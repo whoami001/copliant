@@ -48,6 +48,12 @@ class ComplianceRecord(Base):
     security_reviewer = relationship("User", foreign_keys=[reviewed_by_security], back_populates="reviewed_records")
     legal_approver = relationship("User", foreign_keys=[approved_by_legal], back_populates="approved_records")
     approval_history = relationship("ApprovalHistory", back_populates="record", cascade="all, delete-orphan")
+    legal_declaration = relationship(
+        "LegalDeclaration",
+        back_populates="compliance_record",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<ComplianceRecord(id={self.id}, component_id={self.component_id}, status={self.status})>"

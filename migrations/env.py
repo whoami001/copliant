@@ -8,7 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database import Base
-from app.models import User, Component, ComplianceRecord, ApprovalHistory
+from app.models import User, Component, ComplianceRecord, ApprovalHistory, LegalDeclaration
 
 # this is the Alembic Config object
 config = context.config

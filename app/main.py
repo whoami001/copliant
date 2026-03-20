@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 
 from app.config import get_settings
 from app.exceptions import AppException
-from app.routes import auth, components, records, approvals, dashboard
+from app.routes import auth, components, records, approvals, dashboard, legal_declarations
 from app.utils import logger
 
 settings = get_settings()
@@ -43,6 +43,7 @@ def create_app() -> FastAPI:
     app.include_router(records.router, prefix=f"{settings.api_prefix}/compliance-records", tags=["records"])
     app.include_router(approvals.router, prefix=f"{settings.api_prefix}/approvals", tags=["approvals"])
     app.include_router(dashboard.router, prefix=f"{settings.api_prefix}/dashboard", tags=["dashboard"])
+    app.include_router(legal_declarations.router, prefix=f"{settings.api_prefix}/legal-declarations", tags=["legal-declarations"])
 
     # 健康检查
     @app.get("/health")

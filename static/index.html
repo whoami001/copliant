@@ -619,6 +619,296 @@
         .login-btn-group .btn {
             flex: 1;
         }
+
+        /* 大模态框（声明表单用） */
+        .modal-large {
+            max-width: 700px;
+        }
+
+        /* 步骤指示器 */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-radius: var(--radius-md);
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step-item.active .step-number {
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-item.completed .step-number {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .step-item.active .step-label {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .step-connector {
+            flex: 1;
+            height: 2px;
+            background: var(--border);
+            margin: 0 8px;
+        }
+
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        /* 表单分区 */
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* 组件信息卡片 */
+        .component-info-card {
+            background: var(--bg);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .info-row {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-xs) 0;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-width: 80px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        /* 表单行（并排字段） */
+        .form-row {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .form-row > .form-group {
+            flex: 1;
+        }
+
+        /* 单选组 */
+        .radio-group {
+            display: flex;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-sm) 0;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* 表单提示 */
+        .form-hint {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 确认摘要 */
+        .confirmation-summary {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .summary-card {
+            background: var(--bg);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+        }
+
+        .summary-card .info-row {
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .summary-card .info-row:last-child {
+            border-bottom: none;
+        }
+
+        /* 历史复用提醒 */
+        .history-reminder {
+            background: var(--primary-light);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        .history-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        .history-icon {
+            font-size: 16px;
+        }
+
+        .history-toggle {
+            margin-left: auto;
+            transition: transform 0.2s;
+        }
+
+        .history-header.collapsed .history-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .history-details {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--primary-light);
+            display: none;
+        }
+
+        .history-details.show {
+            display: block;
+        }
+
+        .history-item {
+            padding: var(--spacing-sm) 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* 步骤按钮 */
+        .step-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        /* SPDX 导入样式 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .result-summary {
+            display: flex;
+            gap: var(--spacing-xl);
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-radius: var(--radius-md);
+        }
+
+        .result-summary p {
+            font-size: 14px;
+        }
+
+        .text-success {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .text-danger {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .form-file {
+            display: block;
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .form-file:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* 成功按钮 */
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--success-bg);
+        }
+
+        .btn-sm {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -850,6 +1140,209 @@
                 <div class="login-btn-group">
                     <button class="btn btn-secondary" onclick="closeLoginModal()">取消</button>
                     <button class="btn btn-primary" onclick="doLogin()">登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 法务声明表单模态框（分步表单） -->
+    <div class="modal-overlay" id="declaration-modal-overlay">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title">法务声明表单</h3>
+                <button class="modal-close" onclick="closeDeclarationModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 步骤指示器 -->
+                <div class="step-indicator">
+                    <div class="step-item active" data-step="1">
+                        <span class="step-number">1</span>
+                        <span class="step-label">基本信息</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="2">
+                        <span class="step-number">2</span>
+                        <span class="step-label">许可证详情</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="step-item" data-step="3">
+                        <span class="step-number">3</span>
+                        <span class="step-label">确认提交</span>
+                    </div>
+                </div>
+
+                <!-- 步骤 1: 基本信息 -->
+                <div class="step-content active" id="step-1">
+                    <div class="form-section">
+                        <h4 class="section-title">组件信息</h4>
+                        <div class="component-info-card">
+                            <div class="info-row">
+                                <span class="info-label">组件名称:</span>
+                                <span class="info-value" id="decl-component-name">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">版本:</span>
+                                <span class="info-value" id="decl-component-version">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">许可证:</span>
+                                <span class="info-value" id="decl-component-license">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required" for="decl-purpose">使用目的</label>
+                        <textarea class="form-textarea" id="decl-purpose" placeholder="简述 OSS 组件在项目中的功能，例如：'用于实现用户数据格式化功能，提供一致的输出格式'" rows="4"></textarea>
+                        <span class="form-hint">最多 500 字符</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label required" for="decl-usage-type">使用方式</label>
+                            <select class="form-select" id="decl-usage-type">
+                                <option value="">请选择使用方式</option>
+                                <option value="standalone">独立可执行程序</option>
+                                <option value="dynamically_linked">动态链接库（Python/Perl/Ruby/Java 等）</option>
+                                <option value="statically_linked">静态链接库（C/C++ 等）</option>
+                                <option value="browser_code">浏览器代码（HTML/CSS/JS）</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label required">是否修改过</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="decl-is-modified" value="no" checked> 否
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="decl-is-modified" value="yes"> 是
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤 2: 许可证详情 -->
+                <div class="step-content" id="step-2">
+                    <div class="form-group">
+                        <label class="form-label required" for="decl-license-name">许可证名称 (SPDX)</label>
+                        <input type="text" class="form-input" id="decl-license-name" placeholder="例如：MIT, GPL-2.0-only">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required" for="decl-url-source">源代码下载位置</label>
+                        <input type="url" class="form-input" id="decl-url-source" placeholder="https://github.com/...">
+                        <button class="btn btn-secondary btn-sm" onclick="autoFillSourceUrl()" style="margin-top: 4px;">自动填充</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required" for="decl-license-info">许可证说明页面 URL</label>
+                        <input type="url" class="form-input" id="decl-license-info" placeholder="https://opensource.org/licenses/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required" for="decl-license-text">许可证全文 URL</label>
+                        <input type="url" class="form-input" id="decl-license-text" placeholder="https://opensource.org/licenses/...">
+                    </div>
+                </div>
+
+                <!-- 步骤 3: 确认提交 -->
+                <div class="step-content" id="step-3">
+                    <div class="confirmation-summary">
+                        <h4 class="section-title">请确认以下信息</h4>
+                        <div class="summary-card">
+                            <div class="info-row">
+                                <span class="info-label">组件:</span>
+                                <span class="info-value" id="summary-component">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">使用目的:</span>
+                                <span class="info-value" id="summary-purpose">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">使用方式:</span>
+                                <span class="info-value" id="summary-usage">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">是否修改:</span>
+                                <span class="info-value" id="summary-modified">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">许可证:</span>
+                                <span class="info-value" id="summary-license">-</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">源码位置:</span>
+                                <span class="info-value" id="summary-source">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 历史复用提醒 -->
+                    <div class="history-reminder" id="history-reminder" style="display: none;">
+                        <div class="history-header" onclick="toggleHistoryDetails()">
+                            <span class="history-icon">ℹ️</span>
+                            <span class="history-text">此组件已在 <strong id="history-count">0</strong> 个系统中获批</span>
+                            <span class="history-toggle">▼</span>
+                        </div>
+                        <div class="history-details" id="history-details">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeclarationModal()">取消</button>
+                <div class="step-buttons">
+                    <button class="btn btn-secondary" id="prev-btn" onclick="prevStep()" style="display: none;">上一步</button>
+                    <button class="btn btn-primary" id="next-btn" onclick="nextStep()">下一步：许可证</button>
+                    <button class="btn btn-success" id="submit-btn" onclick="submitDeclaration()" style="display: none;">确认并提交审批</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPDX 批量导入模态框 -->
+    <div class="modal-overlay" id="spdx-import-modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">批量导入组件</h3>
+                <button class="modal-close" onclick="closeSpdxImportModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label required" for="import-system-name">系统名称</label>
+                    <input type="text" class="form-input" id="import-system-name" placeholder="例如：订单管理系统">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="spdx-file">SPDX 文件</label>
+                    <input type="file" class="form-file" id="spdx-file" accept=".spdx,.spdx.json,application/json">
+                    <span class="form-hint">支持 SPDX JSON 和 tag-value 格式</span>
+                </div>
+                <div id="import-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">正在解析 SPDX 文件...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSpdxImportModal()">取消</button>
+                <button class="btn btn-primary" onclick="doSpdxImport()" id="import-submit-btn">导入</button>
+            </div>
+            <div id="import-result" style="display: none; margin-top: 16px;">
+                <div class="result-summary">
+                    <p>成功：<span class="text-success" id="result-success">0</span></p>
+                    <p>失败：<span class="text-danger" id="result-failed">0</span></p>
                 </div>
             </div>
         </div>
@@ -1178,7 +1671,10 @@
                     <td>${new Date(record.created_at).toLocaleDateString('zh-CN')}</td>
                     <td>
                         <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
-                        ${record.status === 'draft' ? `<button class="btn btn-primary" onclick="submitRecord(${record.id})">提交</button>` : ''}
+                        ${record.status === 'draft' ? `
+                            <button class="btn btn-primary" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
+                            <button class="btn btn-secondary" onclick="submitRecord(${record.id})">提交</button>
+                        ` : ''}
                         ${record.status === 'pending_security' ? `<button class="btn btn-primary" onclick="securityApprove(${record.id})">通过</button>` : ''}
                         ${record.status === 'pending_legal' ? `<button class="btn btn-success" onclick="legalApprove(${record.id})">批准</button><button class="btn btn-danger" onclick="legalReject(${record.id})">驳回</button>` : ''}
                     </td>
@@ -1238,13 +1734,8 @@
         }
 
         function showBlackDuckModal() {
-            const reportId = prompt('请输入 Black Duck 报告 ID：');
-            if (!reportId) return;
-
-            const systemName = prompt('请输入系统名称：');
-            if (!systemName) return;
-
-            importBlackDuckReport(reportId, systemName);
+            // 使用 SPDX 批量导入模态框
+            showSpdxImportModal();
         }
 
         async function importBlackDuckReport(reportId, systemName) {
@@ -1378,6 +1869,342 @@
             setTimeout(() => {
                 toast.remove();
             }, 3000);
+        }
+
+        // ==================== 法务声明表单相关函数 ====================
+
+        // 当前声明表单状态
+        let currentDeclarationRecordId = null;
+        let currentDeclarationId = null;
+        let currentDeclarationStep = 1;
+        let currentComponent = null;
+
+        // 打开声明表单模态框
+        function openDeclarationModal(recordId, component = null) {
+            currentDeclarationRecordId = recordId;
+            currentComponent = component;
+            currentDeclarationStep = 1;
+            currentDeclarationId = null;
+
+            // 填充组件信息
+            if (component) {
+                document.getElementById('decl-component-name').textContent = component.name || '-';
+                document.getElementById('decl-component-version').textContent = component.version || '-';
+                document.getElementById('decl-component-license').textContent = component.license || '-';
+            }
+
+            // 重置表单
+            document.getElementById('decl-purpose').value = '';
+            document.getElementById('decl-usage-type').value = '';
+            document.querySelector('input[name="decl-is-modified"][value="no"]').checked = true;
+            document.getElementById('decl-license-name').value = '';
+            document.getElementById('decl-url-source').value = '';
+            document.getElementById('decl-license-info').value = '';
+            document.getElementById('decl-license-text').value = '';
+
+            // 显示模态框
+            document.getElementById('declaration-modal-overlay').classList.add('active');
+            updateStepUI();
+
+            // 加载现有声明（如果有）
+            loadExistingDeclaration(recordId);
+        }
+
+        // 关闭声明表单模态框
+        function closeDeclarationModal() {
+            document.getElementById('declaration-modal-overlay').classList.remove('active');
+        }
+
+        // 加载现有声明
+        async function loadExistingDeclaration(recordId) {
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/records/${recordId}/declaration`);
+                if (res.ok) {
+                    const decl = await res.json();
+                    currentDeclarationId = decl.id;
+
+                    // 填充表单
+                    document.getElementById('decl-purpose').value = decl.purpose_of_use;
+                    document.getElementById('decl-usage-type').value = decl.usage_type;
+                    document.querySelector(`input[name="decl-is-modified"][value="${decl.is_modified}"]`).checked = true;
+                    document.getElementById('decl-license-name').value = decl.license_name;
+                    document.getElementById('decl-url-source').value = decl.url_to_source;
+                    document.getElementById('decl-license-info').value = decl.license_info_url;
+                    document.getElementById('decl-license-text').value = decl.license_text_url;
+
+                    // 加载历史建议
+                    loadHistorySuggestions(decl.id);
+                }
+            } catch (e) {
+                // 404 表示没有现有声明，忽略
+            }
+        }
+
+        // 加载历史建议
+        async function loadHistorySuggestions(declarationId) {
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/${declarationId}/history-suggestions`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.has_history) {
+                        document.getElementById('history-count').textContent = data.suggestions.length;
+                        const detailsEl = document.getElementById('history-details');
+                        detailsEl.innerHTML = data.suggestions.map(s => `
+                            <div class="history-item">
+                                • ${s.system_name} - ${new Date(s.approved_at).toLocaleDateString('zh-CN')}
+                                (${s.license_name})
+                            </div>
+                        `).join('');
+                        document.getElementById('history-reminder').style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.error('加载历史建议失败:', e);
+            }
+        }
+
+        // 切换历史详情
+        function toggleHistoryDetails() {
+            const header = document.querySelector('.history-header');
+            const details = document.getElementById('history-details');
+            header.classList.toggle('collapsed');
+            details.classList.toggle('show');
+        }
+
+        // 更新步骤 UI
+        function updateStepUI() {
+            // 更新步骤指示器
+            document.querySelectorAll('.step-item').forEach((el, idx) => {
+                el.classList.remove('active', 'completed');
+                if (idx + 1 < currentDeclarationStep) {
+                    el.classList.add('completed');
+                } else if (idx + 1 === currentDeclarationStep) {
+                    el.classList.add('active');
+                }
+            });
+
+            // 更新内容区域
+            document.querySelectorAll('.step-content').forEach((el, idx) => {
+                el.classList.remove('active');
+                if (idx === currentDeclarationStep - 1) {
+                    el.classList.add('active');
+                }
+            });
+
+            // 更新按钮
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            prevBtn.style.display = currentDeclarationStep === 1 ? 'none' : 'inline-block';
+            nextBtn.style.display = currentDeclarationStep === 3 ? 'none' : 'inline-block';
+            submitBtn.style.display = currentDeclarationStep === 3 ? 'inline-block' : 'none';
+
+            // 更新下一步按钮文字
+            if (currentDeclarationStep === 1) {
+                nextBtn.textContent = '下一步：许可证';
+            } else if (currentDeclarationStep === 2) {
+                nextBtn.textContent = '下一步：确认';
+            }
+
+            // 更新确认摘要
+            if (currentDeclarationStep === 3) {
+                updateSummary();
+            }
+        }
+
+        // 更新摘要
+        function updateSummary() {
+            const usageTypeMap = {
+                'standalone': '独立可执行程序',
+                'dynamically_linked': '动态链接库',
+                'statically_linked': '静态链接库',
+                'browser_code': '浏览器代码',
+                'other': '其他'
+            };
+
+            document.getElementById('summary-component').textContent =
+                `${document.getElementById('decl-component-name').textContent} @ ${document.getElementById('decl-component-version').textContent}`;
+            document.getElementById('summary-purpose').textContent =
+                document.getElementById('decl-purpose').value || '-';
+            document.getElementById('summary-usage').textContent =
+                usageTypeMap[document.getElementById('decl-usage-type').value] || '-';
+            document.getElementById('summary-modified').textContent =
+                document.querySelector('input[name="decl-is-modified"]:checked').value === 'yes' ? '是' : '否';
+            document.getElementById('summary-license').textContent =
+                document.getElementById('decl-license-name').value || '-';
+            document.getElementById('summary-source').textContent =
+                document.getElementById('decl-url-source').value || '-';
+        }
+
+        // 上一步
+        function prevStep() {
+            if (currentDeclarationStep > 1) {
+                currentDeclarationStep--;
+                updateStepUI();
+            }
+        }
+
+        // 下一步
+        function nextStep() {
+            // 验证当前步骤
+            if (currentDeclarationStep === 1) {
+                const purpose = document.getElementById('decl-purpose').value.trim();
+                const usageType = document.getElementById('decl-usage-type').value;
+                if (!purpose) {
+                    showToast('请填写使用目的', 'warning');
+                    return;
+                }
+                if (!usageType) {
+                    showToast('请选择使用方式', 'warning');
+                    return;
+                }
+            } else if (currentDeclarationStep === 2) {
+                const licenseName = document.getElementById('decl-license-name').value.trim();
+                const urlSource = document.getElementById('decl-url-source').value.trim();
+                const licenseInfo = document.getElementById('decl-license-info').value.trim();
+                const licenseText = document.getElementById('decl-license-text').value.trim();
+                if (!licenseName || !urlSource || !licenseInfo || !licenseText) {
+                    showToast('请填写所有许可证信息字段', 'warning');
+                    return;
+                }
+            }
+
+            if (currentDeclarationStep < 3) {
+                currentDeclarationStep++;
+                updateStepUI();
+            }
+        }
+
+        // 提交声明
+        async function submitDeclaration() {
+            const data = {
+                compliance_record_id: currentDeclarationRecordId,
+                purpose_of_use: document.getElementById('decl-purpose').value.trim(),
+                url_to_source: document.getElementById('decl-url-source').value.trim(),
+                license_info_url: document.getElementById('decl-license-info').value.trim(),
+                license_text_url: document.getElementById('decl-license-text').value.trim(),
+                license_name: document.getElementById('decl-license-name').value.trim(),
+                is_modified: document.querySelector('input[name="decl-is-modified"]:checked').value,
+                usage_type: document.getElementById('decl-usage-type').value,
+            };
+
+            try {
+                let url, method;
+                if (currentDeclarationId) {
+                    url = `${API_BASE}/legal-declarations/${currentDeclarationId}`;
+                    method = 'PUT';
+                } else {
+                    url = `${API_BASE}/legal-declarations`;
+                    method = 'POST';
+                }
+
+                const res = await authFetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                if (!res.ok) throw new Error('提交失败');
+
+                const result = await res.json();
+
+                // 如果是新创建且需要提交
+                if (!currentDeclarationId) {
+                    // 提交审批
+                    await authFetch(`${API_BASE}/legal-declarations/${result.id}/submit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({}),
+                    });
+                }
+
+                showToast('提交成功', 'success');
+                closeDeclarationModal();
+                loadRecords();
+            } catch (error) {
+                showToast('提交失败：' + error.message, 'error');
+            }
+        }
+
+        // 自动填充源码 URL
+        function autoFillSourceUrl() {
+            if (currentComponent && currentComponent.name) {
+                const githubUrl = `https://github.com/${currentComponent.name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}/${currentComponent.name.toLowerCase().replace(/[^a-z0-9-]/g, '-')}`;
+                document.getElementById('decl-url-source').value = githubUrl;
+            }
+        }
+
+        // ==================== SPDX 批量导入相关函数 ====================
+
+        // 打开 SPDX 导入模态框
+        function showSpdxImportModal() {
+            document.getElementById('spdx-import-modal-overlay').classList.add('active');
+            document.getElementById('import-system-name').value = '';
+            document.getElementById('spdx-file').value = '';
+            document.getElementById('import-progress').style.display = 'none';
+            document.getElementById('import-result').style.display = 'none';
+        }
+
+        // 关闭 SPDX 导入模态框
+        function closeSpdxImportModal() {
+            document.getElementById('spdx-import-modal-overlay').classList.remove('active');
+        }
+
+        // 执行 SPDX 导入
+        async function doSpdxImport() {
+            const systemName = document.getElementById('import-system-name').value.trim();
+            const fileInput = document.getElementById('spdx-file');
+            const file = fileInput.files[0];
+
+            if (!systemName) {
+                showToast('请填写系统名称', 'warning');
+                return;
+            }
+            if (!file) {
+                showToast('请选择 SPDX 文件', 'warning');
+                return;
+            }
+
+            // 显示进度
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('progress-fill').style.width = '30%';
+            document.getElementById('progress-text').textContent = '正在上传文件...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/bulk-import?system_name=${encodeURIComponent(systemName)}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                document.getElementById('progress-fill').style.width = '100%';
+                document.getElementById('progress-text').textContent = '导入完成！';
+
+                if (!res.ok) throw new Error('导入失败');
+
+                const result = await res.json();
+
+                // 显示结果
+                document.getElementById('import-result').style.display = 'block';
+                document.getElementById('result-success').textContent = result.success_count;
+                document.getElementById('result-failed').textContent = result.failed_count;
+
+                if (result.success_count > 0) {
+                    showToast(`成功导入 ${result.success_count} 个组件`, 'success');
+                    setTimeout(() => {
+                        closeSpdxImportModal();
+                        loadComponents();
+                    }, 1500);
+                } else {
+                    showToast('导入失败：没有成功导入任何组件', 'error');
+                }
+            } catch (error) {
+                document.getElementById('import-progress').style.display = 'none';
+                showToast('导入失败：' + error.message, 'error');
+            }
         }
 
         // 初始化

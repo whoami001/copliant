@@ -27,6 +27,19 @@ from app.schemas.approval import (
 )
 from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse
 from app.schemas.auth import Token, TokenPayload, EmailLoginRequest
+from app.schemas.legal_declaration import (
+    LegalDeclarationCreate,
+    LegalDeclarationUpdate,
+    LegalDeclarationResponse,
+    LegalDeclarationDetailResponse,
+    LegalDeclarationSubmit,
+    UsageTypeEnum,
+    IsModifiedEnum,
+    BulkImportResult,
+    BulkImportItemResult,
+    HistorySuggestion,
+    HistorySuggestionResponse,
+)
 
 __all__ = [
     # User
@@ -58,4 +71,16 @@ __all__ = [
     "Token",
     "TokenPayload",
     "EmailLoginRequest",
+    # Legal Declaration
+    "LegalDeclarationCreate",
+    "LegalDeclarationUpdate",
+    "LegalDeclarationResponse",
+    "LegalDeclarationDetailResponse",
+    "LegalDeclarationSubmit",
+    "UsageTypeEnum",
+    "IsModifiedEnum",
+    "BulkImportResult",
+    "BulkImportItemResult",
+    "HistorySuggestion",
+    "HistorySuggestionResponse",
 ]
