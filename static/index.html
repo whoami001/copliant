@@ -847,7 +847,9 @@
 
             try {
                 const res = await fetch(`${API_BASE}/compliance-records/${id}/submit`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
                 });
                 if (!res.ok) throw new Error('提交失败');
                 showToast('提交成功', 'success');
@@ -862,7 +864,9 @@
 
             try {
                 const res = await fetch(`${API_BASE}/compliance-records/${id}/approve`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
                 });
                 if (!res.ok) throw new Error('操作失败');
                 showToast('通过成功', 'success');
@@ -934,6 +938,10 @@
                 showPage(hash);
             }
         });
+
+        // 强制刷新缓存版本
+        const APP_VERSION = '1.0.1';
+        console.log('App version:', APP_VERSION);
     </script>
 </body>
 </html>
