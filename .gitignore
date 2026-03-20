@@ -1,0 +1,82 @@
+# Git 忽略文件
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 环境配置（包含敏感信息）
+.env
+.env.local
+.env.*.local
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 日志
+*.log
+logs/
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# 迁移（可选，如果想版本控制迁移则保留）
+# migrations/versions/*.py
+
+# 静态文件构建
+static/build/
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Docker
+docker-compose.override.yml
+*.pid
+
+# 证书和密钥
+*.pem
+*.key
+*.crt
+secrets/
+.gstack/

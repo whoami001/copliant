@@ -1,0 +1,212 @@
+"""
+合规记录相关路由
+"""
+
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.schemas.compliance_record import (
+    ComplianceRecordCreate,
+    ComplianceRecordResponse,
+    ComplianceRecordUpdate,
+    ComplianceRecordSubmit,
+    ComplianceRecordApprove,
+    ComplianceRecordReject,
+    RecordStatusEnum,
+)
+from app.models.compliance_record import ComplianceRecord, RecordStatus
+from app.services.approval_flow import get_approval_flow_service
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+router = APIRouter()
+
+
+@router.get("", response_model=List[ComplianceRecordResponse])
+async def list_records(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    status: Optional[RecordStatusEnum] = None,
+    system_name: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """获取合规记录列表（支持状态和系统过滤）"""
+    from app.models.component import Component
+
+    query = db.query(ComplianceRecord).join(Component, isouter=True)
+
+    if status:
+        query = query.filter(ComplianceRecord.status == status)
+
+    if system_name:
+        query = query.filter(ComplianceRecord.system_name.ilike(f"%{system_name}%"))
+
+    records = query.order_by(ComplianceRecord.created_at.desc()).offset(skip).limit(limit).all()
+    return records
+
+
+@router.post("", response_model=ComplianceRecordResponse)
+async def create_record(
+    record_data: ComplianceRecordCreate,
+    db: Session = Depends(get_db),
+):
+    """创建合规记录"""
+    # 检查组件是否存在
+    from app.models.component import Component
+    component = db.query(Component).filter(Component.id == record_data.component_id).first()
+    if not component:
+        raise HTTPException(status_code=404, detail="Component not found")
+
+    record = ComplianceRecord(
+        component_id=record_data.component_id,
+        system_name=record_data.system_name,
+        comments=record_data.comments,
+        status=RecordStatus.DRAFT,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+
+    logger.info(f"创建合规记录：{record.id}")
+    return record
+
+
+@router.get("/{record_id}", response_model=ComplianceRecordResponse)
+async def get_record(record_id: int, db: Session = Depends(get_db)):
+    """获取合规记录详情"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+    return record
+
+
+@router.put("/{record_id}", response_model=ComplianceRecordResponse)
+async def update_record(
+    record_id: int,
+    update_data: ComplianceRecordUpdate,
+    db: Session = Depends(get_db),
+):
+    """更新合规记录（仅限草稿状态）"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    if record.status != RecordStatus.DRAFT:
+        raise HTTPException(status_code=400, detail="只有草稿状态可以修改")
+
+    for field, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(record, field, value)
+
+    db.commit()
+    db.refresh(record)
+
+    return record
+
+
+@router.post("/{record_id}/submit", response_model=ComplianceRecordResponse)
+async def submit_record(
+    record_id: int,
+    submit_data: ComplianceRecordSubmit,
+    db: Session = Depends(get_db),
+):
+    """提交审批"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    approval_service = get_approval_flow_service(db)
+    # MVP: 虚拟用户
+    from app.models.user import User, UserRole
+    user = User(id=1, email="mvp@company.com", role=UserRole.ENGINEER)
+
+    record = approval_service.submit_for_review(record, user)
+    db.commit()
+    db.refresh(record)
+
+    return record
+
+
+@router.post("/{record_id}/approve", response_model=ComplianceRecordResponse)
+async def approve_record(
+    record_id: int,
+    approve_data: ComplianceRecordApprove,
+    db: Session = Depends(get_db),
+):
+    """审批通过（安全或法务）"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    approval_service = get_approval_flow_service(db)
+    from app.models.user import User, UserRole
+
+    if record.status == RecordStatus.PENDING_SECURITY:
+        # 安全校验通过
+        user = User(id=2, email="security@company.com", role=UserRole.SECURITY)
+        record = approval_service.security_review(record, user, pass_review=True, comments=approve_data.comments)
+    elif record.status == RecordStatus.PENDING_LEGAL:
+        # 法务审批通过
+        user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
+        record = approval_service.legal_approve(record, user, approve=True, comments=approve_data.comments)
+    else:
+        raise HTTPException(status_code=400, detail="当前状态不能执行审批操作")
+
+    db.commit()
+    db.refresh(record)
+
+    return record
+
+
+@router.post("/{record_id}/reject", response_model=ComplianceRecordResponse)
+async def reject_record(
+    record_id: int,
+    reject_data: ComplianceRecordReject,
+    db: Session = Depends(get_db),
+):
+    """审批驳回"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    approval_service = get_approval_flow_service(db)
+    from app.models.user import User, UserRole
+
+    if record.status == RecordStatus.PENDING_SECURITY:
+        user = User(id=2, email="security@company.com", role=UserRole.SECURITY)
+        record = approval_service.security_review(record, user, pass_review=False, comments=reject_data.comments)
+    elif record.status == RecordStatus.PENDING_LEGAL:
+        user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
+        record = approval_service.legal_approve(record, user, approve=False, comments=reject_data.comments)
+    else:
+        raise HTTPException(status_code=400, detail="当前状态不能执行驳回操作")
+
+    db.commit()
+    db.refresh(record)
+
+    return record
+
+
+@router.post("/{record_id}/request-changes", response_model=ComplianceRecordResponse)
+async def request_changes(
+    record_id: int,
+    reject_data: ComplianceRecordReject,
+    db: Session = Depends(get_db),
+):
+    """要求修改（法务用）"""
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    approval_service = get_approval_flow_service(db)
+    from app.models.user import User, UserRole
+
+    user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
+    record = approval_service.request_changes(record, user, comments=reject_data.comments)
+
+    db.commit()
+    db.refresh(record)
+
+    return record

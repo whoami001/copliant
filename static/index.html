@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compliance Hub - 软件合规管理系统</title>
+    <style>
+        :root {
+            /* 主色 */
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-light: #DBEAFE;
+
+            /* 状态色 */
+            --success: #16A34A;
+            --success-bg: #DCFCE7;
+            --success-text: #166534;
+            --warning: #D97706;
+            --warning-bg: #FEF3C7;
+            --warning-text: #92400E;
+            --danger: #DC2626;
+            --danger-bg: #FEE2E2;
+            --danger-text: #991B1B;
+            --info: #0891B2;
+
+            /* 中性色 */
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-disabled: #9CA3AF;
+            --border: #E5E7EB;
+            --bg: #F9FAFB;
+            --surface: #FFFFFF;
+
+            /* 间距 */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 24px;
+
+            /* 圆角 */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* 布局 */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: var(--spacing-lg);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: var(--spacing-xl);
+        }
+
+        /* 顶部栏 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* 内容卡片 */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: var(--spacing-lg);
+        }
+
+        /* 按钮 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* 表格 */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: var(--spacing-md) var(--spacing-lg);
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            background: var(--bg);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .table tr:hover {
+            background: var(--bg);
+        }
+
+        /* 徽章 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .badge-warning {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .badge-danger {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .badge-secondary {
+            background: var(--bg);
+            color: var(--text-secondary);
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: var(--danger);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl) * 2;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            color: var(--text-disabled);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .empty-state-desc {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* Toast 通知 */
+        .toast-container {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            z-index: 1000;
+        }
+
+        .toast {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--info);
+            min-width: 320px;
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.error { border-left-color: var(--danger); }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl) * 2;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 页面 */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Compliance Hub
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                        </svg>
+                        仪表板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#records" class="nav-link" data-page="records">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        合规记录
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#components" class="nav-link" data-page="components">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        组件管理
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="header">
+                <h1 class="header-title" id="page-title">仪表板</h1>
+                <div class="user-menu">
+                    <div class="user-avatar">U</div>
+                    <span id="user-name">User</span>
+                </div>
+            </header>
+
+            <!-- 仪表板页面 -->
+            <div id="page-dashboard" class="page active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">待我处理</div>
+                        <div class="stat-value" id="stat-pending">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">本月通过</div>
+                        <div class="stat-value" id="stat-approved">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均处理时间</div>
+                        <div class="stat-value" id="stat-avg-days">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">总记录数</div>
+                        <div class="stat-value" id="stat-total">-</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">待办事项</h2>
+                        <button class="btn btn-primary" onclick="showNewRecordModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            新建合规记录
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="todo-list">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 合规记录页面 -->
+            <div id="page-records" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">合规记录列表</h2>
+                        <button class="btn btn-primary" onclick="showNewRecordModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            新建合规记录
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
+                            <select class="form-select" style="width: 200px;" id="filter-status" onchange="loadRecords()">
+                                <option value="">全部状态</option>
+                                <option value="draft">草稿</option>
+                                <option value="pending_security">待安全校验</option>
+                                <option value="pending_legal">待法务审批</option>
+                                <option value="approved">已通过</option>
+                                <option value="rejected">已驳回</option>
+                            </select>
+                            <input type="text" class="form-input" placeholder="搜索系统名..." style="width: 200px;" id="search-system" oninput="loadRecords()">
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>组件</th>
+                                    <th>系统</th>
+                                    <th>状态</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-table-body">
+                                <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 组件管理页面 -->
+            <div id="page-components" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">组件管理</h2>
+                        <button class="btn btn-primary" onclick="showBlackDuckModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            导入 Black Duck 报告
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 16px;">
+                            <input type="text" class="form-input" placeholder="搜索组件名..." style="width: 300px;" id="search-component" oninput="loadComponents()">
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>名称</th>
+                                    <th>版本</th>
+                                    <th>许可证</th>
+                                    <th>风险等级</th>
+                                    <th>已审批</th>
+                                    <th>创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody id="components-table-body">
+                                <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast 容器 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // API 基础 URL
+        const API_BASE = '/api';
+
+        // 状态映射
+        const STATUS_MAP = {
+            'draft': { label: '草稿', class: 'badge-secondary' },
+            'pending_security': { label: '待安全校验', class: 'badge-warning' },
+            'pending_legal': { label: '待法务审批', class: 'badge-warning' },
+            'approved': { label: '已通过', class: 'badge-success' },
+            'rejected': { label: '已驳回', class: 'badge-danger' }
+        };
+
+        const RISK_MAP = {
+            'safe': { label: '安全', class: 'badge-success' },
+            'caution': { label: '注意', class: 'badge-warning' },
+            'warning': { label: '警告', class: 'badge-danger' },
+            'unknown': { label: '未知', class: 'badge-secondary' }
+        };
+
+        // 页面导航
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                showPage(page);
+            });
+        });
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+            document.getElementById(`page-${page}`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+            const titles = {
+                'dashboard': '仪表板',
+                'records': '合规记录',
+                'components': '组件管理'
+            };
+            document.getElementById('page-title').textContent = titles[page];
+
+            // 加载对应页面数据
+            if (page === 'dashboard') loadDashboard();
+            else if (page === 'records') loadRecords();
+            else if (page === 'components') loadComponents();
+        }
+
+        // 加载仪表板数据
+        async function loadDashboard() {
+            try {
+                const [statsRes, todoRes] = await Promise.all([
+                    fetch(`${API_BASE}/dashboard/stats`),
+                    fetch(`${API_BASE}/dashboard/todo`)
+                ]);
+
+                const stats = await statsRes.json();
+                const todos = await todoRes.json();
+
+                document.getElementById('stat-pending').textContent = stats.pending_my_action;
+                document.getElementById('stat-approved').textContent = stats.approved_this_month;
+                document.getElementById('stat-avg-days').textContent = stats.avg_processing_days + '天';
+                document.getElementById('stat-total').textContent = stats.total_records;
+
+                renderTodoList(todos.items);
+            } catch (error) {
+                showToast('加载数据失败：' + error.message, 'error');
+            }
+        }
+
+        function renderTodoList(items) {
+            const container = document.getElementById('todo-list');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">太棒了！</div>
+                        <div class="empty-state-desc">所有合规记录都已处理完成</div>
+                        <button class="btn btn-primary" onclick="showNewRecordModal()">创建新的合规记录</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>记录名称</th>
+                            <th>系统</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => `
+                            <tr>
+                                <td>${item.record_name}</td>
+                                <td>${item.system_name}</td>
+                                <td><span class="badge ${STATUS_MAP[item.status]?.class || 'badge-secondary'}">${STATUS_MAP[item.status]?.label || item.status}</span></td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="handleRecord(${item.id})">处理</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 加载合规记录列表
+        async function loadRecords() {
+            const status = document.getElementById('filter-status').value;
+            const system = document.getElementById('search-system').value;
+
+            let url = `${API_BASE}/compliance-records?limit=100`;
+            if (status) url += `&status=${status}`;
+            if (system) url += `&system_name=${encodeURIComponent(system)}`;
+
+            try {
+                const res = await fetch(url);
+                const records = await res.json();
+                renderRecordsTable(records);
+            } catch (error) {
+                showToast('加载记录失败：' + error.message, 'error');
+            }
+        }
+
+        function renderRecordsTable(records) {
+            const tbody = document.getElementById('records-table-body');
+
+            if (!records || records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无记录</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td>${record.id}</td>
+                    <td>${record.component?.name || '-'}@${record.component?.version || '-'}</td>
+                    <td>${record.system_name}</td>
+                    <td><span class="badge ${STATUS_MAP[record.status]?.class || 'badge-secondary'}">${STATUS_MAP[record.status]?.label || record.status}</span></td>
+                    <td>${new Date(record.created_at).toLocaleDateString('zh-CN')}</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
+                        ${record.status === 'draft' ? `<button class="btn btn-primary" onclick="submitRecord(${record.id})">提交</button>` : ''}
+                        ${record.status === 'pending_security' ? `<button class="btn btn-primary" onclick="securityApprove(${record.id})">通过</button>` : ''}
+                        ${record.status === 'pending_legal' ? `<button class="btn btn-success" onclick="legalApprove(${record.id})">批准</button><button class="btn btn-danger" onclick="legalReject(${record.id})">驳回</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 加载组件列表
+        async function loadComponents() {
+            const search = document.getElementById('search-component').value;
+
+            let url = `${API_BASE}/components?limit=100`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            try {
+                const res = await fetch(url);
+                const components = await res.json();
+                renderComponentsTable(components);
+            } catch (error) {
+                showToast('加载组件失败：' + error.message, 'error');
+            }
+        }
+
+        function renderComponentsTable(components) {
+            const tbody = document.getElementById('components-table-body');
+
+            if (!components || components.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无组件</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = components.map(comp => `
+                <tr>
+                    <td>${comp.name}</td>
+                    <td>${comp.version}</td>
+                    <td>${comp.license || '-'}</td>
+                    <td><span class="badge ${RISK_MAP[comp.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[comp.license_risk_level]?.label || comp.license_risk_level}</span></td>
+                    <td>${comp.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
+                    <td>${new Date(comp.created_at).toLocaleDateString('zh-CN')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 显示新建记录模态框（简化版：直接 prompt）
+        function showNewRecordModal() {
+            // MVP 简化：使用 prompt，生产环境应该用真正的模态框
+            const systemName = prompt('请输入系统名称：');
+            if (!systemName) return;
+
+            const reportId = prompt('请输入 Black Duck 报告 ID（可选）：');
+
+            if (reportId) {
+                importBlackDuckReport(reportId, systemName);
+            } else {
+                showToast('请输入 Black Duck 报告 ID', 'warning');
+            }
+        }
+
+        function showBlackDuckModal() {
+            const reportId = prompt('请输入 Black Duck 报告 ID：');
+            if (!reportId) return;
+
+            const systemName = prompt('请输入系统名称：');
+            if (!systemName) return;
+
+            importBlackDuckReport(reportId, systemName);
+        }
+
+        async function importBlackDuckReport(reportId, systemName) {
+            try {
+                showToast('正在导入报告...', 'info');
+
+                const res = await fetch(`${API_BASE}/components/blackduck`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report_id: reportId, system_name: systemName })
+                });
+
+                if (!res.ok) throw new Error('导入失败');
+
+                const components = await res.json();
+                showToast(`成功导入 ${components.length} 个组件`, 'success');
+
+                // 创建合规记录
+                if (components.length > 0) {
+                    for (const comp of components) {
+                        await fetch(`${API_BASE}/compliance-records`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                component_id: comp.id,
+                                system_name: systemName
+                            })
+                        });
+                    }
+                    showToast(`已创建 ${components.length} 条合规记录`, 'success');
+                }
+
+                loadComponents();
+            } catch (error) {
+                showToast('导入失败：' + error.message, 'error');
+            }
+        }
+
+        // 处理记录
+        function handleRecord(id) {
+            window.location.hash = 'records';
+            setTimeout(() => viewRecord(id), 100);
+        }
+
+        function viewRecord(id) {
+            window.open(`/api/compliance-records/${id}`, '_blank');
+            // MVP 简化：直接打开 API，生产环境应该有详情页
+        }
+
+        async function submitRecord(id) {
+            if (!confirm('确认提交审批？')) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/compliance-records/${id}/submit`, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('提交失败');
+                showToast('提交成功', 'success');
+                loadRecords();
+            } catch (error) {
+                showToast('提交失败：' + error.message, 'error');
+            }
+        }
+
+        async function securityApprove(id) {
+            if (!confirm('确认通过安全校验？')) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/compliance-records/${id}/approve`, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('操作失败');
+                showToast('通过成功', 'success');
+                loadRecords();
+            } catch (error) {
+                showToast('操作失败：' + error.message, 'error');
+            }
+        }
+
+        async function legalApprove(id) {
+            const comments = prompt('审批意见（可选）：');
+            if (comments === null) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/compliance-records/${id}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comments: comments || null })
+                });
+                if (!res.ok) throw new Error('操作失败');
+                showToast('批准成功', 'success');
+                loadRecords();
+            } catch (error) {
+                showToast('操作失败：' + error.message, 'error');
+            }
+        }
+
+        async function legalReject(id) {
+            const comments = prompt('请输入驳回原因（必填）：');
+            if (!comments) {
+                showToast('驳回原因必填', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/compliance-records/${id}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ comments: comments })
+                });
+                if (!res.ok) throw new Error('操作失败');
+                showToast('已驳回', 'success');
+                loadRecords();
+            } catch (error) {
+                showToast('操作失败：' + error.message, 'error');
+            }
+        }
+
+        // Toast 通知
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboard();
+
+            // 处理 hash 路由
+            const hash = window.location.hash.slice(1) || 'dashboard';
+            if (['dashboard', 'records', 'components'].includes(hash)) {
+                showPage(hash);
+            }
+        });
+    </script>
+</body>
+</html>
