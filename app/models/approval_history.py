@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -26,7 +25,8 @@ class ApprovalHistory(Base):
     new_status = Column(String(30))
     comments = Column(Text)
 
-    ip_address = Column(INET)
+    # Use String type for SQLite compatibility, PostgreSQL for production
+    ip_address = Column(String(50))
     user_agent = Column(Text)
 
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

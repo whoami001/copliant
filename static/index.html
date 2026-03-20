@@ -405,6 +405,220 @@
         .page.active {
             display: block;
         }
+
+        /* 登录模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: flex-end;
+        }
+
+        /* 用户菜单下拉 */
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            transition: background 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--bg);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: var(--spacing-xs);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            z-index: 100;
+        }
+
+        .user-dropdown.active {
+            display: block;
+        }
+
+        .user-dropdown-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .user-dropdown-item {
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .user-dropdown-item:hover {
+            background: var(--bg);
+        }
+
+        .user-dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .user-dropdown-item.danger {
+            color: var(--danger);
+        }
+
+        /* 快速切换用户 */
+        .quick-switch {
+            padding: var(--spacing-md);
+        }
+
+        .quick-switch-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-user-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            margin-bottom: var(--spacing-xs);
+            transition: all 0.2s;
+        }
+
+        .quick-user-btn:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+
+        .quick-user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .avatar-engineer { background: #3B82F6; }
+        .avatar-security { background: #F59E0B; }
+        .avatar-legal { background: #8B5CF6; }
+        .avatar-admin { background: #DC2626; }
+
+        /* 登录表单 */
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .login-btn-group {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .login-btn-group .btn {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -449,9 +663,41 @@
         <main class="main-content">
             <header class="header">
                 <h1 class="header-title" id="page-title">仪表板</h1>
-                <div class="user-menu">
-                    <div class="user-avatar">U</div>
+                <div class="user-menu" id="user-menu" onclick="toggleUserDropdown()">
+                    <div class="user-avatar" id="user-avatar">U</div>
                     <span id="user-name">User</span>
+                    <span class="user-role" id="user-role"></span>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-dropdown-header">
+                            <div id="dropdown-email">user@example.com</div>
+                        </div>
+                        <div class="quick-switch">
+                            <div class="quick-switch-title">快速切换</div>
+                            <button class="quick-user-btn" onclick="switchUser('engineer@test.com')">
+                                <div class="quick-user-avatar avatar-engineer">工</div>
+                                <span>工程师</span>
+                            </button>
+                            <button class="quick-user-btn" onclick="switchUser('security@test.com')">
+                                <div class="quick-user-avatar avatar-security">安</div>
+                                <span>安全评审</span>
+                            </button>
+                            <button class="quick-user-btn" onclick="switchUser('legal@test.com')">
+                                <div class="quick-user-avatar avatar-legal">法</div>
+                                <span>法务审批</span>
+                            </button>
+                            <button class="quick-user-btn" onclick="switchUser('admin@test.com')">
+                                <div class="quick-user-avatar avatar-admin">管</div>
+                                <span>管理员</span>
+                            </button>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <div class="user-dropdown-item" onclick="showLoginModal()">
+                            切换账号
+                        </div>
+                        <div class="user-dropdown-item danger" onclick="logout()">
+                            退出登录
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -576,12 +822,49 @@
         </main>
     </div>
 
+    <!-- 登录模态框 -->
+    <div class="modal-overlay" id="login-modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">用户登录</h3>
+                <button class="modal-close" onclick="closeLoginModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" id="login-email" placeholder="name@example.com" style="width: 100%;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">验证码</label>
+                    <input type="text" class="form-input" id="login-code" placeholder="任意验证码（MVP 模式）" style="width: 100%;">
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">
+                    MVP 版本：任意邮箱 + 任意验证码均可登录
+                </p>
+            </div>
+            <div class="modal-footer">
+                <div class="login-btn-group">
+                    <button class="btn btn-secondary" onclick="closeLoginModal()">取消</button>
+                    <button class="btn btn-primary" onclick="doLogin()">登录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast 容器 -->
     <div class="toast-container" id="toast-container"></div>
 
     <script>
         // API 基础 URL
         const API_BASE = '/api';
+
+        // 认证状态
+        let currentUser = null;
+        let authToken = localStorage.getItem('auth_token');
 
         // 状态映射
         const STATUS_MAP = {
@@ -598,6 +881,175 @@
             'warning': { label: '警告', class: 'badge-danger' },
             'unknown': { label: '未知', class: 'badge-secondary' }
         };
+
+        // 认证请求封装
+        async function authFetch(url, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const res = await fetch(url, { ...options, headers });
+
+            if (res.status === 401) {
+                // Token 失效，跳转到登录
+                logout();
+                showLoginModal();
+                throw new Error('请先登录');
+            }
+
+            return res;
+        }
+
+        // 用户菜单下拉
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('active');
+            event.stopPropagation();
+        }
+
+        // 点击其他地方关闭下拉
+        document.addEventListener('click', () => {
+            document.getElementById('user-dropdown').classList.remove('active');
+        });
+
+        // 更新用户界面
+        function updateUserUI(user) {
+            const avatar = document.getElementById('user-avatar');
+            const name = document.getElementById('user-name');
+            const role = document.getElementById('user-role');
+            const email = document.getElementById('dropdown-email');
+
+            if (user) {
+                avatar.textContent = user.name.charAt(0).toUpperCase();
+                name.textContent = user.name;
+                role.textContent = getRoleLabel(user.role);
+                email.textContent = user.email;
+
+                // 保存登录状态
+                currentUser = user;
+                localStorage.setItem('current_user', JSON.stringify(user));
+            } else {
+                avatar.textContent = 'U';
+                name.textContent = '未登录';
+                role.textContent = '';
+                email.textContent = '';
+                currentUser = null;
+                localStorage.removeItem('current_user');
+            }
+        }
+
+        function getRoleLabel(role) {
+            const labels = {
+                'engineer': '工程师',
+                'security': '安全评审',
+                'legal': '法务审批',
+                'admin': '管理员'
+            };
+            return labels[role] || role;
+        }
+
+        // 登录相关
+        function showLoginModal() {
+            document.getElementById('login-modal-overlay').classList.add('active');
+            document.getElementById('login-email').focus();
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal-overlay').classList.remove('active');
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('login-email').value;
+            const code = document.getElementById('login-code').value;
+
+            if (!email) {
+                showToast('请输入邮箱', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || '登录失败');
+                }
+
+                const data = await res.json();
+                authToken = data.access_token;
+                localStorage.setItem('auth_token', authToken);
+
+                // 获取用户信息
+                await fetchCurrentUser();
+
+                closeLoginModal();
+                showToast('登录成功', 'success');
+            } catch (error) {
+                showToast('登录失败：' + error.message, 'error');
+            }
+        }
+
+        async function fetchCurrentUser() {
+            try {
+                const res = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (res.ok) {
+                    const user = await res.json();
+                    updateUserUI(user);
+                    return user;
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+            return null;
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('auth_token');
+            updateUserUI(null);
+            showToast('已退出登录', 'info');
+        }
+
+        // 快速切换用户
+        async function switchUser(email) {
+            document.getElementById('login-email').value = email;
+            document.getElementById('login-code').value = '123456';
+            await doLogin();
+        }
+
+        // 检查登录状态
+        async function checkAuth() {
+            // 先尝试恢复保存的用户
+            const savedUser = localStorage.getItem('current_user');
+            if (savedUser && authToken) {
+                try {
+                    const user = await fetchCurrentUser();
+                    if (!user) {
+                        // Token 失效，清除状态
+                        logout();
+                        showLoginModal();
+                    }
+                } catch (e) {
+                    logout();
+                    showLoginModal();
+                }
+            } else if (!authToken) {
+                // 未登录，显示登录框
+                showLoginModal();
+            }
+        }
 
         // 页面导航
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -632,8 +1084,8 @@
         async function loadDashboard() {
             try {
                 const [statsRes, todoRes] = await Promise.all([
-                    fetch(`${API_BASE}/dashboard/stats`),
-                    fetch(`${API_BASE}/dashboard/todo`)
+                    authFetch(`${API_BASE}/dashboard/stats`),
+                    authFetch(`${API_BASE}/dashboard/todo`)
                 ]);
 
                 const stats = await statsRes.json();
@@ -701,7 +1153,7 @@
             if (system) url += `&system_name=${encodeURIComponent(system)}`;
 
             try {
-                const res = await fetch(url);
+                const res = await authFetch(url);
                 const records = await res.json();
                 renderRecordsTable(records);
             } catch (error) {
@@ -742,7 +1194,7 @@
             if (search) url += `&search=${encodeURIComponent(search)}`;
 
             try {
-                const res = await fetch(url);
+                const res = await authFetch(url);
                 const components = await res.json();
                 renderComponentsTable(components);
             } catch (error) {
@@ -799,7 +1251,7 @@
             try {
                 showToast('正在导入报告...', 'info');
 
-                const res = await fetch(`${API_BASE}/components/blackduck`, {
+                const res = await authFetch(`${API_BASE}/components/blackduck`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ report_id: reportId, system_name: systemName })
@@ -813,7 +1265,7 @@
                 // 创建合规记录
                 if (components.length > 0) {
                     for (const comp of components) {
-                        await fetch(`${API_BASE}/compliance-records`, {
+                        await authFetch(`${API_BASE}/compliance-records`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -846,7 +1298,7 @@
             if (!confirm('确认提交审批？')) return;
 
             try {
-                const res = await fetch(`${API_BASE}/compliance-records/${id}/submit`, {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/submit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -863,7 +1315,7 @@
             if (!confirm('确认通过安全校验？')) return;
 
             try {
-                const res = await fetch(`${API_BASE}/compliance-records/${id}/approve`, {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/approve`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -881,7 +1333,7 @@
             if (comments === null) return;
 
             try {
-                const res = await fetch(`${API_BASE}/compliance-records/${id}/approve`, {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/approve`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ comments: comments || null })
@@ -902,7 +1354,7 @@
             }
 
             try {
-                const res = await fetch(`${API_BASE}/compliance-records/${id}/reject`, {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/reject`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ comments: comments })
@@ -929,8 +1381,9 @@
         }
 
         // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDashboard();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查登录状态
+            await checkAuth();
 
             // 处理 hash 路由
             const hash = window.location.hash.slice(1) || 'dashboard';
@@ -940,7 +1393,7 @@
         });
 
         // 强制刷新缓存版本
-        const APP_VERSION = '1.0.1';
+        const APP_VERSION = '1.1.0';
         console.log('App version:', APP_VERSION);
     </script>
 </body>
