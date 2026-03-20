@@ -272,4 +272,4 @@ docker-compose restart app
 
 ---
 
-Last updated: 2026-03-20
+Last updated: 2026-03-20 - Frontend now includes authentication UI with role-based access

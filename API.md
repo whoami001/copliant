@@ -373,4 +373,4 @@ with httpx.Client() as client:
 
 ---
 
-Last updated: 2026-03-20
+Last updated: 2026-03-20 - Added frontend authentication UI, comprehensive test coverage (196 tests)
