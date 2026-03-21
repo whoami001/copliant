@@ -920,6 +920,368 @@
             padding: var(--spacing-xs) var(--spacing-sm);
             font-size: 12px;
         }
+
+        /* 批量编辑表格样式 */
+        .modal-lg {
+            max-width: 1400px;
+            width: 98%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-lg .modal-header {
+            flex-shrink: 0;
+        }
+
+        .modal-lg .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .modal-lg .modal-footer {
+            flex-shrink: 0;
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border);
+            margin-top: var(--spacing-md);
+        }
+
+        .batch-edit-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+            flex-wrap: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 var(--spacing-sm);
+        }
+
+        .toolbar-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .batch-summary {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .batch-edit-table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+        }
+
+        .batch-edit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            table-layout: auto;
+        }
+
+        .batch-edit-table thead {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 1;
+        }
+
+        .batch-edit-table th {
+            padding: var(--spacing-sm) var(--spacing-md);
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .batch-edit-table td {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .batch-edit-table tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .batch-edit-table tbody tr.selected {
+            background: var(--primary-light);
+        }
+
+        .col-select {
+            width: 25px;
+            text-align: center;
+        }
+
+        .col-index {
+            width: 40px;
+            min-width: 40px;
+            text-align: center;
+            font-family: monospace;
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .col-name {
+            font-weight: 500;
+            max-width: 150px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-version {
+            font-family: monospace;
+            color: var(--text-secondary);
+            font-size: 11px;
+            padding: 2px 4px !important;
+            max-width: 80px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-license {
+            font-size: 11px;
+            padding: 2px 4px !important;
+            max-width: 100px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-license-name {
+            width: 100px;
+            min-width: 100px;
+            font-size: 11px;
+            font-family: monospace;
+            color: var(--text-secondary);
+            padding: 2px 4px !important;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-url-source {
+            width: 120px;
+            min-width: 120px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 2px 4px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .col-license-info {
+            width: 120px;
+            min-width: 120px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 2px 4px !important;
+            max-width: 120px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-license-text {
+            width: 120px;
+            min-width: 120px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 2px 4px !important;
+            max-width: 120px;
+            word-break: break-all;
+            white-space: normal;
+            line-height: 1.3;
+        }
+
+        .col-purpose {
+            min-width: 150px;
+        }
+
+        .col-usage {
+            white-space: nowrap;
+        }
+
+        .col-modified {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .col-source {
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .editable-cell {
+            width: 100%;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .editable-cell:hover {
+            border-color: var(--border);
+            background: var(--surface);
+        }
+
+        .editable-cell:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .editable-cell textarea {
+            width: 100%;
+            min-height: 60px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .editable-cell select {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .ai-fill-btn {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 12px;
+            background: var(--surface);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .ai-fill-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .batch-edit-hint {
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .batch-edit-hint ul {
+            margin-left: var(--spacing-lg);
+            margin-top: var(--spacing-sm);
+        }
+
+        .batch-edit-hint li {
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .batch-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+        }
+
+        .pagination-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .page-size-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .page-size-select {
+            width: 100px;
+            padding: 4px 8px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            cursor: pointer;
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: var(--bg);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -1232,7 +1594,10 @@
 
                     <div class="form-group">
                         <label class="form-label required" for="decl-purpose">使用目的</label>
-                        <textarea class="form-textarea" id="decl-purpose" placeholder="简述 OSS 组件在项目中的功能，例如：'用于实现用户数据格式化功能，提供一致的输出格式'" rows="4"></textarea>
+                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                            <textarea class="form-textarea" id="decl-purpose" placeholder="简述 OSS 组件在项目中的功能，例如：'用于实现用户数据格式化功能，提供一致的输出格式'" rows="4" style="flex: 1;"></textarea>
+                            <button class="btn btn-sm btn-secondary" onclick="copyPurposeField()" title="复制使用目的" style="align-self: flex-start; padding: 8px 12px;">📋</button>
+                        </div>
                         <span class="form-hint">最多 500 字符</span>
                     </div>
 
@@ -1344,7 +1709,7 @@
 
     <!-- SPDX 批量导入模态框 -->
     <div class="modal-overlay" id="spdx-import-modal-overlay">
-        <div class="modal">
+        <div class="modal modal-lg">
             <div class="modal-header">
                 <h3 class="modal-title">批量导入组件</h3>
                 <button class="modal-close" onclick="closeSpdxImportModal()">
@@ -1354,25 +1719,99 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label required" for="import-system-name">系统名称</label>
-                    <input type="text" class="form-input" id="import-system-name" placeholder="例如：订单管理系统">
-                </div>
-                <div class="form-group">
-                    <label class="form-label required" for="spdx-file">SPDX 文件</label>
-                    <input type="file" class="form-file" id="spdx-file" accept=".spdx,.spdx.json,application/json">
-                    <span class="form-hint">支持 SPDX JSON 和 tag-value 格式</span>
-                </div>
-                <div id="import-progress" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                <!-- Step 1: 文件选择 -->
+                <div id="import-step-1">
+                    <div class="form-group">
+                        <label class="form-label required" for="import-system-name">系统名称</label>
+                        <input type="text" class="form-input" id="import-system-name" placeholder="例如：订单管理系统">
                     </div>
-                    <p class="progress-text" id="progress-text">正在解析 SPDX 文件...</p>
+                    <div class="form-group">
+                        <label class="form-label required" for="spdx-file">SPDX 文件</label>
+                        <input type="file" class="form-file" id="spdx-file" accept=".spdx,.spdx.json,application/json">
+                        <span class="form-hint">支持 SPDX JSON 和 tag-value 格式</span>
+                    </div>
+                    <div id="import-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <p class="progress-text" id="progress-text">正在解析 SPDX 文件...</p>
+                    </div>
+                </div>
+
+                <!-- Step 2: 批量编辑 -->
+                <div id="import-step-2" style="display: none; flex-direction: column; height: calc(100vh - 200px);">
+                    <div class="batch-edit-toolbar">
+                        <div class="toolbar-left">
+                            <button class="btn btn-sm btn-secondary" onclick="selectAllBatchItems()">全选</button>
+                            <button class="btn btn-sm btn-secondary" onclick="deselectAllBatchItems()">取消全选</button>
+                            <div class="toolbar-divider"></div>
+                            <label class="toolbar-label">批量设置使用方式：</label>
+                            <select class="form-select form-select-sm" id="batch-usage-type" onchange="applyBatchUsageType(this.value)">
+                                <option value="">请选择...</option>
+                                <option value="standalone">独立可执行程序</option>
+                                <option value="dynamically_linked">动态链接库</option>
+                                <option value="statically_linked">静态链接库</option>
+                                <option value="browser_code">浏览器代码</option>
+                                <option value="other">其他</option>
+                            </select>
+                            <div class="toolbar-divider"></div>
+                            <button class="btn btn-sm btn-secondary" onclick="fillAllPurposeWithAI()" title="AI 批量生成使用目的">✨ AI 批量填充使用目的</button>
+                        </div>
+                        <div class="toolbar-right">
+                            <span class="batch-summary" id="batch-summary">已选择 0 / 共 0 项</span>
+                        </div>
+                    </div>
+                    <div class="batch-edit-table-container">
+                        <table class="batch-edit-table" id="batch-edit-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-select"><input type="checkbox" id="batch-select-all" onchange="toggleBatchSelectAll()"></th>
+                                    <th class="col-index">#</th>
+                                    <th class="col-name">组件名称</th>
+                                    <th class="col-version">版本</th>
+                                    <th class="col-license-name">许可证 (SPDX)</th>
+                                    <th class="col-url-source">下载 URL</th>
+                                    <th class="col-license-info">许可证说明 URL</th>
+                                    <th class="col-license-text">许可证全文 URL</th>
+                                    <th class="col-purpose">使用目的</th>
+                                    <th class="col-usage">使用方式</th>
+                                    <th class="col-modified">是否修改</th>
+                                    <th class="col-source">来源</th>
+                                </tr>
+                            </thead>
+                            <tbody id="batch-edit-tbody">
+                                <!-- 动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="batch-pagination" id="batch-pagination">
+                        <div class="pagination-left">
+                            <label class="page-size-label">每页显示：</label>
+                            <select class="form-select form-select-sm page-size-select" id="page-size-select" onchange="changePageSize(this.value)">
+                                <option value="100">100</option>
+                                <option value="200" selected>200</option>
+                                <option value="500">500</option>
+                                <option value="1000">1000</option>
+                                <option value="all">全部</option>
+                            </select>
+                        </div>
+                        <span class="pagination-info" id="pagination-info">第 1-10 项，共 0 项</span>
+                        <div class="pagination-controls">
+                            <button class="btn btn-sm btn-secondary" id="prev-page-btn" onclick="changePage(-1)" disabled>上一页</button>
+                            <span class="page-numbers" id="page-numbers"></span>
+                            <button class="btn btn-sm btn-secondary" id="next-page-btn" onclick="changePage(1)" disabled>下一页</button>
+                        </div>
+                    </div>
+                    <div class="batch-edit-hint">
+                        <p>💡 提示：点击单元格即可编辑 | <span class="badge badge-success">历史</span> 表示复用已审批的声明 | <span class="badge badge-secondary">SPDX</span> 表示从 SPDX 文件解析 | 使用 AI 按钮可自动生成使用目的</p>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeSpdxImportModal()">取消</button>
-                <button class="btn btn-primary" onclick="doSpdxImport()" id="import-submit-btn">导入</button>
+                <button class="btn btn-secondary" onclick="backToStep1()" id="import-back-btn" style="display: none;">上一步</button>
+                <button class="btn btn-primary" onclick="previewSpdxImport()" id="import-preview-btn">预览</button>
+                <button class="btn btn-primary" onclick="submitBatchEdit()" id="import-submit-btn" style="display: none;">提交导入</button>
             </div>
             <div id="import-result" style="display: none; margin-top: 16px;">
                 <div class="result-summary">
@@ -1826,13 +2265,21 @@
                     <td><span class="badge ${STATUS_MAP[record.status]?.class || 'badge-secondary'}">${STATUS_MAP[record.status]?.label || record.status}</span></td>
                     <td>${new Date(record.created_at).toLocaleDateString('zh-CN')}</td>
                     <td>
-                        <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
-                        ${record.status === 'draft' ? `
-                            <button class="btn btn-primary engineer-only" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
-                            <button class="btn btn-secondary engineer-only" onclick="submitRecord(${record.id})">提交</button>
-                        ` : ''}
-                        ${record.status === 'pending_security' ? `<button class="btn btn-primary security-only" onclick="securityApprove(${record.id})">通过</button>` : ''}
-                        ${record.status === 'pending_legal' ? `<button class="btn btn-success legal-only" onclick="legalApprove(${record.id})">批准</button><button class="btn btn-danger legal-only" onclick="legalReject(${record.id})">驳回</button>` : ''}
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
+                            ${record.status !== 'draft' ? `
+                                <button class="btn btn-secondary" onclick="viewDeclaration(${record.id})">查看声明</button>
+                            ` : ''}
+                            ${record.status === 'draft' ? `
+                                <button class="btn btn-primary engineer-only" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
+                                <button class="btn btn-secondary engineer-only" onclick="submitRecord(${record.id})">提交</button>
+                            ` : ''}
+                            ${record.status === 'pending_security' ? `<button class="btn btn-primary security-only" onclick="securityApprove(${record.id})">通过</button>` : ''}
+                            ${record.status === 'pending_legal' ? `
+                                <button class="btn btn-success legal-only" onclick="legalApprove(${record.id})">批准</button>
+                                <button class="btn btn-danger legal-only" onclick="legalReject(${record.id})">驳回</button>
+                            ` : ''}
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -1942,6 +2389,110 @@
         function viewRecord(id) {
             window.open(`/api/compliance-records/${id}`, '_blank');
             // MVP 简化：直接打开 API，生产环境应该有详情页
+        }
+
+        // 查看法务声明（只读模式）
+        async function viewDeclaration(recordId) {
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/records/${recordId}/declaration`);
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        showToast('此记录尚未填写声明', 'warning');
+                    } else if (res.status === 403) {
+                        showToast('权限不足，无法查看此声明', 'error');
+                    } else {
+                        showToast('加载声明失败', 'error');
+                    }
+                    return;
+                }
+
+                const decl = await res.json();
+                populateDeclarationModalReadonly(decl, recordId);
+
+                // 显示模态框
+                document.getElementById('declaration-modal-overlay').classList.add('active');
+            } catch (error) {
+                showToast('加载声明失败：' + error.message, 'error');
+            }
+        }
+
+        // 填充只读模态框
+        function populateDeclarationModalReadonly(decl, recordId) {
+            // 设置模态框为只读模式
+            const modalTitle = document.querySelector('#declaration-modal-overlay .modal-title');
+            modalTitle.textContent = '法务声明详情（只读）';
+
+            // 填充组件信息
+            document.getElementById('decl-component-name').textContent = decl.component?.name || '-';
+            document.getElementById('decl-component-version').textContent = decl.component?.version || '-';
+            document.getElementById('decl-component-license').textContent = decl.component?.license || '-';
+
+            // 填充表单字段（只读）
+            const fields = [
+                { id: 'decl-purpose', value: decl.purpose_of_use || '-' },
+                { id: 'decl-usage-type', value: decl.usage_type || '-' },
+                { id: 'decl-license-name', value: decl.license_name || '-' },
+                { id: 'decl-url-source', value: decl.url_to_source || '-', isLink: true },
+                { id: 'decl-license-info', value: decl.license_info_url || '-', isLink: true },
+                { id: 'decl-license-text', value: decl.license_text_url || '-', isLink: true },
+            ];
+
+            fields.forEach(field => {
+                const el = document.getElementById(field.id);
+                if (field.isLink && field.value && field.value !== '-') {
+                    // 保存原始值到 data 属性（用于恢复）
+                    el.setAttribute('data-original-value', field.value);
+                    el.setAttribute('data-original-placeholder', el.placeholder || '');
+
+                    // 可点击的链接
+                    const linkId = `link-${field.id}`;
+                    const btnId = `btn-${field.id}`;
+                    el.parentElement.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <a id="${linkId}" href="${escapeHtml(field.value)}" target="_blank" rel="noopener noreferrer"
+                               style="color: var(--primary); text-decoration: underline; word-break: break-all; flex: 1;">
+                                ${escapeHtml(field.value)}
+                            </a>
+                            <button id="${btnId}" class="btn btn-sm btn-secondary"
+                                    title="复制链接" style="padding: 2px 6px; font-size: 12px;">📋</button>
+                        </div>
+                    `;
+
+                    // 使用 addEventListener 绑定复制功能（避免 XSS 风险）
+                    document.getElementById(btnId).addEventListener('click', () => {
+                        copyToClipboard(field.value);
+                    });
+                } else {
+                    el.value = field.value;
+                    el.disabled = true;
+                    el.style.background = 'var(--bg)';
+                    el.style.cursor = 'default';
+                }
+            });
+
+            // 设置是否修改（只读显示）
+            const isModified = decl.is_modified || 'no';
+            const modifiedRadios = document.querySelectorAll('input[name="decl-is-modified"]');
+            modifiedRadios.forEach(radio => {
+                radio.disabled = true;
+                radio.parentElement.style.color = radio.value === isModified ? 'var(--text-primary)' : 'var(--text-secondary)';
+                radio.parentElement.style.fontWeight = radio.value === isModified ? '600' : 'normal';
+            });
+
+            // 隐藏步骤指示器和导航按钮，显示复制按钮组
+            document.querySelector('.step-indicator').style.display = 'none';
+            document.querySelector('#declaration-modal-overlay .modal-footer .step-buttons').style.display = 'none';
+
+            // 显示"关闭"按钮（替换"取消"按钮）
+            const cancelBtn = document.querySelector('#declaration-modal-overlay .modal-footer .btn-secondary');
+            cancelBtn.textContent = '关闭';
+            cancelBtn.onclick = closeDeclarationModal;
+
+            // 隐藏历史复用提醒（只读模式不需要）
+            document.getElementById('history-reminder').style.display = 'none';
+
+            // 存储声明 ID 用于关闭时重置
+            window.currentViewDeclarationId = decl.id;
         }
 
         async function submitRecord(id) {
@@ -2071,7 +2622,78 @@
 
         // 关闭声明表单模态框
         function closeDeclarationModal() {
+            // 重置模态框状态（从只读查看模式恢复）
+            if (window.currentViewDeclarationId) {
+                const modalTitle = document.querySelector('#declaration-modal-overlay .modal-title');
+                modalTitle.textContent = '法务声明表单';
+
+                // 恢复步骤指示器和导航按钮
+                document.querySelector('.step-indicator').style.display = 'flex';
+                document.querySelector('#declaration-modal-overlay .modal-footer .step-buttons').style.display = 'flex';
+
+                // 恢复"取消"按钮
+                const cancelBtn = document.querySelector('#declaration-modal-overlay .modal-footer .btn-secondary');
+                cancelBtn.textContent = '取消';
+                cancelBtn.onclick = closeDeclarationModal;
+
+                // 恢复历史复用提醒
+                document.getElementById('history-reminder').style.display = 'block';
+
+                // 恢复 URL 字段（从 data 属性还原为 input）
+                const urlFields = [
+                    { id: 'decl-url-source', placeholder: 'https://example.com/repo' },
+                    { id: 'decl-license-info', placeholder: 'https://example.com/license' },
+                    { id: 'decl-license-text', placeholder: 'https://example.com/license-text' },
+                ];
+                urlFields.forEach(field => {
+                    const el = document.getElementById(field.id);
+                    const originalValue = el.getAttribute('data-original-value');
+                    const originalPlaceholder = el.getAttribute('data-original-placeholder');
+                    if (originalValue) {
+                        el.value = originalValue;
+                        el.placeholder = originalPlaceholder || field.placeholder;
+                        el.disabled = false;
+                        el.style.background = '';
+                        el.style.cursor = '';
+                        el.removeAttribute('data-original-value');
+                        el.removeAttribute('data-original-placeholder');
+                    }
+                });
+
+                // 清除只读标记
+                window.currentViewDeclarationId = null;
+            }
+
             document.getElementById('declaration-modal-overlay').classList.remove('active');
+        }
+
+        // 复制使用目的字段
+        function copyPurposeField() {
+            const purpose = document.getElementById('decl-purpose').value;
+            if (!purpose) {
+                showToast('使用目的为空，无法复制', 'warning');
+                return;
+            }
+            copyToClipboard(purpose);
+        }
+
+        // 复制到剪贴板
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('已复制到剪贴板', 'success');
+            } catch (error) {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('已复制到剪贴板', 'success');
+            }
         }
 
         // 加载现有声明
@@ -2306,9 +2928,487 @@
         // 关闭 SPDX 导入模态框
         function closeSpdxImportModal() {
             document.getElementById('spdx-import-modal-overlay').classList.remove('active');
+            // 重置状态
+            document.getElementById('import-step-1').style.display = '';
+            document.getElementById('import-step-2').style.display = 'none';
+            document.getElementById('import-back-btn').style.display = 'none';
+            document.getElementById('import-preview-btn').style.display = '';
+            document.getElementById('import-submit-btn').style.display = 'none';
+            document.getElementById('import-progress').style.display = 'none';
+            document.getElementById('import-result').style.display = 'none';
         }
 
-        // 执行 SPDX 导入
+        // 返回第一步
+        function backToStep1() {
+            document.getElementById('import-step-1').style.display = '';
+            document.getElementById('import-step-2').style.display = 'none';
+            document.getElementById('import-back-btn').style.display = 'none';
+            document.getElementById('import-preview-btn').style.display = '';
+            document.getElementById('import-submit-btn').style.display = 'none';
+            // 重置分页
+            window.currentPage = 1;
+            window.totalPages = 0;
+            window.batchImportData = null;
+        }
+
+        // 预览 SPDX 导入（调用预览接口获取预填充数据）
+        async function previewSpdxImport() {
+            const systemName = document.getElementById('import-system-name').value.trim();
+            const fileInput = document.getElementById('spdx-file');
+            const file = fileInput.files[0];
+
+            if (!systemName) {
+                showToast('请填写系统名称', 'warning');
+                return;
+            }
+            if (!file) {
+                showToast('请选择 SPDX 文件', 'warning');
+                return;
+            }
+
+            // 显示进度
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('progress-fill').style.width = '30%';
+            document.getElementById('progress-text').textContent = '正在解析 SPDX 文件...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/bulk-import/preview?system_name=${encodeURIComponent(systemName)}`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const contentType = res.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await res.text();
+                    console.error('非 JSON 响应:', text.substring(0, 500));
+                    throw new Error('服务器返回了非 JSON 响应，请检查日志');
+                }
+
+                const result = await res.json();
+                if (!res.ok) {
+                    const errorMsg = result.detail || result.message || '预览失败';
+                    throw new Error(errorMsg);
+                }
+
+                document.getElementById('progress-fill').style.width = '100%';
+                document.getElementById('progress-text').textContent = `解析完成！共 ${result.items.length} 个组件`;
+
+                // 存储预填充数据
+                window.batchImportData = result.items;
+                window.systemName = systemName;
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = Math.ceil(result.items.length / window.pageSize);
+
+                // 设置下拉框初始值
+                document.getElementById('page-size-select').value = '200';
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(result.items);
+
+                // 渲染分页
+                renderPagination(result.items.length);
+
+                // 切换到第二步
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = '';
+                document.getElementById('import-preview-btn').style.display = 'none';
+                document.getElementById('import-submit-btn').style.display = '';
+                document.getElementById('import-progress').style.display = 'none';
+
+            } catch (error) {
+                document.getElementById('import-progress').style.display = 'none';
+                showToast('预览失败：' + error.message, 'error');
+            }
+        }
+
+        // 渲染批量编辑表格
+        function renderBatchEditTable(items) {
+            const tbody = document.getElementById('batch-edit-tbody');
+            const usageTypeOptions = [
+                { value: 'standalone', label: '独立可执行程序' },
+                { value: 'dynamically_linked', label: '动态链接库' },
+                { value: 'statically_linked', label: '静态链接库' },
+                { value: 'browser_code', label: '浏览器代码' },
+                { value: 'other', label: '其他' }
+            ];
+
+            // 计算当前页的数据
+            const startIndex = (window.currentPage - 1) * window.pageSize;
+            const endIndex = Math.min(startIndex + window.pageSize, items.length);
+            const pageItems = items.slice(startIndex, endIndex);
+
+            tbody.innerHTML = pageItems.map((item, index) => {
+                const globalIndex = startIndex + index; // 全局索引
+                return `
+                <tr data-index="${globalIndex}">
+                    <td class="col-select">
+                        <input type="checkbox" class="batch-item-checkbox" data-index="${globalIndex}" checked>
+                    </td>
+                    <td class="col-index">${globalIndex + 1}</td>
+                    <td class="col-name">${escapeHtml(item.component_name)}</td>
+                    <td class="col-version">${escapeHtml(item.component_version)}</td>
+                    <td class="col-license-name">${escapeHtml(item.license_name || '')}</td>
+                    <td class="col-url-source" title="${escapeHtml(item.url_to_source || '')}">${escapeHtml(item.url_to_source) || '-'}</td>
+                    <td class="col-license-info">
+                        <textarea class="editable-cell" id="license-info-${globalIndex}" placeholder="填写许可证说明 URL...">${escapeHtml(item.license_info_url || '')}</textarea>
+                    </td>
+                    <td class="col-license-text">
+                        <textarea class="editable-cell" id="license-text-${globalIndex}" placeholder="填写许可证全文 URL...">${escapeHtml(item.license_text_url || '')}</textarea>
+                    </td>
+                    <td class="col-purpose">
+                        <textarea class="editable-cell" id="purpose-${globalIndex}" placeholder="填写使用目的...">${escapeHtml(item.purpose_of_use || '')}</textarea>
+                    </td>
+                    <td class="col-usage">
+                        <select class="editable-cell" id="usage-${globalIndex}">
+                            <option value="">请选择...</option>
+                            ${usageTypeOptions.map(opt => `<option value="${opt.value}" ${item.usage_type === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="col-modified">
+                        <select class="editable-cell" id="modified-${globalIndex}">
+                            <option value="no" ${item.is_modified === 'no' ? 'selected' : ''}>否</option>
+                            <option value="yes" ${item.is_modified === 'yes' ? 'selected' : ''}>是</option>
+                        </select>
+                    </td>
+                    <td class="col-source">
+                        <span class="badge ${item.source === 'history' ? 'badge-success' : 'badge-secondary'}">
+                            ${item.source === 'history' ? '历史' : 'SPDX'}
+                        </span>
+                    </td>
+                </tr>
+            `}).join('');
+
+            updateBatchSummary();
+        }
+
+        // 渲染分页
+        function renderPagination(totalItems) {
+            const pageInfo = document.getElementById('pagination-info');
+            const pageNumbers = document.getElementById('page-numbers');
+            const prevBtn = document.getElementById('prev-page-btn');
+            const nextBtn = document.getElementById('next-page-btn');
+
+            const startIndex = (window.currentPage - 1) * window.pageSize + 1;
+            const endIndex = Math.min(window.currentPage * window.pageSize, totalItems);
+            pageInfo.textContent = `第 ${startIndex}-${endIndex} 项，共 ${totalItems} 项`;
+
+            // 上一页/下一页按钮状态
+            prevBtn.disabled = window.currentPage === 1;
+            nextBtn.disabled = window.currentPage === window.totalPages;
+
+            // 生成页码按钮
+            let buttons = [];
+            const maxVisible = 5;
+            let startPage = Math.max(1, window.currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(window.totalPages, startPage + maxVisible - 1);
+
+            // 调整起始页，确保始终显示 maxVisible 个按钮（如果总页数允许）
+            if (endPage - startPage + 1 < maxVisible && window.totalPages >= maxVisible) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                buttons.push(`<button class="page-btn ${i === window.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`);
+            }
+            pageNumbers.innerHTML = buttons.join('');
+        }
+
+        // 翻页
+        function changePage(delta) {
+            const newPage = window.currentPage + delta;
+            if (newPage >= 1 && newPage <= window.totalPages) {
+                goToPage(newPage);
+            }
+        }
+
+        // 跳转到指定页
+        function goToPage(page) {
+            window.currentPage = page;
+            renderBatchEditTable(window.batchImportData);
+            renderPagination(window.batchImportData.length);
+        }
+
+        // 切换每页显示数量
+        function changePageSize(size) {
+            if (size === 'all') {
+                window.pageSize = window.batchImportData ? window.batchImportData.length : 999999;
+            } else {
+                window.pageSize = parseInt(size, 10);
+            }
+            window.totalPages = Math.ceil(window.batchImportData.length / window.pageSize);
+            window.currentPage = 1; // 重置到第一页
+            renderBatchEditTable(window.batchImportData);
+            renderPagination(window.batchImportData.length);
+        }
+
+        // 切换全选
+        function toggleBatchSelectAll() {
+            const checkbox = document.getElementById('batch-select-all');
+            const checked = checkbox.checked;
+            document.querySelectorAll('.batch-item-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateBatchSummary();
+        }
+
+        // 全选
+        function selectAllBatchItems() {
+            document.querySelectorAll('.batch-item-checkbox').forEach(cb => cb.checked = true);
+            updateBatchSummary();
+        }
+
+        // 取消全选
+        function deselectAllBatchItems() {
+            document.querySelectorAll('.batch-item-checkbox').forEach(cb => cb.checked = false);
+            updateBatchSummary();
+        }
+
+        // 更新批量摘要
+        function updateBatchSummary() {
+            const checkboxes = document.querySelectorAll('.batch-item-checkbox');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            document.getElementById('batch-summary').textContent = `已选择 ${checkedCount} / 共 ${checkboxes.length} 项`;
+        }
+
+        // 批量设置使用方式
+        function applyBatchUsageType(usageType) {
+            if (!usageType) return;
+            const checkedIndices = Array.from(document.querySelectorAll('.batch-item-checkbox:checked')).map(cb => cb.dataset.index);
+            checkedIndices.forEach(index => {
+                const select = document.getElementById(`usage-${index}`);
+                if (select) {
+                    select.value = usageType;
+                }
+            });
+            document.getElementById('batch-usage-type').value = '';
+            showToast(`已为 ${checkedIndices.length} 个组件设置使用方式`, 'success');
+        }
+
+        // AI 填充使用目的
+        async function fillPurposeWithAI(index) {
+            const item = window.batchImportData[index];
+            if (!item) return;
+
+            const textarea = document.getElementById(`purpose-${index}`);
+            const suggestion = generatePurposeSuggestion(item.component_name, item.component_version, item.license_name);
+            textarea.value = suggestion;
+            showToast('AI 建议已生成，请根据实际情况调整', 'success');
+        }
+
+        // 批量 AI 填充使用目的
+        function fillAllPurposeWithAI() {
+            const items = window.batchImportData;
+            if (!items || items.length === 0) {
+                showToast('没有可填充的数据', 'warning');
+                return;
+            }
+
+            let count = 0;
+            items.forEach((item, index) => {
+                const textarea = document.getElementById(`purpose-${index}`);
+                if (textarea && !textarea.value.trim()) {
+                    textarea.value = generatePurposeSuggestion(item.component_name, item.component_version, item.license_name);
+                    count++;
+                }
+            });
+
+            showToast(`已为 ${count} 个组件生成 AI 建议`, 'success');
+        }
+
+        // 本地 AI 建议生成（基于组件名称模板）
+        function generatePurposeSuggestion(componentName, componentVersion, licenseName) {
+            const nameLower = componentName.toLowerCase();
+            const purposeTemplates = {
+                'react': '用于构建用户界面的 JavaScript 库',
+                'vue': '用于构建用户界面的渐进式 JavaScript 框架',
+                'angular': '用于构建 Web 应用的 TypeScript 框架',
+                'express': '用于构建 Web 服务器和 API 的 Node.js 框架',
+                'axios': '用于发送 HTTP 请求的 JavaScript 客户端',
+                'lodash': '提供实用函数的 JavaScript 工具库',
+                'typescript': 'JavaScript 的超集，编译为纯 JavaScript',
+                'webpack': 'JavaScript 应用的模块打包工具',
+                'babel': 'JavaScript 编译器，用于将新语法转换为兼容版本',
+                'eslint': 'JavaScript 代码静态分析工具',
+                'prettier': '代码格式化工具',
+                'jest': 'JavaScript 测试框架',
+                'mocha': 'JavaScript 测试运行器',
+                'chai': 'JavaScript 断言库',
+                'moment': '日期处理库',
+                'dayjs': '轻量级日期处理库',
+                'underscore': 'JavaScript 工具库',
+            };
+
+            for (const [key, purpose] of Object.entries(purposeTemplates)) {
+                if (key in nameLower) {
+                    return `${purpose}。${licenseName} 许可证。`;
+                }
+            }
+
+            return `用于项目功能实现的第三方组件。${licenseName} 许可证。`;
+        }
+
+        // 提交批量编辑
+        async function submitBatchEdit() {
+            const items = window.batchImportData;
+            const systemName = window.systemName;
+
+            if (!items || items.length === 0) {
+                showToast('没有可提交的数据', 'warning');
+                return;
+            }
+
+            // 收集选中的项目数据
+            const selectedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                if (checkbox && checkbox.checked) {
+                    const purpose = document.getElementById(`purpose-${i}`).value.trim();
+                    const usageType = document.getElementById(`usage-${i}`).value;
+                    const isModified = document.getElementById(`modified-${i}`).value;
+
+                    if (!purpose) {
+                        showToast(`请填写第 ${i + 1} 个组件的使用目的`, 'warning');
+                        return;
+                    }
+                    if (!usageType) {
+                        showToast(`请选择第 ${i + 1} 个组件的使用方式`, 'warning');
+                        return;
+                    }
+
+                    selectedItems.push({
+                        component_name: items[i].component_name,
+                        component_version: items[i].component_version,
+                        license_name: items[i].license_name,
+                        url_to_source: items[i].url_to_source || '',
+                        license_info_url: items[i].license_info_url || '',
+                        license_text_url: items[i].license_text_url || '',
+                        purpose_of_use: purpose,
+                        usage_type: usageType,
+                        is_modified: isModified,
+                    });
+                }
+            }
+
+            if (selectedItems.length === 0) {
+                showToast('请至少选择一个组件', 'warning');
+                return;
+            }
+
+            // 显示进度
+            document.getElementById('import-progress').style.display = 'block';
+            document.getElementById('progress-fill').style.width = '30%';
+            document.getElementById('progress-text').textContent = `正在导入 ${selectedItems.length} 个组件...`;
+
+            try {
+                // 批量创建声明（调用现有的 bulk-import 接口）
+                // 注意：这里需要后端支持接收预填充数据的批量导入
+                // 临时方案：逐个创建声明
+                let successCount = 0;
+                let failedCount = 0;
+
+                for (const item of selectedItems) {
+                    try {
+                        // 1. 查找或创建组件
+                        const componentRes = await authFetch(`${API_BASE}/components?name=${encodeURIComponent(item.component_name)}&version=${encodeURIComponent(item.component_version)}`);
+                        let component = await componentRes.json();
+
+                        if (!component || component.length === 0) {
+                            // 创建新组件
+                            const createRes = await authFetch(`${API_BASE}/components`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    name: item.component_name,
+                                    version: item.component_version,
+                                    license: item.license_name,
+                                })
+                            });
+                            component = await createRes.json();
+                        } else {
+                            component = component[0];
+                        }
+
+                        // 2. 创建合规记录
+                        const recordRes = await authFetch(`${API_BASE}/compliance-records`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                component_id: component.id,
+                                system_name: systemName,
+                            })
+                        });
+                        const record = await recordRes.json();
+
+                        // 3. 创建法务声明
+                        const declRes = await authFetch(`${API_BASE}/legal-declarations`, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                compliance_record_id: record.id,
+                                purpose_of_use: item.purpose_of_use,
+                                url_to_source: item.url_to_source,
+                                license_info_url: item.license_info_url,
+                                license_text_url: item.license_text_url,
+                                license_name: item.license_name,
+                                is_modified: item.is_modified,
+                                usage_type: item.usage_type,
+                            })
+                        });
+
+                        if (declRes.ok) {
+                            successCount++;
+                        } else {
+                            failedCount++;
+                        }
+
+                        // 更新进度
+                        const progress = Math.round((successCount + failedCount) / selectedItems.length * 100);
+                        document.getElementById('progress-fill').style.width = `${progress}%`;
+                        document.getElementById('progress-text').textContent = `已处理 ${successCount + failedCount}/${selectedItems.length} 个组件`;
+
+                    } catch (error) {
+                        console.error(`导入组件 ${item.component_name} 失败:`, error);
+                        failedCount++;
+                    }
+                }
+
+                document.getElementById('progress-fill').style.width = '100%';
+                document.getElementById('progress-text').textContent = '导入完成！';
+
+                // 显示结果
+                document.getElementById('import-result').style.display = 'block';
+                document.getElementById('result-success').textContent = successCount;
+                document.getElementById('result-failed').textContent = failedCount;
+
+                if (successCount > 0) {
+                    showToast(`成功导入 ${successCount} 个组件`, 'success');
+                    setTimeout(() => {
+                        closeSpdxImportModal();
+                        loadComponents();
+                    }, 1500);
+                } else {
+                    showToast('导入失败：没有成功导入任何组件', 'error');
+                }
+
+            } catch (error) {
+                document.getElementById('import-progress').style.display = 'none';
+                showToast('导入失败：' + error.message, 'error');
+            }
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 执行 SPDX 导入（保留向后兼容）
         async function doSpdxImport() {
             const systemName = document.getElementById('import-system-name').value.trim();
             const fileInput = document.getElementById('spdx-file');
@@ -2337,12 +3437,26 @@
                     body: formData,
                 });
 
+                // 检查 Content-Type，确保是 JSON 响应
+                const contentType = res.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    // 非 JSON 响应，直接读取文本
+                    const text = await res.text();
+                    console.error('非 JSON 响应:', text.substring(0, 500));
+                    throw new Error('服务器返回了非 JSON 响应，请检查日志');
+                }
+
+                // 先解析响应体，即使是错误响应
+                const result = await res.json();
+
+                if (!res.ok) {
+                    // 从服务器响应中获取具体错误消息
+                    const errorMsg = result.detail || result.message || '导入失败';
+                    throw new Error(errorMsg);
+                }
+
                 document.getElementById('progress-fill').style.width = '100%';
                 document.getElementById('progress-text').textContent = '导入完成！';
-
-                if (!res.ok) throw new Error('导入失败');
-
-                const result = await res.json();
 
                 // 显示结果
                 document.getElementById('import-result').style.display = 'block';
@@ -2360,6 +3474,7 @@
                 }
             } catch (error) {
                 document.getElementById('import-progress').style.display = 'none';
+                document.getElementById('import-result').style.display = 'none';
                 showToast('导入失败：' + error.message, 'error');
             }
         }
