@@ -1683,6 +1683,14 @@
                         </div>
                     </div>
 
+                    <!-- 审批时间线 -->
+                    <div class="form-section" id="decl-approval-timeline-container" style="display: none;">
+                        <h4 class="section-title">审批记录</h4>
+                        <div class="timeline-container" id="decl-approval-timeline" style="margin-top: 12px;">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label required" for="decl-purpose">使用目的</label>
                         <div style="display: flex; gap: 8px; align-items: flex-start;">
@@ -1790,6 +1798,7 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeDeclarationModal()">取消</button>
                 <div class="step-buttons">
+                    <button class="btn btn-sm btn-secondary" id="export-pdf-btn" onclick="exportDeclarationPDF()" style="display: none; margin-right: 8px;">📄 导出 PDF</button>
                     <button class="btn btn-secondary" id="prev-btn" onclick="prevStep()" style="display: none;">上一步</button>
                     <button class="btn btn-primary" id="next-btn" onclick="nextStep()">下一步：许可证</button>
                     <button class="btn btn-success" id="submit-btn" onclick="submitDeclaration()" style="display: none;">确认并提交审批</button>
@@ -2582,8 +2591,43 @@
             // 隐藏历史复用提醒（只读模式不需要）
             document.getElementById('history-reminder').style.display = 'none';
 
-            // 存储声明 ID 用于关闭时重置
+            // 存储声明 ID 用于关闭时重置和导出 PDF
             window.currentViewDeclarationId = decl.id;
+            currentDeclarationId = decl.id;
+
+            // 显示/隐藏导出 PDF 按钮（只有已提交的声明才能导出）
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            if (decl.current_status === 'approved' || decl.current_status === 'pending_legal' || decl.current_status === 'pending_security') {
+                exportPdfBtn.style.display = '';
+            } else {
+                exportPdfBtn.style.display = 'none';
+            }
+
+            // 显示审批时间线
+            const approvalTimelineContainer = document.getElementById('decl-approval-timeline-container');
+            if (approvalTimelineContainer && decl.approval_timeline && decl.approval_timeline.length > 0) {
+                approvalTimelineContainer.style.display = '';
+                const timelineList = document.getElementById('decl-approval-timeline');
+                timelineList.innerHTML = decl.approval_timeline.map(entry => `
+                    <div class="timeline-item" style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <div class="timeline-icon" style="width: 32px; height: 32px; border-radius: 50%; background: ${entry.status === 'approved' ? 'var(--success)' : 'var(--warning)'}; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                            ${entry.status === 'approved' ? '✓' : '○'}
+                        </div>
+                        <div class="timeline-content" style="flex: 1;">
+                            <div class="timeline-stage" style="font-weight: 600; color: var(--text-primary);">${entry.stage_name}</div>
+                            <div class="timeline-details" style="font-size: 12px; color: var(--text-secondary);">
+                                ${entry.approver_email ? '审批人：' + escapeHtml(entry.approver_email) : '待审批'}
+                                ${entry.approved_at ? ' · ' + new Date(entry.approved_at).toLocaleString('zh-CN') : ''}
+                            </div>
+                        </div>
+                        <div class="timeline-status" style="font-size: 12px; color: ${entry.status === 'approved' ? 'var(--success)' : 'var(--warning)'};">
+                            ${entry.status === 'approved' ? '已通过' : '待审批'}
+                        </div>
+                    </div>
+                `).join('');
+            } else if (approvalTimelineContainer) {
+                approvalTimelineContainer.style.display = 'none';
+            }
         }
 
         async function submitRecord(id) {
@@ -2784,6 +2828,40 @@
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
                 showToast('已复制到剪贴板', 'success');
+            }
+        }
+
+        // 导出 PDF
+        async function exportDeclarationPDF() {
+            if (!currentDeclarationId) {
+                showToast('声明 ID 不存在', 'error');
+                return;
+            }
+
+            try {
+                const res = await authFetch(`${API_BASE}/legal-declarations/${currentDeclarationId}/export-pdf`, {
+                    method: 'GET'
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({ detail: '导出失败' }));
+                    throw new Error(error.detail || '导出失败');
+                }
+
+                // 下载 PDF 文件
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `法务声明-${currentDeclarationId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showToast('PDF 导出成功', 'success');
+            } catch (error) {
+                showToast('导出失败：' + error.message, 'error');
             }
         }
 

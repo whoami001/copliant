@@ -2,6 +2,7 @@
 
 from typing import List, Optional
 from datetime import datetime
+from io import BytesIO
 
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from sqlalchemy.orm import Session
@@ -27,8 +28,10 @@ from app.schemas.legal_declaration import (
 from app.services.spdx_parser import parse_spdx_file, SpdxParseError
 from app.services.declaration_history import get_declaration_history_service
 from app.services.declaration_auto_filler import get_auto_filler_service
+from app.services.pdf_exporter import get_pdf_exporter
 from app.core.permissions import get_current_user_from_token, require_role, can
 from app.utils.logger import get_logger
+from fastapi.responses import StreamingResponse
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -122,7 +125,7 @@ async def get_declaration_by_record(
     record_id: int,
     db: Session = Depends(get_db),
 ):
-    """通过合规记录 ID 获取声明（含关联信息）"""
+    """通过合规记录 ID 获取声明（含关联信息和审批时间线）"""
     declaration = db.query(LegalDeclaration).filter(
         LegalDeclaration.compliance_record_id == record_id
     ).first()
@@ -132,6 +135,61 @@ async def get_declaration_by_record(
     # 获取关联信息
     record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
     component = db.query(Component).filter(Component.id == record.component_id).first() if record else None
+
+    # 构建审批时间线
+    from app.schemas.legal_declaration import ApprovalTimelineEntry
+    timeline = []
+
+    # 安全审批阶段
+    if record:
+        if record.security_reviewed_at:
+            # 获取安全审批人邮箱
+            security_reviewer_email = None
+            if record.reviewed_by_security:
+                from app.models.user import User
+                security_reviewer = db.query(User).filter(User.id == record.reviewed_by_security).first()
+                security_reviewer_email = security_reviewer.email if security_reviewer else None
+
+            timeline.append(ApprovalTimelineEntry(
+                stage="security_review",
+                stage_name="安全审批",
+                approver_email=security_reviewer_email,
+                approved_at=record.security_reviewed_at,
+                status="approved"
+            ))
+        elif record.status in [RecordStatus.PENDING_SECURITY, RecordStatus.PENDING_LEGAL, RecordStatus.APPROVED]:
+            timeline.append(ApprovalTimelineEntry(
+                stage="security_review",
+                stage_name="安全审批",
+                approver_email=None,
+                approved_at=None,
+                status="pending"
+            ))
+
+        # 法务审批阶段
+        if record.legal_approved_at:
+            # 获取法务审批人邮箱
+            legal_approver_email = None
+            if record.approved_by_legal:
+                from app.models.user import User
+                legal_approver = db.query(User).filter(User.id == record.approved_by_legal).first()
+                legal_approver_email = legal_approver.email if legal_approver else None
+
+            timeline.append(ApprovalTimelineEntry(
+                stage="legal_approve",
+                stage_name="法务审批",
+                approver_email=legal_approver_email,
+                approved_at=record.legal_approved_at,
+                status="approved"
+            ))
+        elif record.status in [RecordStatus.PENDING_LEGAL, RecordStatus.APPROVED]:
+            timeline.append(ApprovalTimelineEntry(
+                stage="legal_approve",
+                stage_name="法务审批",
+                approver_email=None,
+                approved_at=None,
+                status="pending"
+            ))
 
     return LegalDeclarationDetailResponse(
         id=declaration.id,
@@ -148,6 +206,8 @@ async def get_declaration_by_record(
         updated_at=declaration.updated_at,
         compliance_record=record,
         component=component,
+        approval_timeline=timeline if timeline else None,
+        current_status=record.status.value if record else None,
     )
 
 
@@ -498,3 +558,133 @@ async def get_history_suggestions(
     # 查询历史建议
     history_service = get_declaration_history_service(db)
     return history_service.get_history_suggestions(record.component_id, current_record_id=record.id)
+
+
+@router.get("/{declaration_id}/export-pdf")
+async def export_declaration_pdf(
+    declaration_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    """导出法务声明为 PDF
+
+    仅允许有权限查看声明的用户导出（声明创建者、安全、法务、管理员）。
+    """
+    # 获取声明
+    declaration = db.query(LegalDeclaration).filter(
+        LegalDeclaration.id == declaration_id
+    ).first()
+    if not declaration:
+        raise HTTPException(status_code=404, detail="声明不存在")
+
+    # 获取关联记录
+    record = db.query(ComplianceRecord).filter(
+        ComplianceRecord.id == declaration.compliance_record_id
+    ).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="关联的合规记录不存在")
+
+    # 获取组件信息
+    component = db.query(Component).filter(
+        Component.id == record.component_id
+    ).first()
+    if not component:
+        raise HTTPException(status_code=404, detail="关联的组件不存在")
+
+    # 权限检查：只有相关角色可以导出
+    allowed_roles = [UserRole.ENGINEER, UserRole.SECURITY, UserRole.LEGAL, UserRole.ADMIN]
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "security", "legal", "admin"],
+                "message": "权限不足：无法导出法务声明"
+            }
+        )
+
+    # 工程师只能导出自己的声明
+    if current_user.role == UserRole.ENGINEER:
+        if record.filled_by != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="权限不足：只能导出自己创建的声明"
+            )
+
+    # 构建审批时间线
+    approval_timeline = []
+
+    # 安全审批阶段
+    if record.security_reviewed_at:
+        security_reviewer_email = None
+        if record.reviewed_by_security:
+            security_reviewer = db.query(User).filter(User.id == record.reviewed_by_security).first()
+            security_reviewer_email = security_reviewer.email if security_reviewer else None
+
+        approval_timeline.append({
+            "stage_name": "安全审批",
+            "approver_email": security_reviewer_email,
+            "approved_at": record.security_reviewed_at,
+            "status": "approved"
+        })
+    elif record.status in [RecordStatus.PENDING_SECURITY, RecordStatus.PENDING_LEGAL, RecordStatus.APPROVED]:
+        approval_timeline.append({
+            "stage_name": "安全审批",
+            "approver_email": None,
+            "approved_at": None,
+            "status": "pending"
+        })
+
+    # 法务审批阶段
+    if record.legal_approved_at:
+        legal_approver_email = None
+        if record.approved_by_legal:
+            legal_approver = db.query(User).filter(User.id == record.approved_by_legal).first()
+            legal_approver_email = legal_approver.email if legal_approver else None
+
+        approval_timeline.append({
+            "stage_name": "法务审批",
+            "approver_email": legal_approver_email,
+            "approved_at": record.legal_approved_at,
+            "status": "approved"
+        })
+    elif record.status in [RecordStatus.PENDING_LEGAL, RecordStatus.APPROVED]:
+        approval_timeline.append({
+            "stage_name": "法务审批",
+            "approver_email": None,
+            "approved_at": None,
+            "status": "pending"
+        })
+
+    # 生成 PDF
+    exporter = get_pdf_exporter()
+    declaration_data = {
+        "purpose_of_use": declaration.purpose_of_use,
+        "url_to_source": declaration.url_to_source,
+        "license_info_url": declaration.license_info_url,
+        "license_text_url": declaration.license_text_url,
+        "license_name": declaration.license_name,
+        "is_modified": declaration.is_modified,
+        "usage_type": declaration.usage_type,
+    }
+
+    try:
+        pdf_data = exporter.generate_pdf(
+            declaration_data=declaration_data,
+            component_name=component.name,
+            component_version=component.version,
+            system_name=record.system_name,
+            approval_timeline=approval_timeline
+        )
+    except Exception as e:
+        logger.error(f"生成 PDF 失败：{e}")
+        raise HTTPException(status_code=500, detail="PDF 生成失败，请稍后重试")
+
+    # 返回 PDF 文件
+    filename = f"{component.name.replace('/', '-').replace(' ', '_')}-{component.version}-法务声明.pdf"
+
+    return StreamingResponse(
+        BytesIO(pdf_data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

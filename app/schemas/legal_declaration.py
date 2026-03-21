@@ -144,6 +144,8 @@ class LegalDeclarationDetailResponse(LegalDeclarationResponse):
     """法务声明详情响应（含关联信息）"""
     compliance_record: Optional[ComplianceRecordRef] = None
     component: Optional[ComponentRef] = None
+    approval_timeline: Optional[List[ApprovalTimelineEntry]] = None
+    current_status: Optional[str] = None
 
 
 class BulkImportResult(BaseModel):
@@ -160,6 +162,21 @@ class BulkImportItemResult(BaseModel):
     success: bool
     declaration_id: Optional[int] = None
     error: Optional[str] = None
+
+
+class ApprovalTimelineEntry(BaseModel):
+    """审批时间线条目"""
+    stage: str  # "security_review" or "legal_approve"
+    stage_name: str  # "安全审批" or "法务审批"
+    approver_email: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    status: str  # "pending" or "approved"
+
+
+class ApprovalTimelineResponse(BaseModel):
+    """审批时间线响应"""
+    timeline: List[ApprovalTimelineEntry]
+    current_status: str
 
 
 class HistorySuggestion(BaseModel):
