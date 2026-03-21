@@ -247,6 +247,12 @@
             pointer-events: none;
         }
 
+        /* 键盘导航焦点样式 */
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
         /* 表格 */
         .table {
             width: 100%;
@@ -460,12 +466,22 @@
             background: none;
             border: none;
             cursor: pointer;
-            padding: 4px;
+            padding: 8px; /* 增大点击区域 */
             color: var(--text-secondary);
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-close:hover {
             color: var(--text-primary);
+        }
+
+        .modal-close:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
         }
 
         .modal-body {
@@ -919,6 +935,7 @@
         .btn-sm {
             padding: var(--spacing-xs) var(--spacing-sm);
             font-size: 12px;
+            min-height: 44px; /* 触摸目标最小尺寸 */
         }
 
         /* 批量编辑表格样式 */
@@ -1281,6 +1298,80 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            /* 表格容器支持横向滚动 */
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .table {
+                min-width: 600px; /* 保证表格在小屏幕上可横向滚动 */
+            }
+
+            /* 行动按钮堆叠 */
+            .action-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .action-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 卡片式布局优化 */
+            .card {
+                margin-bottom: var(--spacing-lg);
+            }
+
+            /* 空状态居中 */
+            .empty-state {
+                padding: calc(var(--spacing-xl) * 2) var(--spacing-lg);
+            }
+
+            /* 模态框适配 */
+            .modal {
+                width: 90%;
+                max-width: none;
+                margin: var(--spacing-lg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .user-menu {
+                align-self: flex-end;
+            }
         }
     </style>
 </head>
