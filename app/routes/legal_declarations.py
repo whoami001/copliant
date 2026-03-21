@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database import get_db
-from app.models.legal_declaration import LegalDeclaration, UsageType, IsModified
+from app.models.legal_declaration import LegalDeclaration
 from app.models.compliance_record import ComplianceRecord, RecordStatus
 from app.models.component import Component
+from app.models.user import User, UserRole
 from app.schemas.legal_declaration import (
     LegalDeclarationCreate,
     LegalDeclarationUpdate,
@@ -23,6 +24,7 @@ from app.schemas.legal_declaration import (
 )
 from app.services.spdx_parser import parse_spdx_file, SpdxParseError
 from app.services.declaration_history import get_declaration_history_service
+from app.core.permissions import get_current_user_from_token, require_role, can
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -39,12 +41,24 @@ def _is_valid_url(url: str) -> bool:
 @router.post("", response_model=LegalDeclarationResponse)
 async def create_declaration(
     declaration_data: LegalDeclarationCreate,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """创建/提交法务声明
 
     仅允许 DRAFT 状态的合规记录创建声明。
     """
+    # 检查权限：Engineer 和 Admin 可以创建声明
+    if not can(current_user, "create_declaration"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "admin"],
+                "message": "权限不足：只有研发和管理员可以创建法务声明"
+            }
+        )
+
     # 检查合规记录是否存在
     record = db.query(ComplianceRecord).filter(
         ComplianceRecord.id == declaration_data.compliance_record_id
@@ -178,45 +192,69 @@ async def update_declaration(
 async def submit_declaration(
     declaration_id: int,
     submit_data: LegalDeclarationSubmit,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """提交法务声明（进入审批流程）
 
     将合规记录从 DRAFT 状态转为 PENDING_SECURITY。
+
+    使用事务确保原子性：如果提交失败，回滚所有更改。
     """
-    declaration = db.query(LegalDeclaration).filter(
-        LegalDeclaration.id == declaration_id
-    ).first()
-    if not declaration:
-        raise HTTPException(status_code=404, detail="声明不存在")
+    try:
+        declaration = db.query(LegalDeclaration).filter(
+            LegalDeclaration.id == declaration_id
+        ).first()
+        if not declaration:
+            raise HTTPException(status_code=404, detail="声明不存在")
 
-    record = db.query(ComplianceRecord).filter(
-        ComplianceRecord.id == declaration.compliance_record_id
-    ).first()
-    if not record:
-        raise HTTPException(status_code=404, detail="关联的合规记录不存在")
+        record = db.query(ComplianceRecord).filter(
+            ComplianceRecord.id == declaration.compliance_record_id
+        ).first()
+        if not record:
+            raise HTTPException(status_code=404, detail="关联的合规记录不存在")
 
-    if record.status != RecordStatus.DRAFT:
-        raise HTTPException(
-            status_code=400,
-            detail=f"当前状态不能提交：{record.status.value}，仅 DRAFT 状态可提交"
-        )
+        # 检查权限：只有 Engineer 和 Admin 可以提交声明
+        if not can(current_user, "submit_declaration"):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "INSUFFICIENT_PERMISSION",
+                    "required_roles": ["engineer", "admin"],
+                    "message": "权限不足：只有研发和管理员可以提交法务声明"
+                }
+            )
 
-    # 更新记录状态
-    record.status = RecordStatus.PENDING_SECURITY
-    record.submitted_at = datetime.utcnow()
+        if record.status != RecordStatus.DRAFT:
+            raise HTTPException(
+                status_code=400,
+                detail=f"当前状态不能提交：{record.status.value}，仅 DRAFT 状态可提交"
+            )
 
-    db.commit()
-    db.refresh(declaration)
+        # 更新记录状态
+        record.status = RecordStatus.PENDING_SECURITY
+        record.submitted_at = datetime.utcnow()
 
-    logger.info(f"提交法务声明：{declaration.id}, 记录状态：{record.status.value}")
-    return declaration
+        db.commit()
+        db.refresh(declaration)
+
+        logger.info(f"提交法务声明：{declaration.id}, 记录状态：{record.status.value}")
+        return declaration
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"提交法务声明失败：{e}")
+        raise HTTPException(status_code=500, detail="提交失败，请稍后重试")
 
 
 @router.post("/bulk-import", response_model=BulkImportResult)
 async def bulk_import_declarations(
     file: UploadFile = File(...),
     system_name: str = Query(..., description="系统名称"),
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """批量导入法务声明
@@ -225,6 +263,17 @@ async def bulk_import_declarations(
 
     返回结果包含成功/失败数量及详细信息。
     """
+    # 检查权限：只有 Engineer 和 Admin 可以批量导入
+    if not can(current_user, "bulk_import"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "admin"],
+                "message": "权限不足：只有研发和管理员可以批量导入法务声明"
+            }
+        )
+
     # 读取文件内容
     content = await file.read()
     try:
@@ -299,8 +348,8 @@ async def bulk_import_declarations(
                 license_info_url=license_info_url,
                 license_text_url="",  # 需要手动填写
                 license_name=spdx_comp.license_concluded or "UNKNOWN",
-                is_modified=IsModified.NO,
-                usage_type=UsageType.OTHER,  # 需要手动选择
+                is_modified="no",
+                usage_type="other",  # 需要手动选择
                 submitted_at=datetime.utcnow(),
             )
             db.add(declaration)
@@ -358,4 +407,4 @@ async def get_history_suggestions(
 
     # 查询历史建议
     history_service = get_declaration_history_service(db)
-    return history_service.get_history_suggestions(record.component_id)
+    return history_service.get_history_suggestions(record.component_id, current_record_id=record.id)

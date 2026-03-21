@@ -236,6 +236,17 @@
             color: white;
         }
 
+        .btn-danger:hover {
+            background: #B91C1C;
+        }
+
+        /* 禁用状态 */
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         /* 表格 */
         .table {
             width: 100%;
@@ -1015,7 +1026,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">待办事项</h2>
-                        <button class="btn btn-primary" onclick="showNewRecordModal()">
+                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 5v14M5 12h14"/>
                             </svg>
@@ -1037,7 +1048,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">合规记录列表</h2>
-                        <button class="btn btn-primary" onclick="showNewRecordModal()">
+                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 5v14M5 12h14"/>
                             </svg>
@@ -1080,7 +1091,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">组件管理</h2>
-                        <button class="btn btn-primary" onclick="showBlackDuckModal()">
+                        <button class="btn btn-primary engineer-only" onclick="showBlackDuckModal()" :disabled="authLoading">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                             </svg>
@@ -1141,6 +1152,30 @@
                     <button class="btn btn-secondary" onclick="closeLoginModal()">取消</button>
                     <button class="btn btn-primary" onclick="doLogin()">登录</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 403 权限拒绝模态框 -->
+    <div class="modal-overlay" id="permission-denied-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="permission-denied-title" aria-describedby="permission-denied-desc">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="permission-denied-title">权限不足</h3>
+                <button class="modal-close" onclick="closePermissionDeniedModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="permission-denied-desc" style="color: var(--text-secondary); margin-bottom: 16px;">您的角色没有权限执行此操作</p>
+                <div id="permission-required-info" style="background: var(--bg); padding: 12px; border-radius: 6px; font-size: 14px;">
+                    <strong>需要以下角色之一：</strong>
+                    <ul id="required-roles-list" style="margin-top: 8px; padding-left: 20px;"></ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closePermissionDeniedModal()">知道了</button>
             </div>
         </div>
     </div>
@@ -1358,6 +1393,7 @@
         // 认证状态
         let currentUser = null;
         let authToken = localStorage.getItem('auth_token');
+        let authLoading = true;  // 认证加载中状态
 
         // 状态映射
         const STATUS_MAP = {
@@ -1395,6 +1431,35 @@
                 throw new Error('请先登录');
             }
 
+            if (res.status === 403) {
+                // 权限不足，显示权限拒绝模态框
+                try {
+                    const err = await res.json();
+                    // 优先使用结构化错误响应
+                    if (err.detail && err.detail.code === 'INSUFFICIENT_PERMISSION' && err.detail.required_roles) {
+                        showPermissionDenied(err.detail.required_roles);
+                    } else {
+                        // 向后兼容：从旧格式错误信息中提取角色
+                        const detail = err.detail || '';
+                        const roleMatch = detail.match(/需要以下角色之一 ([\s\S]+)/);
+                        if (roleMatch) {
+                            const rolesStr = roleMatch[1];
+                            const roleMap = { '工程师': 'engineer', '安全评审': 'security', '法务审批': 'legal', '管理员': 'admin' };
+                            const requiredRoles = rolesStr.split(',').map(r => {
+                                const trimmed = r.trim();
+                                return roleMap[trimmed] || trimmed;
+                            }).filter(r => ['engineer', 'security', 'legal', 'admin'].includes(r));
+                            if (requiredRoles.length > 0) {
+                                showPermissionDenied(requiredRoles);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('解析 403 错误失败:', e);
+                }
+                throw new Error('权限不足');
+            }
+
             return res;
         }
 
@@ -1426,6 +1491,10 @@
                 // 保存登录状态
                 currentUser = user;
                 localStorage.setItem('current_user', JSON.stringify(user));
+
+                // 认证加载完成，更新按钮状态
+                authLoading = false;
+                updateRoleBasedUI();
             } else {
                 avatar.textContent = 'U';
                 name.textContent = '未登录';
@@ -1433,6 +1502,7 @@
                 email.textContent = '';
                 currentUser = null;
                 localStorage.removeItem('current_user');
+                authLoading = true;
             }
         }
 
@@ -1515,6 +1585,75 @@
             showToast('已退出登录', 'info');
         }
 
+        // ==================== 权限相关函数 ====================
+
+        // 显示权限拒绝模态框
+        function showPermissionDenied(requiredRoles) {
+            const roleLabels = {
+                'engineer': '研发',
+                'security': '安全评审',
+                'legal': '法务审批',
+                'admin': '管理员'
+            };
+            const list = document.getElementById('required-roles-list');
+            list.innerHTML = requiredRoles.map(r => `<li>${roleLabels[r] || r}</li>`).join('');
+            document.getElementById('permission-denied-modal-overlay').classList.add('active');
+        }
+
+        // 关闭权限拒绝模态框
+        function closePermissionDeniedModal() {
+            document.getElementById('permission-denied-modal-overlay').classList.remove('active');
+        }
+
+        // 检查用户是否有指定角色
+        function hasRole(role) {
+            if (!currentUser) return false;
+            if (currentUser.role === 'admin') return true;  // ADMIN 通行所有权限
+            return currentUser.role === role;
+        }
+
+        // 检查用户是否有任一指定角色
+        function hasAnyRole(roles) {
+            if (!currentUser) return false;
+            if (currentUser.role === 'admin') return true;
+            return roles.includes(currentUser.role);
+        }
+
+        // 更新角色相关的 UI 显示
+        function updateRoleBasedUI() {
+            // 按钮禁用状态由 authLoading 控制
+            const allButtons = document.querySelectorAll('.btn-primary, .btn-success, .btn-danger');
+            allButtons.forEach(btn => {
+                btn.disabled = authLoading;
+                if (authLoading) {
+                    btn.classList.add('btn-disabled');
+                } else {
+                    btn.classList.remove('btn-disabled');
+                }
+            });
+
+            // 根据角色显示/隐藏特定按钮
+            const isAdmin = currentUser && currentUser.role === 'admin';
+
+            // 研发可见按钮
+            const engineerButtons = document.querySelectorAll('.engineer-only');
+            engineerButtons.forEach(btn => {
+                btn.style.display = (isAdmin || hasRole('engineer')) ? 'inline-flex' : 'none';
+            });
+
+            // 安全可见按钮
+            const securityButtons = document.querySelectorAll('.security-only');
+            securityButtons.forEach(btn => {
+                btn.style.display = (isAdmin || hasRole('security')) ? 'inline-flex' : 'none';
+            });
+
+            // 法务可见按钮
+            const legalButtons = document.querySelectorAll('.legal-only');
+            legalButtons.forEach(btn => {
+                btn.style.display = (isAdmin || hasRole('legal')) ? 'inline-flex' : 'none';
+            });
+        }
+
         // 快速切换用户
         async function switchUser(email) {
             document.getElementById('login-email').value = email;
@@ -1540,6 +1679,7 @@
                 }
             } else if (!authToken) {
                 // 未登录，显示登录框
+                authLoading = false;  // 未登录状态不需要 loading
                 showLoginModal();
             }
         }
@@ -1604,7 +1744,7 @@
                         <div class="empty-state-icon">📋</div>
                         <div class="empty-state-title">太棒了！</div>
                         <div class="empty-state-desc">所有合规记录都已处理完成</div>
-                        <button class="btn btn-primary" onclick="showNewRecordModal()">创建新的合规记录</button>
+                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">创建新的合规记录</button>
                     </div>
                 `;
                 return;
@@ -1627,7 +1767,7 @@
                                 <td>${item.system_name}</td>
                                 <td><span class="badge ${STATUS_MAP[item.status]?.class || 'badge-secondary'}">${STATUS_MAP[item.status]?.label || item.status}</span></td>
                                 <td>
-                                    <button class="btn btn-primary" onclick="handleRecord(${item.id})">处理</button>
+                                    <button class="btn btn-primary engineer-only" onclick="handleRecord(${item.id})">处理</button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -1672,11 +1812,11 @@
                     <td>
                         <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
                         ${record.status === 'draft' ? `
-                            <button class="btn btn-primary" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
-                            <button class="btn btn-secondary" onclick="submitRecord(${record.id})">提交</button>
+                            <button class="btn btn-primary engineer-only" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
+                            <button class="btn btn-secondary engineer-only" onclick="submitRecord(${record.id})">提交</button>
                         ` : ''}
-                        ${record.status === 'pending_security' ? `<button class="btn btn-primary" onclick="securityApprove(${record.id})">通过</button>` : ''}
-                        ${record.status === 'pending_legal' ? `<button class="btn btn-success" onclick="legalApprove(${record.id})">批准</button><button class="btn btn-danger" onclick="legalReject(${record.id})">驳回</button>` : ''}
+                        ${record.status === 'pending_security' ? `<button class="btn btn-primary security-only" onclick="securityApprove(${record.id})">通过</button>` : ''}
+                        ${record.status === 'pending_legal' ? `<button class="btn btn-success legal-only" onclick="legalApprove(${record.id})">批准</button><button class="btn btn-danger legal-only" onclick="legalReject(${record.id})">驳回</button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -2109,15 +2249,13 @@
 
                 const result = await res.json();
 
-                // 如果是新创建且需要提交
-                if (!currentDeclarationId) {
-                    // 提交审批
-                    await authFetch(`${API_BASE}/legal-declarations/${result.id}/submit`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({}),
-                    });
-                }
+                // 提交审批（无论新建还是更新都调用 submit 端点）
+                const submitId = currentDeclarationId || result.id;
+                await authFetch(`${API_BASE}/legal-declarations/${submitId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                });
 
                 showToast('提交成功', 'success');
                 closeDeclarationModal();

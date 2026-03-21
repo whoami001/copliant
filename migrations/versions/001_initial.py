@@ -17,7 +17,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("name", sa.String(length=100), nullable=True),
-        sa.Column("role", sa.Enum("ENGINEER", "SECURITY", "LEGAL", "ADMIN", name="userrole"), nullable=False),
+        sa.Column("role", sa.String(length=20), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=True, default=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),
         sa.Column("updated_at", sa.DateTime(), nullable=True),
@@ -58,10 +58,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("component_id", sa.Integer(), nullable=False),
         sa.Column("system_name", sa.String(length=255), nullable=False),
-        sa.Column("status", sa.Enum(
-            "DRAFT", "PENDING_SECURITY", "PENDING_LEGAL", "APPROVED", "REJECTED",
-            name="recordstatus"
-        ), nullable=False),
+        sa.Column("status", sa.String(length=30), nullable=False),
         sa.Column("filled_by", sa.Integer(), nullable=True),
         sa.Column("submitted_at", sa.DateTime(), nullable=True),
         sa.Column("reviewed_by_security", sa.Integer(), nullable=True),

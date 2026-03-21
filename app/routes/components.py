@@ -15,9 +15,11 @@ from app.schemas.component import (
     BlackDuckReportUpload,
     ComponentUpdate,
 )
+from app.models.user import User, UserRole
 from app.services.black_duck import black_duck_service
 from app.services.component_match import get_component_match_service
 from app.models.component import Component
+from app.core.permissions import get_current_user_from_token, can
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -57,6 +59,7 @@ async def get_component(component_id: int, db: Session = Depends(get_db)):
 @router.post("/blackduck", response_model=List[ComponentResponse])
 async def upload_black_duck_report(
     request: BlackDuckReportUpload,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """
@@ -66,6 +69,17 @@ async def upload_black_duck_report(
     - <=50 个组件：同步处理，直接返回结果
     - >50 个组件：异步处理，返回任务 ID（需要轮询）
     """
+    # 检查权限：只有 Engineer 和 Admin 可以上传 Black Duck 报告
+    if not can(current_user, "bulk_import"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "admin"],
+                "message": "权限不足：只有研发和管理员可以上传 Black Duck 报告"
+            }
+        )
+
     # 获取报告数据
     report_data = await black_duck_service.fetch_report(request.report_id)
     components_data = await black_duck_service.parse_components(report_data)
@@ -114,6 +128,7 @@ async def upload_black_duck_report(
 async def match_component(
     name: str = Query(...),
     version: str = Query(...),
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """匹配组件（检查是否已存在）"""

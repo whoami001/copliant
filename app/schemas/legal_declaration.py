@@ -25,31 +25,26 @@ class LegalDeclarationBase(BaseModel):
     """法务声明基础 Schema"""
     purpose_of_use: str = Field(
         ...,
-        min_length=1,
         max_length=500,
         description="使用目的（简述 OSS 组件实现的功能）"
     )
     url_to_source: str = Field(
         ...,
-        min_length=1,
         max_length=500,
         description="源代码下载位置"
     )
     license_info_url: str = Field(
         ...,
-        min_length=1,
         max_length=500,
         description="许可证和例外条款说明页面"
     )
     license_text_url: str = Field(
         ...,
-        min_length=1,
         max_length=500,
         description="许可证全文 URL"
     )
     license_name: str = Field(
         ...,
-        min_length=1,
         max_length=100,
         description="SPDX 许可证 ID（如 GPL-2.0-only）"
     )

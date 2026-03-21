@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -50,15 +50,15 @@ class LegalDeclaration(Base):
     license_text_url = Column(String(500), nullable=False, comment="许可证全文 URL")
     license_name = Column(String(100), nullable=False, comment="SPDX 许可证 ID")
 
-    # 枚举字段
+    # 枚举字段（使用 String 类型，数据库层面有 ENUM 约束）
     is_modified = Column(
-        SQLEnum(IsModified),
+        String(10),
         nullable=False,
-        default=IsModified.NO,
+        default="no",
         comment="是否修改"
     )
     usage_type = Column(
-        SQLEnum(UsageType),
+        String(50),
         nullable=False,
         comment="使用方式"
     )
@@ -80,6 +80,18 @@ class LegalDeclaration(Base):
         "ComplianceRecord",
         back_populates="legal_declaration",
         uselist=False
+    )
+
+    # 数据库约束：确保枚举字段值有效
+    __table_args__ = (
+        CheckConstraint(
+            "is_modified IN ('yes', 'no')",
+            name="check_is_modified_valid"
+        ),
+        CheckConstraint(
+            "usage_type IN ('standalone', 'dynamically_linked', 'statically_linked', 'browser_code', 'other')",
+            name="check_usage_type_valid"
+        ),
     )
 
     def __repr__(self) -> str:

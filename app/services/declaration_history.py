@@ -27,6 +27,7 @@ class DeclarationHistoryService:
     def get_history_suggestions(
         self,
         component_id: int,
+        current_record_id: Optional[int] = None,
         limit: int = 5
     ) -> HistorySuggestionResponse:
         """获取组件的历史审批建议
@@ -35,6 +36,7 @@ class DeclarationHistoryService:
 
         Args:
             component_id: 组件 ID
+            current_record_id: 当前合规记录 ID（用于排除自身）
             limit: 返回结果数量限制
 
         Returns:
@@ -46,18 +48,20 @@ class DeclarationHistoryService:
             return HistorySuggestionResponse(has_history=False, suggestions=[])
 
         # 查询同一组件名称 + 版本的历史声明
+        filters = [
+            Component.name == target_component.name,
+            Component.version == target_component.version,
+            ComplianceRecord.status == RecordStatus.APPROVED,
+        ]
+        # 排除当前合规记录本身（而不是排除当前组件 ID）
+        if current_record_id:
+            filters.append(ComplianceRecord.id != current_record_id)
+
         query = (
             self.db.query(LegalDeclaration, ComplianceRecord, Component)
             .join(ComplianceRecord, LegalDeclaration.compliance_record_id == ComplianceRecord.id)
             .join(Component, ComplianceRecord.component_id == Component.id)
-            .filter(
-                and_(
-                    Component.name == target_component.name,
-                    Component.version == target_component.version,
-                    ComplianceRecord.status == RecordStatus.APPROVED,
-                    Component.id != component_id,  # 排除当前组件本身
-                )
-            )
+            .filter(and_(*filters))
             .order_by(ComplianceRecord.legal_approved_at.desc())
             .limit(limit)
         )
@@ -83,8 +87,8 @@ class DeclarationHistoryService:
                     system_name=record.system_name,
                     license_name=decl.license_name,
                     purpose_of_use=decl.purpose_of_use,
-                    usage_type=decl.usage_type.value,
-                    is_modified=decl.is_modified.value,
+                    usage_type=decl.usage_type,  # String column, not enum
+                    is_modified=decl.is_modified,  # String column, not enum
                     approved_at=record.legal_approved_at or decl.submitted_at,
                     approved_by=approved_by_email,
                 )
@@ -138,8 +142,8 @@ class DeclarationHistoryService:
                     system_name=record.system_name,
                     license_name=decl.license_name,
                     purpose_of_use=decl.purpose_of_use,
-                    usage_type=decl.usage_type.value,
-                    is_modified=decl.is_modified.value,
+                    usage_type=decl.usage_type,  # String column, not enum
+                    is_modified=decl.is_modified,  # String column, not enum
                     approved_at=record.legal_approved_at or decl.submitted_at,
                     approved_by=None,
                 )

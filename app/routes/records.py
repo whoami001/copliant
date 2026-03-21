@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.database import get_db
 from app.schemas.compliance_record import (
@@ -18,7 +19,9 @@ from app.schemas.compliance_record import (
     RecordStatusEnum,
 )
 from app.models.compliance_record import ComplianceRecord, RecordStatus
+from app.models.user import User, UserRole
 from app.services.approval_flow import get_approval_flow_service
+from app.core.permissions import get_current_user_from_token, can
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,6 +34,7 @@ async def list_records(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[RecordStatusEnum] = None,
     system_name: Optional[str] = None,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """获取合规记录列表（支持状态和系统过滤）"""
@@ -44,6 +48,16 @@ async def list_records(
     if system_name:
         query = query.filter(ComplianceRecord.system_name.ilike(f"%{system_name}%"))
 
+    # 角色数据过滤：Engineer 只能看到自己的记录和 NULL 遗留数据
+    if current_user.role == UserRole.ENGINEER:
+        logger.debug(f"用户 {current_user.id} 查询记录，应用数据过滤")
+        query = query.filter(
+            or_(
+                ComplianceRecord.filled_by == current_user.id,
+                ComplianceRecord.filled_by.is_(None)
+            )
+        )
+
     records = query.order_by(ComplianceRecord.created_at.desc()).offset(skip).limit(limit).all()
     return records
 
@@ -51,6 +65,7 @@ async def list_records(
 @router.post("", response_model=ComplianceRecordResponse)
 async def create_record(
     record_data: ComplianceRecordCreate,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """创建合规记录"""
@@ -110,6 +125,7 @@ async def update_record(
 async def submit_record(
     record_id: int,
     submit_data: ComplianceRecordSubmit,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """提交审批"""
@@ -117,9 +133,12 @@ async def submit_record(
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
 
+    # 检查权限：Engineer 只能提交自己的记录
+    if record.filled_by is not None and record.filled_by != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="权限不足：只能提交自己创建的记录")
+
     approval_service = get_approval_flow_service(db)
     # MVP: 虚拟用户
-    from app.models.user import User, UserRole
     user = User(id=1, email="mvp@company.com", role=UserRole.ENGINEER)
 
     record = approval_service.submit_for_review(record, user)
@@ -133,6 +152,7 @@ async def submit_record(
 async def approve_record(
     record_id: int,
     approve_data: ComplianceRecordApprove,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """审批通过（安全或法务）"""
@@ -141,7 +161,6 @@ async def approve_record(
         raise HTTPException(status_code=404, detail="Record not found")
 
     approval_service = get_approval_flow_service(db)
-    from app.models.user import User, UserRole
 
     if record.status == RecordStatus.PENDING_SECURITY:
         # 安全校验通过
@@ -164,6 +183,7 @@ async def approve_record(
 async def reject_record(
     record_id: int,
     reject_data: ComplianceRecordReject,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """审批驳回"""
@@ -172,7 +192,6 @@ async def reject_record(
         raise HTTPException(status_code=404, detail="Record not found")
 
     approval_service = get_approval_flow_service(db)
-    from app.models.user import User, UserRole
 
     if record.status == RecordStatus.PENDING_SECURITY:
         user = User(id=2, email="security@company.com", role=UserRole.SECURITY)
@@ -193,6 +212,7 @@ async def reject_record(
 async def request_changes(
     record_id: int,
     reject_data: ComplianceRecordReject,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """要求修改（法务用）"""
@@ -201,7 +221,6 @@ async def request_changes(
         raise HTTPException(status_code=404, detail="Record not found")
 
     approval_service = get_approval_flow_service(db)
-    from app.models.user import User, UserRole
 
     user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
     record = approval_service.request_changes(record, user, comments=reject_data.comments)
