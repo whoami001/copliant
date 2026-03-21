@@ -16,7 +16,7 @@ class Component(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False, index=True)
-    version = Column(String(50), nullable=False)
+    version = Column(String(255), nullable=False)
     license = Column(String(100))
     copyright = Column(Text)
     usage_type = Column(String(50))  # 'direct' or 'transitive'

@@ -180,5 +180,25 @@ class HistorySuggestionResponse(BaseModel):
     suggestions: List[HistorySuggestion]
 
 
+class BulkAutofillItem(BaseModel):
+    """批量预填充单项结果"""
+    component_name: str
+    component_version: str
+    license_name: str = ""
+    url_to_source: str = ""
+    license_info_url: str = ""
+    license_text_url: str = ""
+    is_modified: str = "no"
+    usage_type: str = ""
+    purpose_of_use: str = ""
+    purpose_of_use_suggestion: str = ""
+    source: str = "spdx"  # "spdx" 或 "history"
+
+
+class BulkAutofillResponse(BaseModel):
+    """批量预填充响应"""
+    items: List[BulkAutofillItem]
+
+
 # 更新 forward references
 LegalDeclarationDetailResponse.model_rebuild()

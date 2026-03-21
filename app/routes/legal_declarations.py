@@ -21,9 +21,12 @@ from app.schemas.legal_declaration import (
     BulkImportResult,
     BulkImportItemResult,
     HistorySuggestionResponse,
+    BulkAutofillResponse,
+    BulkAutofillItem,
 )
 from app.services.spdx_parser import parse_spdx_file, SpdxParseError
 from app.services.declaration_history import get_declaration_history_service
+from app.services.declaration_auto_filler import get_auto_filler_service
 from app.core.permissions import get_current_user_from_token, require_role, can
 from app.utils.logger import get_logger
 
@@ -332,8 +335,13 @@ async def bulk_import_declarations(
             db.flush()
 
             # 创建法务声明（草稿）
+            # SPDX 文件中的 NOASSERTION 是合法值，表示无法确定下载位置，应视为空字符串
             url_to_source = spdx_comp.download_location or ""
+            if url_to_source == "NOASSERTION":
+                url_to_source = ""
             license_info_url = spdx_comp.license_info_from_files or ""
+            if license_info_url == "NOASSERTION":
+                license_info_url = ""
 
             # 轻量级 URL 验证
             if url_to_source and not _is_valid_url(url_to_source):
@@ -372,6 +380,8 @@ async def bulk_import_declarations(
                 error=str(e),
             ))
             failed_count += 1
+            # 回滚当前事务，继续处理下一个组件
+            db.rollback()
 
     db.commit()
 
@@ -381,6 +391,86 @@ async def bulk_import_declarations(
         failed_count=failed_count,
         results=results,
     )
+
+
+@router.post("/bulk-import/preview", response_model=BulkAutofillResponse)
+async def preview_bulk_import_with_autofill(
+    file: UploadFile,
+    system_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    """批量导入预览（带智能预填充）
+
+    1. 解析 SPDX 文件
+    2. 为每个组件自动填充字段（从 SPDX 数据 + 历史记录）
+    3. 返回预览数据，供前端批量编辑
+
+    仅 ENGINEER 和 ADMIN 角色可以使用。
+    """
+    # 权限检查
+    if not can(current_user, "bulk_import"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "admin"],
+                "message": "权限不足：只有研发和管理员可以批量导入法务声明"
+            }
+        )
+
+    # 读取文件内容
+    content = await file.read()
+    try:
+        content_str = content.decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(status_code=400, detail="文件编码错误，请使用 UTF-8 编码")
+
+    # 解析 SPDX
+    try:
+        components = parse_spdx_file(content_str)
+    except SpdxParseError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    if not components:
+        raise HTTPException(status_code=400, detail="SPDX 文件中没有找到组件")
+
+    # 获取自动填充服务
+    auto_filler = get_auto_filler_service(db)
+
+    # 批量获取预填充数据
+    spdx_data = [
+        {
+            "name": comp.name,
+            "version": comp.version,
+            "license_concluded": comp.license_concluded,
+            "download_location": comp.download_location,
+            "license_info_from_files": comp.license_info_from_files,
+        }
+        for comp in components
+    ]
+
+    autofill_items = auto_filler.get_batch_autofill(spdx_data, system_name)
+
+    # 转换为响应格式
+    items = [
+        BulkAutofillItem(
+            component_name=item["component_name"],
+            component_version=item["component_version"],
+            license_name=item.get("license_name", ""),
+            url_to_source=item.get("url_to_source", ""),
+            license_info_url=item.get("license_info_url", ""),
+            license_text_url=item.get("license_text_url", ""),
+            is_modified=item.get("is_modified", "no"),
+            usage_type=item.get("usage_type", ""),
+            purpose_of_use=item.get("purpose_of_use", ""),
+            purpose_of_use_suggestion=item.get("purpose_of_use_suggestion", ""),
+            source=item.get("source", "spdx"),
+        )
+        for item in autofill_items
+    ]
+
+    return BulkAutofillResponse(items=items)
 
 
 @router.get("/{declaration_id}/history-suggestions", response_model=HistorySuggestionResponse)
