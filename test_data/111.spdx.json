@@ -1,0 +1,63 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "Test Component List",
+  "documentNamespace": "https://example.org/test-111",
+  "creationInfo": {
+    "created": "2026-03-21T00:00:00Z",
+    "creators": ["Tool: Test Generator"]
+  },
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-1",
+      "name": "lodash",
+      "versionInfo": "4.17.21",
+      "downloadLocation": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseInfoFromFiles": "https://opensource.org/licenses/MIT",
+      "copyrightText": "Copyright OpenJS Foundation"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2",
+      "name": "express",
+      "versionInfo": "4.18.2",
+      "downloadLocation": "https://registry.npmjs.org/express/-/express-4.18.2.tgz",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseInfoFromFiles": "https://opensource.org/licenses/MIT",
+      "copyrightText": "Copyright TJ Holowaychuk"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-3",
+      "name": "react",
+      "versionInfo": "18.2.0",
+      "downloadLocation": "https://registry.npmjs.org/react/-/react-18.2.0.tgz",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseInfoFromFiles": "https://opensource.org/licenses/MIT",
+      "copyrightText": "Copyright Meta Platforms, Inc."
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4",
+      "name": "axios",
+      "versionInfo": "1.6.0",
+      "downloadLocation": "https://registry.npmjs.org/axios/-/axios-1.6.0.tgz",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseInfoFromFiles": "https://opensource.org/licenses/MIT",
+      "copyrightText": "Copyright Matt Zabriskie"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5",
+      "name": "typescript",
+      "versionInfo": "5.3.2",
+      "downloadLocation": "https://registry.npmjs.org/typescript/-/typescript-5.3.2.tgz",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "licenseInfoFromFiles": "https://www.apache.org/licenses/LICENSE-2.0",
+      "copyrightText": "Copyright Microsoft Corporation"
+    }
+  ]
+}
