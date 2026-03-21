@@ -1659,6 +1659,15 @@
             document.getElementById('login-email').value = email;
             document.getElementById('login-code').value = '123456';
             await doLogin();
+            // 登录后重新加载当前页面数据，确保按钮可见性更新
+            const currentPage = document.querySelector('.page.active');
+            if (currentPage && currentPage.id === 'page-records') {
+                await loadRecords();
+            } else if (currentPage && currentPage.id === 'page-dashboard') {
+                await loadDashboard();
+            } else if (currentPage && currentPage.id === 'page-components') {
+                await loadComponents();
+            }
         }
 
         // 检查登录状态
@@ -1747,6 +1756,7 @@
                         <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">创建新的合规记录</button>
                     </div>
                 `;
+                updateRoleBasedUI();  // 更新按钮可见性
                 return;
             }
 
@@ -1774,6 +1784,7 @@
                     </tbody>
                 </table>
             `;
+            updateRoleBasedUI();  // 渲染完成后更新按钮可见性
         }
 
         // 加载合规记录列表
@@ -1799,6 +1810,7 @@
 
             if (!records || records.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无记录</div></td></tr>';
+                updateRoleBasedUI();  // 更新按钮可见性
                 return;
             }
 
@@ -1820,6 +1832,9 @@
                     </td>
                 </tr>
             `).join('');
+
+            // 渲染完成后更新按钮可见性
+            updateRoleBasedUI();
         }
 
         // 加载组件列表
