@@ -264,6 +264,9 @@
             padding: var(--spacing-md) var(--spacing-lg);
             text-align: left;
             border-bottom: 1px solid var(--border);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
 
         .table th {
@@ -2587,8 +2590,77 @@
             updateRoleBasedUI();
         }
 
-        // 查看系统详情（弹窗显示该系统下所有组件）
-        function viewComponentSystemDetail(systemName) {
+        // 查看系统详情（打开批量编辑界面，支持继续编辑草稿）
+        async function viewComponentSystemDetail(systemName) {
+            try {
+                // 加载该系统下所有草稿状态的记录
+                const url = `${API_BASE}/compliance-records?system_name=${encodeURIComponent(systemName)}&status=draft&limit=1000`;
+                const res = await authFetch(url);
+                const records = await res.json();
+
+                if (!records || records.length === 0) {
+                    showToast('该系统下没有草稿记录', 'warning');
+                    // 如果没有草稿，显示只读的组件列表
+                    viewComponentSystemDetailReadonly(systemName);
+                    return;
+                }
+
+                // 将记录转换为批量编辑格式
+                const importItems = records.map(record => {
+                    // 从 declaration 对象中提取数据（如果有）
+                    const decl = record.declaration || {};
+                    return {
+                        record_id: record.id,
+                        declaration_id: decl.id || null,
+                        component_id: record.component_id,
+                        component_name: record.component?.name || '-',
+                        component_version: record.component?.version || '-',
+                        license_name: record.component?.license || '-',
+                        url_to_source: decl.url_to_source || record.component?.url_to_source || '',
+                        license_info_url: decl.license_info_url || '',
+                        license_text_url: decl.license_text_url || '',
+                        purpose_of_use: decl.purpose_of_use || '',
+                        usage_type: decl.usage_type || '',
+                        is_modified: decl.is_modified || 'no',
+                        source: record.component?.source || 'manual',
+                    };
+                });
+
+                // 设置全局变量
+                window.batchImportData = importItems;
+                window.systemName = systemName;
+                window.isEditMode = true; // 标记为编辑模式（非预览）
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = Math.ceil(importItems.length / window.pageSize);
+
+                // 设置下拉框初始值
+                document.getElementById('page-size-select').value = '200';
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(importItems);
+
+                // 渲染分页
+                renderPagination(importItems.length);
+
+                // 打开批量导入模态框，直接显示编辑步骤
+                document.getElementById('spdx-import-modal-overlay').classList.add('active');
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = 'none';
+                document.getElementById('import-preview-btn').style.display = 'none';
+                document.getElementById('import-submit-btn').style.display = '';
+                document.getElementById('import-system-name').value = systemName;
+
+            } catch (error) {
+                showToast('加载失败：' + error.message, 'error');
+            }
+        }
+
+        // 只读模式查看系统组件（当没有草稿时显示）
+        function viewComponentSystemDetailReadonly(systemName) {
             const systemRecords = componentRecordsGroupedBySystem[systemName] || [];
             const modal = document.getElementById('component-system-detail-modal-overlay');
             const title = document.getElementById('component-system-detail-title');
@@ -3688,6 +3760,7 @@
         async function submitBatchEdit() {
             const items = window.batchImportData;
             const systemName = window.systemName;
+            const isEditMode = window.isEditMode || false; // 是否是编辑已有记录的模式
 
             if (!items || items.length === 0) {
                 showToast('没有可提交的数据', 'warning');
@@ -3713,12 +3786,7 @@
                     }
 
                     selectedItems.push({
-                        component_name: items[i].component_name,
-                        component_version: items[i].component_version,
-                        license_name: items[i].license_name,
-                        url_to_source: items[i].url_to_source || '',
-                        license_info_url: items[i].license_info_url || '',
-                        license_text_url: items[i].license_text_url || '',
+                        ...items[i], // 保留原有的 record_id 等信息
                         purpose_of_use: purpose,
                         usage_type: usageType,
                         is_modified: isModified,
@@ -3734,65 +3802,87 @@
             // 显示进度
             document.getElementById('import-progress').style.display = 'block';
             document.getElementById('progress-fill').style.width = '30%';
-            document.getElementById('progress-text').textContent = `正在导入 ${selectedItems.length} 个组件...`;
+            const actionText = isEditMode ? '正在更新' : '正在导入';
+            document.getElementById('progress-text').textContent = `${actionText} ${selectedItems.length} 个组件...`;
 
             try {
-                // 批量创建声明（调用现有的 bulk-import 接口）
-                // 注意：这里需要后端支持接收预填充数据的批量导入
-                // 临时方案：逐个创建声明
                 let successCount = 0;
                 let failedCount = 0;
 
                 for (const item of selectedItems) {
                     try {
-                        // 1. 查找或创建组件
-                        const componentRes = await authFetch(`${API_BASE}/components?name=${encodeURIComponent(item.component_name)}&version=${encodeURIComponent(item.component_version)}`);
-                        let component = await componentRes.json();
-
-                        if (!component || component.length === 0) {
-                            // 创建新组件
-                            const createRes = await authFetch(`${API_BASE}/components`, {
-                                method: 'POST',
+                        // 如果是编辑模式，直接更新已有的声明
+                        if (isEditMode && item.record_id && item.declaration_id) {
+                            // 更新法务声明
+                            const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
+                                method: 'PUT',
                                 body: JSON.stringify({
-                                    name: item.component_name,
-                                    version: item.component_version,
-                                    license: item.license_name,
+                                    purpose_of_use: item.purpose_of_use,
+                                    url_to_source: item.url_to_source || '',
+                                    license_info_url: item.license_info_url || '',
+                                    license_text_url: item.license_text_url || '',
+                                    license_name: item.license_name,
+                                    is_modified: item.is_modified,
+                                    usage_type: item.usage_type,
                                 })
                             });
-                            component = await createRes.json();
+
+                            if (declRes.ok) {
+                                successCount++;
+                            } else {
+                                failedCount++;
+                            }
                         } else {
-                            component = component[0];
-                        }
+                            // 新建模式：走原有逻辑
+                            // 1. 查找或创建组件
+                            const componentRes = await authFetch(`${API_BASE}/components?name=${encodeURIComponent(item.component_name)}&version=${encodeURIComponent(item.component_version)}`);
+                            let component = await componentRes.json();
 
-                        // 2. 创建合规记录
-                        const recordRes = await authFetch(`${API_BASE}/compliance-records`, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                component_id: component.id,
-                                system_name: systemName,
-                            })
-                        });
-                        const record = await recordRes.json();
+                            if (!component || component.length === 0) {
+                                // 创建新组件
+                                const createRes = await authFetch(`${API_BASE}/components`, {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        name: item.component_name,
+                                        version: item.component_version,
+                                        license: item.license_name,
+                                    })
+                                });
+                                component = await createRes.json();
+                            } else {
+                                component = component[0];
+                            }
 
-                        // 3. 创建法务声明
-                        const declRes = await authFetch(`${API_BASE}/legal-declarations`, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                compliance_record_id: record.id,
-                                purpose_of_use: item.purpose_of_use,
-                                url_to_source: item.url_to_source,
-                                license_info_url: item.license_info_url,
-                                license_text_url: item.license_text_url,
-                                license_name: item.license_name,
-                                is_modified: item.is_modified,
-                                usage_type: item.usage_type,
-                            })
-                        });
+                            // 2. 创建合规记录
+                            const recordRes = await authFetch(`${API_BASE}/compliance-records`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    component_id: component.id,
+                                    system_name: systemName,
+                                })
+                            });
+                            const record = await recordRes.json();
 
-                        if (declRes.ok) {
-                            successCount++;
-                        } else {
-                            failedCount++;
+                            // 3. 创建法务声明
+                            const declRes = await authFetch(`${API_BASE}/legal-declarations`, {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    compliance_record_id: record.id,
+                                    purpose_of_use: item.purpose_of_use,
+                                    url_to_source: item.url_to_source || '',
+                                    license_info_url: item.license_info_url || '',
+                                    license_text_url: item.license_text_url || '',
+                                    license_name: item.license_name,
+                                    is_modified: item.is_modified,
+                                    usage_type: item.usage_type,
+                                })
+                            });
+
+                            if (declRes.ok) {
+                                successCount++;
+                            } else {
+                                failedCount++;
+                            }
                         }
 
                         // 更新进度
@@ -3801,13 +3891,14 @@
                         document.getElementById('progress-text').textContent = `已处理 ${successCount + failedCount}/${selectedItems.length} 个组件`;
 
                     } catch (error) {
-                        console.error(`导入组件 ${item.component_name} 失败:`, error);
+                        console.error(`处理组件 ${item.component_name} 失败:`, error);
                         failedCount++;
                     }
                 }
 
                 document.getElementById('progress-fill').style.width = '100%';
-                document.getElementById('progress-text').textContent = '导入完成！';
+                const completeText = isEditMode ? '更新完成！' : '导入完成！';
+                document.getElementById('progress-text').textContent = completeText;
 
                 // 显示结果
                 document.getElementById('import-result').style.display = 'block';
@@ -3815,18 +3906,24 @@
                 document.getElementById('result-failed').textContent = failedCount;
 
                 if (successCount > 0) {
-                    showToast(`成功导入 ${successCount} 个组件`, 'success');
+                    const successText = isEditMode ? `成功更新 ${successCount} 个组件` : `成功导入 ${successCount} 个组件`;
+                    showToast(successText, 'success');
                     setTimeout(() => {
                         closeSpdxImportModal();
-                        loadComponents();
+                        if (isEditMode) {
+                            loadComponentRecords(); // 刷新组件导入页面
+                        } else {
+                            loadComponents();
+                        }
                     }, 1500);
                 } else {
-                    showToast('导入失败：没有成功导入任何组件', 'error');
+                    const errorText = isEditMode ? '更新失败：没有成功更新任何组件' : '导入失败：没有成功导入任何组件';
+                    showToast(errorText, 'error');
                 }
 
             } catch (error) {
                 document.getElementById('import-progress').style.display = 'none';
-                showToast('导入失败：' + error.message, 'error');
+                showToast('操作失败：' + error.message, 'error');
             }
         }
 
