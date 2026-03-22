@@ -18,6 +18,25 @@
 
 ---
 
+## UX Improvements (Deferred)
+
+### Record Detail Page UI
+**Priority:** P3
+**Status:** DEFERRED
+**Found by:** /qa on 2026-03-22
+
+**What:** 创建合规记录的详情页面 UI，替代当前直接打开 API JSON 的 MVP 方案
+
+**Why:** 当前点击"处理"按钮会打开裸 API 端点（JSON 格式），对用户体验不友好，也不适合生产环境
+
+**Cons:**
+- 需要设计详情页的字段布局和编辑功能
+- 增加前端页面复杂度
+
+**Repro:** 点击待办事项中的"处理"按钮 → 打开 `/api/compliance-records/{id}` JSON 页面
+
+---
+
 ## Completed
 
 ### 历史复用提醒功能
