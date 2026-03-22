@@ -5,5 +5,6 @@ from app.models.component import Component
 from app.models.compliance_record import ComplianceRecord
 from app.models.approval_history import ApprovalHistory
 from app.models.legal_declaration import LegalDeclaration, UsageType, IsModified
+from app.models.urgency import Urgency
 
-__all__ = ["User", "Component", "ComplianceRecord", "ApprovalHistory", "LegalDeclaration", "UsageType", "IsModified"]
+__all__ = ["User", "Component", "ComplianceRecord", "ApprovalHistory", "LegalDeclaration", "UsageType", "IsModified", "Urgency"]
