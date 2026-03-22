@@ -1574,20 +1574,12 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">组件导入</h2>
-                        <div style="display: flex; gap: 12px;">
-                            <button class="btn btn-primary engineer-only" onclick="showBlackDuckModal()" :disabled="authLoading">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                                </svg>
-                                导入 Black Duck 报告
-                            </button>
-                            <button class="btn btn-secondary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                                </svg>
-                                上传 SPDX 文件
-                            </button>
-                        </div>
+                        <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading" style="margin-left: auto;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            上传 SPDX 文件
+                        </button>
                     </div>
                     <div class="card-body">
                         <div style="margin-bottom: 16px; display: flex; gap: 12px;">
@@ -2757,57 +2749,30 @@
 
         // 显示新建记录模态框（简化版：直接 prompt）
         function showNewRecordModal() {
-            // MVP 简化：使用 prompt，生产环境应该用真正的模态框
             const systemName = prompt('请输入系统名称：');
             if (!systemName) return;
 
-            const reportId = prompt('请输入 Black Duck 报告 ID（可选）：');
-
-            if (reportId) {
-                importBlackDuckReport(reportId, systemName);
-            } else {
-                showToast('请输入 Black Duck 报告 ID', 'warning');
-            }
+            // 直接创建空记录，用户可以在草稿状态下继续编辑
+            createEmptyRecord(systemName);
         }
 
-        function showBlackDuckModal() {
-            // 使用 SPDX 批量导入模态框
-            showSpdxImportModal();
-        }
-
-        async function importBlackDuckReport(reportId, systemName) {
+        async function createEmptyRecord(systemName) {
             try {
-                showToast('正在导入报告...', 'info');
-
-                const res = await authFetch(`${API_BASE}/components/blackduck`, {
+                const res = await authFetch(`${API_BASE}/compliance-records`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ report_id: reportId, system_name: systemName })
+                    body: JSON.stringify({
+                        system_name: systemName
+                    })
                 });
 
-                if (!res.ok) throw new Error('导入失败');
+                if (!res.ok) throw new Error('创建失败');
 
-                const components = await res.json();
-                showToast(`成功导入 ${components.length} 个组件`, 'success');
-
-                // 创建合规记录
-                if (components.length > 0) {
-                    for (const comp of components) {
-                        await authFetch(`${API_BASE}/compliance-records`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                component_id: comp.id,
-                                system_name: systemName
-                            })
-                        });
-                    }
-                    showToast(`已创建 ${components.length} 条合规记录`, 'success');
-                }
-
-                loadComponents();
+                const record = await res.json();
+                showToast('创建成功，请在草稿中继续编辑', 'success');
+                loadRecords();
             } catch (error) {
-                showToast('导入失败：' + error.message, 'error');
+                showToast('创建失败：' + error.message, 'error');
             }
         }
 
