@@ -248,3 +248,38 @@ async def request_changes(
     db.refresh(record)
 
     return record
+
+
+@router.post("/{record_id}/urge", response_model=ComplianceRecordResponse)
+async def urge_record(
+    record_id: int,
+    current_user: User = Depends(get_current_user_from_token),
+    db: Session = Depends(get_db),
+):
+    """催促审批（研发可以催促安全加快处理）"""
+    from app.models.urgency import Urgency
+
+    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    # 检查状态：只能催促待审批的记录
+    if record.status not in [RecordStatus.PENDING_SECURITY, RecordStatus.PENDING_LEGAL]:
+        raise HTTPException(status_code=400, detail="当前状态不能催促")
+
+    # 检查权限：Engineer 只能催促自己的记录
+    if current_user.role == UserRole.ENGINEER:
+        if record.filled_by is not None and record.filled_by != current_user.id:
+            raise HTTPException(status_code=403, detail="权限不足：只能催促自己的记录")
+
+    # 创建催促记录
+    urgency = Urgency(
+        record_id=record_id,
+        urged_by=current_user.id,
+        target_role="security" if record.status == RecordStatus.PENDING_SECURITY else "legal",
+    )
+    db.add(urgency)
+    db.commit()
+
+    logger.info(f"用户 {current_user.id} 催促记录 {record_id}")
+    return record

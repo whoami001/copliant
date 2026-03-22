@@ -2403,16 +2403,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${items.map(item => `
-                            <tr>
-                                <td>${item.record_name}</td>
-                                <td>${item.system_name}</td>
-                                <td><span class="badge ${STATUS_MAP[item.status]?.class || 'badge-secondary'}">${STATUS_MAP[item.status]?.label || item.status}</span></td>
-                                <td>
-                                    <button class="btn btn-primary engineer-only" onclick="handleRecord(${item.id})">处理</button>
-                                </td>
-                            </tr>
-                        `).join('')}
+                        ${items.map(item => {
+                            const status = item.status;
+                            let actionButtons = '';
+
+                            // 根据状态显示不同的操作按钮
+                            if (status === 'pending_security' || status === 'pending_legal') {
+                                // 待审批状态：研发只能催促
+                                actionButtons = `<button class="btn btn-sm btn-warning engineer-only" onclick="urgeRecord(${item.id}, '${status}')">催促</button>`;
+                            } else if (status === 'draft') {
+                                // 草稿状态：研发可以编辑/提交
+                                actionButtons = `<button class="btn btn-sm btn-primary engineer-only" onclick="handleRecord(${item.id})">处理</button>`;
+                            } else if (status === 'rejected') {
+                                // 已驳回：研发可以重新处理
+                                actionButtons = `<button class="btn btn-sm btn-primary engineer-only" onclick="handleRecord(${item.id})">重新处理</button>`;
+                            }
+
+                            return `
+                                <tr>
+                                    <td>${item.record_name}</td>
+                                    <td>${item.system_name}</td>
+                                    <td><span class="badge ${STATUS_MAP[item.status]?.class || 'badge-secondary'}">${STATUS_MAP[item.status]?.label || item.status}</span></td>
+                                    <td>${actionButtons}</td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
@@ -2782,6 +2797,29 @@
         function handleRecord(id) {
             window.location.hash = 'records';
             setTimeout(() => viewRecord(id), 100);
+        }
+
+        // 催促审批
+        async function urgeRecord(id, status) {
+            const target = status === 'pending_security' ? '安全团队' : '法务团队';
+            if (!confirm(`确定要催促${target}加快处理吗？`)) return;
+
+            try {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/urge`, {
+                    method: 'POST'
+                });
+
+                if (res.ok) {
+                    showToast(`已催促${target}，他们将尽快处理`, 'success');
+                    // 重新加载待办事项
+                    loadDashboard();
+                } else {
+                    const error = await res.json();
+                    showToast('催促失败：' + (error.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('催促失败：' + error.message, 'error');
+            }
         }
 
         function viewRecord(id) {

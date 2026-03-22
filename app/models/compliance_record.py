@@ -54,6 +54,7 @@ class ComplianceRecord(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    urgencies = relationship("Urgency", back_populates="record")
 
     def __repr__(self) -> str:
         return f"<ComplianceRecord(id={self.id}, component_id={self.component_id}, status={self.status})>"
