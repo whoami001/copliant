@@ -1944,6 +1944,8 @@
                             </select>
                             <div class="toolbar-divider"></div>
                             <button class="btn btn-sm btn-secondary btn-toolbar-wide" onclick="fillAllPurposeWithAI()" title="AI 批量生成使用目的">✨ AI 批量填充使用目的</button>
+                            <div class="toolbar-divider"></div>
+                            <button class="btn btn-sm btn-success btn-toolbar-wide" onclick="saveBatchProgress()" title="保存当前编辑进度，稍后可以继续编辑">💾 保存进度</button>
                         </div>
                         <div class="toolbar-right">
                             <span class="batch-summary" id="batch-summary">已选择 0 / 共 0 项</span>
@@ -3719,6 +3721,85 @@
             }
 
             return `用于项目功能实现的第三方组件。${licenseName} 许可证。`;
+        }
+
+        // 保存批量编辑进度（不验证必填字段，允许保存未完成的编辑）
+        async function saveBatchProgress() {
+            const items = window.batchImportData;
+            const isEditMode = window.isEditMode || false;
+
+            if (!items || items.length === 0) {
+                showToast('没有可保存的数据', 'warning');
+                return;
+            }
+
+            // 收集所有项目数据（不验证必填字段）
+            const updatedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const purpose = document.getElementById(`purpose-${i}`)?.value.trim() || '';
+                const usageType = document.getElementById(`usage-${i}`)?.value || '';
+                const isModified = document.getElementById(`modified-${i}`)?.value || 'no';
+
+                updatedItems.push({
+                    ...items[i],
+                    purpose_of_use: purpose,
+                    usage_type: usageType,
+                    is_modified: isModified,
+                });
+            }
+
+            // 只保存已选择的项目
+            const selectedItems = updatedItems.filter((_, i) => {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                return checkbox && checkbox.checked;
+            });
+
+            if (selectedItems.length === 0) {
+                showToast('请至少选择一个组件', 'warning');
+                return;
+            }
+
+            try {
+                let savedCount = 0;
+                for (const item of selectedItems) {
+                    // 编辑模式：更新已有声明
+                    if (isEditMode && item.declaration_id) {
+                        const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({
+                                purpose_of_use: item.purpose_of_use,
+                                url_to_source: item.url_to_source || '',
+                                license_info_url: item.license_info_url || '',
+                                license_text_url: item.license_text_url || '',
+                                license_name: item.license_name,
+                                is_modified: item.is_modified,
+                                usage_type: item.usage_type,
+                            })
+                        });
+                        if (declRes.ok) savedCount++;
+                    }
+                    // 新建模式：如果有 declaration_id，也更新
+                    else if (item.declaration_id) {
+                        const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({
+                                purpose_of_use: item.purpose_of_use,
+                                url_to_source: item.url_to_source || '',
+                                license_info_url: item.license_info_url || '',
+                                license_text_url: item.license_text_url || '',
+                                license_name: item.license_name,
+                                is_modified: item.is_modified,
+                                usage_type: item.usage_type,
+                            })
+                        });
+                        if (declRes.ok) savedCount++;
+                    }
+                }
+
+                showToast(`已保存 ${savedCount} 个组件的进度`, 'success');
+            } catch (error) {
+                showToast('保存失败：' + error.message, 'error');
+            }
         }
 
         // 提交批量编辑
