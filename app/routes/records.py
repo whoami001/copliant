@@ -34,20 +34,28 @@ async def list_records(
     limit: int = Query(20, ge=1, le=1000),
     status: Optional[RecordStatusEnum] = None,
     system_name: Optional[str] = None,
+    component_name: Optional[str] = None,
     response: Response = None,
     current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
-    """获取合规记录列表（支持状态和系统过滤）"""
+    """获取合规记录列表（支持状态、系统名和组件名过滤）"""
     from app.models.component import Component
+    from app.models.legal_declaration import LegalDeclaration
 
-    query = db.query(ComplianceRecord).join(Component, isouter=True).options(joinedload(ComplianceRecord.component))
+    query = db.query(ComplianceRecord).join(Component, isouter=True).options(
+        joinedload(ComplianceRecord.component),
+        joinedload(ComplianceRecord.legal_declaration)
+    )
 
     if status:
         query = query.filter(ComplianceRecord.status == status)
 
     if system_name:
         query = query.filter(ComplianceRecord.system_name.ilike(f"%{system_name}%"))
+
+    if component_name:
+        query = query.filter(Component.name.ilike(f"%{component_name}%"))
 
     # 角色数据过滤：Engineer 只能看到自己的记录和 NULL 遗留数据
     if current_user.role == UserRole.ENGINEER:

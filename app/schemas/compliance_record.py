@@ -72,5 +72,24 @@ class ComplianceRecordResponse(ComplianceRecordBase):
     legal_approved_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    declaration: Optional["DeclarationRef"] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DeclarationRef(BaseModel):
+    """法务声明引用"""
+    id: int
+    compliance_record_id: int
+    purpose_of_use: Optional[str] = None
+    url_to_source: Optional[str] = None
+    license_info_url: Optional[str] = None
+    license_text_url: Optional[str] = None
+    license_name: Optional[str] = None
+    is_modified: Optional[str] = None
+    usage_type: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+# 解决循环引用
+ComplianceRecordResponse.model_rebuild()

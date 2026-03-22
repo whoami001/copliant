@@ -1528,7 +1528,7 @@
                                 <option value="approved">已通过</option>
                                 <option value="rejected">已驳回</option>
                             </select>
-                            <input type="text" class="form-input" placeholder="搜索系统名..." style="width: 200px;" id="search-system" oninput="loadRecords()">
+                            <input type="text" class="form-input" placeholder="搜索组件名称..." style="width: 200px;" id="search-component" oninput="loadRecords()">
                         </div>
                         <div style="overflow-x: auto;">
                             <table class="table" style="min-width: 800px; table-layout: fixed;">
@@ -2426,11 +2426,11 @@
         // 加载合规记录列表
         async function loadRecords() {
             const status = document.getElementById('filter-status').value;
-            const system = document.getElementById('search-system').value;
+            const component = document.getElementById('search-component').value;
 
             let url = `${API_BASE}/compliance-records?limit=${recordsPageSize}&skip=${(recordsCurrentPage - 1) * recordsPageSize}`;
             if (status) url += `&status=${status}`;
-            if (system) url += `&system_name=${encodeURIComponent(system)}`;
+            if (component) url += `&component_name=${encodeURIComponent(component)}`;
 
             try {
                 const res = await authFetch(url);
