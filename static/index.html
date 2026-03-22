@@ -968,7 +968,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--spacing-md);
+            padding: 8px 12px;
             background: var(--bg);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
@@ -982,26 +982,33 @@
         .toolbar-left {
             display: flex;
             align-items: center;
-            gap: var(--spacing-sm);
+            flex-wrap: nowrap;
+            gap: 6px;
         }
 
         .toolbar-right {
             display: flex;
             align-items: center;
-            gap: var(--spacing-md);
+            justify-content: flex-end;
+            gap: 12px;
         }
 
         .toolbar-divider {
             width: 1px;
-            height: 20px;
+            height: 16px;
             background: var(--border);
-            margin: 0 var(--spacing-sm);
+            margin: 0 4px;
         }
 
         .toolbar-label {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
             font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .btn-toolbar-wide {
+            min-width: 80px;
         }
 
         .batch-summary {
@@ -1407,7 +1414,7 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
-                        组件管理
+组件导入
                     </a>
                 </li>
             </ul>
@@ -1520,56 +1527,100 @@
                             </select>
                             <input type="text" class="form-input" placeholder="搜索系统名..." style="width: 200px;" id="search-system" oninput="loadRecords()">
                         </div>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>组件</th>
-                                    <th>系统</th>
-                                    <th>状态</th>
-                                    <th>创建时间</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="records-table-body">
-                                <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
-                            </tbody>
-                        </table>
+                        <div style="overflow-x: auto;">
+                            <table class="table" style="min-width: 800px; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 25%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 8%;">
+                                    <col style="width: 15%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>名称</th>
+                                        <th>版本</th>
+                                        <th>许可证</th>
+                                        <th>风险等级</th>
+                                        <th>已审批</th>
+                                        <th>创建时间</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="records-table-body">
+                                    <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 分页控件 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+                            <div style="color: var(--text-secondary); font-size: 14px;">
+                                第 <span id="records-current-page">1</span> 页，共 <span id="records-total-pages">1</span> 页（<span id="records-total-count">0</span> 条记录）
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm btn-secondary" id="records-prev-btn" onclick="changeRecordsPage(-1)" disabled>上一页</button>
+                                <button class="btn btn-sm btn-primary" id="records-next-btn" onclick="changeRecordsPage(1)">下一页</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 组件管理页面 -->
+            <!-- 组件导入页面 -->
             <div id="page-components" class="page">
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">组件管理</h2>
-                        <button class="btn btn-primary engineer-only" onclick="showBlackDuckModal()" :disabled="authLoading">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                            </svg>
-                            导入 Black Duck 报告
-                        </button>
+                        <h2 class="card-title">组件导入</h2>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-primary engineer-only" onclick="showBlackDuckModal()" :disabled="authLoading">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                </svg>
+                                导入 Black Duck 报告
+                            </button>
+                            <button class="btn btn-secondary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                </svg>
+                                上传 SPDX 文件
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <div style="margin-bottom: 16px;">
-                            <input type="text" class="form-input" placeholder="搜索组件名..." style="width: 300px;" id="search-component" oninput="loadComponents()">
+                        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
+                            <select class="form-select" style="width: 200px;" id="component-filter-status" onchange="loadComponentRecords()">
+                                <option value="">全部状态</option>
+                                <option value="draft">草稿</option>
+                                <option value="pending_security">待安全校验</option>
+                                <option value="pending_legal">待法务审批</option>
+                                <option value="approved">已通过</option>
+                                <option value="rejected">已驳回</option>
+                            </select>
+                            <input type="text" class="form-input" placeholder="搜索系统名..." style="width: 200px;" id="component-search-system" oninput="loadComponentRecords()">
                         </div>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>名称</th>
-                                    <th>版本</th>
-                                    <th>许可证</th>
-                                    <th>风险等级</th>
-                                    <th>已审批</th>
-                                    <th>创建时间</th>
-                                </tr>
-                            </thead>
-                            <tbody id="components-table-body">
-                                <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
-                            </tbody>
-                        </table>
+                        <div style="overflow-x: auto;">
+                            <table class="table" style="min-width: 700px; table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 25%;">
+                                    <col style="width: 12%;">
+                                    <col style="width: 18%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 30%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>系统名称</th>
+                                        <th>组件数量</th>
+                                        <th>状态</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="component-records-table-body">
+                                    <tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1629,6 +1680,48 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" onclick="closePermissionDeniedModal()">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 组件系统详情弹窗 -->
+    <div class="modal-overlay" id="component-system-detail-modal-overlay">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="component-system-detail-title">系统详情</h3>
+                <button class="modal-close" onclick="closeComponentSystemDetailModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <colgroup>
+                        <col style="width: 25%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 12%;">
+                        <col style="width: 8%;">
+                        <col style="width: 25%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>版本</th>
+                            <th>许可证</th>
+                            <th>风险等级</th>
+                            <th>已审批</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="component-system-detail-body">
+                        <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeComponentSystemDetailModal()">关闭</button>
             </div>
         </div>
     </div>
@@ -1842,8 +1935,8 @@
                 <div id="import-step-2" style="display: none; flex-direction: column; height: calc(100vh - 200px);">
                     <div class="batch-edit-toolbar">
                         <div class="toolbar-left">
-                            <button class="btn btn-sm btn-secondary" onclick="selectAllBatchItems()">全选</button>
-                            <button class="btn btn-sm btn-secondary" onclick="deselectAllBatchItems()">取消全选</button>
+                            <button class="btn btn-sm btn-secondary btn-toolbar-wide" onclick="selectAllBatchItems()">全选</button>
+                            <button class="btn btn-sm btn-secondary btn-toolbar-wide" onclick="deselectAllBatchItems()">取消全选</button>
                             <div class="toolbar-divider"></div>
                             <label class="toolbar-label">批量设置使用方式：</label>
                             <select class="form-select form-select-sm" id="batch-usage-type" onchange="applyBatchUsageType(this.value)">
@@ -1855,7 +1948,7 @@
                                 <option value="other">其他</option>
                             </select>
                             <div class="toolbar-divider"></div>
-                            <button class="btn btn-sm btn-secondary" onclick="fillAllPurposeWithAI()" title="AI 批量生成使用目的">✨ AI 批量填充使用目的</button>
+                            <button class="btn btn-sm btn-secondary btn-toolbar-wide" onclick="fillAllPurposeWithAI()" title="AI 批量生成使用目的">✨ AI 批量填充使用目的</button>
                         </div>
                         <div class="toolbar-right">
                             <span class="batch-summary" id="batch-summary">已选择 0 / 共 0 项</span>
@@ -1869,10 +1962,9 @@
                                     <th class="col-index">#</th>
                                     <th class="col-name">组件名称</th>
                                     <th class="col-version">版本</th>
-                                    <th class="col-license-name">许可证 (SPDX)</th>
-                                    <th class="col-url-source">下载 URL</th>
-                                    <th class="col-license-info">许可证说明 URL</th>
-                                    <th class="col-license-text">许可证全文 URL</th>
+                                    <th class="col-url-source">组件源码下载地址</th>
+                                    <th class="col-license-info">源码中许可证链接</th>
+                                    <th class="col-license-text">官方许可证链接</th>
                                     <th class="col-purpose">使用目的</th>
                                     <th class="col-usage">使用方式</th>
                                     <th class="col-modified">是否修改</th>
@@ -2262,7 +2354,7 @@
             // 加载对应页面数据
             if (page === 'dashboard') loadDashboard();
             else if (page === 'records') loadRecords();
-            else if (page === 'components') loadComponents();
+            else if (page === 'components') loadComponentRecords();
         }
 
         // 加载仪表板数据
@@ -2330,22 +2422,50 @@
             updateRoleBasedUI();  // 渲染完成后更新按钮可见性
         }
 
+        // 分页状态
+        let recordsCurrentPage = 1;
+        let recordsTotalPages = 1;
+        let recordsTotalCount = 0;
+        let recordsPageSize = 20;
+
         // 加载合规记录列表
         async function loadRecords() {
             const status = document.getElementById('filter-status').value;
             const system = document.getElementById('search-system').value;
 
-            let url = `${API_BASE}/compliance-records?limit=100`;
+            let url = `${API_BASE}/compliance-records?limit=${recordsPageSize}&skip=${(recordsCurrentPage - 1) * recordsPageSize}`;
             if (status) url += `&status=${status}`;
             if (system) url += `&system_name=${encodeURIComponent(system)}`;
 
             try {
                 const res = await authFetch(url);
                 const records = await res.json();
+                // 获取总数（通过 response header 或单独 API）
+                const totalCount = parseInt(res.headers.get('x-total-count') || records.length);
+                recordsTotalCount = totalCount;
+                recordsTotalPages = Math.ceil(totalCount / recordsPageSize);
                 renderRecordsTable(records);
+                updateRecordsPagination();
             } catch (error) {
                 showToast('加载记录失败：' + error.message, 'error');
             }
+        }
+
+        // 更新分页控件状态
+        function updateRecordsPagination() {
+            document.getElementById('records-current-page').textContent = recordsCurrentPage;
+            document.getElementById('records-total-pages').textContent = recordsTotalPages;
+            document.getElementById('records-total-count').textContent = recordsTotalCount;
+            document.getElementById('records-prev-btn').disabled = recordsCurrentPage <= 1;
+            document.getElementById('records-next-btn').disabled = recordsCurrentPage >= recordsTotalPages;
+        }
+
+        // 切换页码
+        function changeRecordsPage(delta) {
+            const newPage = recordsCurrentPage + delta;
+            if (newPage < 1 || newPage > recordsTotalPages) return;
+            recordsCurrentPage = newPage;
+            loadRecords();
         }
 
         function renderRecordsTable(records) {
@@ -2353,39 +2473,178 @@
 
             if (!records || records.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无记录</div></td></tr>';
-                updateRoleBasedUI();  // 更新按钮可见性
+                updateRoleBasedUI();
                 return;
             }
 
             tbody.innerHTML = records.map(record => `
                 <tr>
-                    <td>${record.id}</td>
-                    <td>${record.component?.name || '-'}@${record.component?.version || '-'}</td>
-                    <td>${record.system_name}</td>
-                    <td><span class="badge ${STATUS_MAP[record.status]?.class || 'badge-secondary'}">${STATUS_MAP[record.status]?.label || record.status}</span></td>
+                    <td>${record.component?.name || '-'}</td>
+                    <td>${record.component?.version || '-'}</td>
+                    <td>${record.component?.license || '-'}</td>
+                    <td><span class="badge ${RISK_MAP[record.component?.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[record.component?.license_risk_level]?.label || '-'}</span></td>
+                    <td>${record.component?.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
                     <td>${new Date(record.created_at).toLocaleDateString('zh-CN')}</td>
-                    <td>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="btn btn-secondary" onclick="viewRecord(${record.id})">查看</button>
-                            ${record.status !== 'draft' ? `
-                                <button class="btn btn-secondary" onclick="viewDeclaration(${record.id})">查看声明</button>
-                            ` : ''}
-                            ${record.status === 'draft' ? `
-                                <button class="btn btn-primary engineer-only" onclick="openDeclarationModal(${record.id}, ${JSON.stringify(record.component || {}).replace(/"/g, '&quot;')})">填写声明</button>
-                                <button class="btn btn-secondary engineer-only" onclick="submitRecord(${record.id})">提交</button>
-                            ` : ''}
-                            ${record.status === 'pending_security' ? `<button class="btn btn-primary security-only" onclick="securityApprove(${record.id})">通过</button>` : ''}
-                            ${record.status === 'pending_legal' ? `
-                                <button class="btn btn-success legal-only" onclick="legalApprove(${record.id})">批准</button>
-                                <button class="btn btn-danger legal-only" onclick="legalReject(${record.id})">驳回</button>
-                            ` : ''}
-                        </div>
-                    </td>
                 </tr>
             `).join('');
 
-            // 渲染完成后更新按钮可见性
             updateRoleBasedUI();
+        }
+
+        // ========== 组件导入页面相关函数 ==========
+
+        // 组件导入页面的状态常量
+        const COMPONENT_STATUS_PRIORITY = {
+            'pending_legal': 5,
+            'pending_security': 4,
+            'draft': 2,
+            'rejected': 1,
+            'approved': 0
+        };
+
+        const COMPONENT_STATUS_LABELS = {
+            'draft': '草稿',
+            'pending_security': '待安全校验',
+            'pending_legal': '待法务审批',
+            'approved': '已通过',
+            'rejected': '已驳回'
+        };
+
+        const COMPONENT_STATUS_CLASS = {
+            'draft': 'badge-secondary',
+            'pending_security': 'badge-warning',
+            'pending_legal': 'badge-warning',
+            'approved': 'badge-success',
+            'rejected': 'badge-error'
+        };
+
+        // 组件导入页面的分组数据（全局变量）
+        let componentRecordsGroupedBySystem = {};
+
+        // 加载组件导入页面的数据（合规记录按系统分组）
+        async function loadComponentRecords() {
+            const status = document.getElementById('component-filter-status').value;
+            const system = document.getElementById('component-search-system').value;
+
+            let url = `${API_BASE}/compliance-records?limit=1000`;
+            if (status) url += `&status=${status}`;
+            if (system) url += `&system_name=${encodeURIComponent(system)}`;
+
+            try {
+                const res = await authFetch(url);
+                const records = await res.json();
+                renderComponentRecordsTable(records);
+            } catch (error) {
+                showToast('加载记录失败：' + error.message, 'error');
+            }
+        }
+
+        // 渲染组件导入页面表格（按系统分组）
+        function renderComponentRecordsTable(records) {
+            const tbody = document.getElementById('component-records-table-body');
+
+            if (!records || records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div>暂无记录</div></td></tr>';
+                updateRoleBasedUI();
+                return;
+            }
+
+            // 按系统名称分组
+            componentRecordsGroupedBySystem = {};
+            records.forEach(record => {
+                const systemName = record.system_name || '未命名系统';
+                if (!componentRecordsGroupedBySystem[systemName]) {
+                    componentRecordsGroupedBySystem[systemName] = [];
+                }
+                componentRecordsGroupedBySystem[systemName].push(record);
+            });
+
+            // 渲染每组数据
+            tbody.innerHTML = Object.entries(componentRecordsGroupedBySystem).map(([systemName, systemRecords]) => {
+                const componentCount = systemRecords.length;
+                // 取优先级最高的状态
+                const dominantStatus = systemRecords.reduce((prev, curr) => {
+                    return COMPONENT_STATUS_PRIORITY[curr.status] > COMPONENT_STATUS_PRIORITY[prev.status] ? curr : prev;
+                });
+                const firstRecord = systemRecords.reduce((prev, curr) => {
+                    return new Date(prev.created_at) < new Date(curr.created_at) ? prev : curr;
+                });
+
+                return `
+                    <tr>
+                        <td>${systemName}</td>
+                        <td>${componentCount} 个</td>
+                        <td><span class="badge ${COMPONENT_STATUS_CLASS[dominantStatus.status] || 'badge-secondary'}">${COMPONENT_STATUS_LABELS[dominantStatus.status] || dominantStatus.status}</span></td>
+                        <td>${new Date(firstRecord.created_at).toLocaleDateString('zh-CN')}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="viewComponentSystemDetail('${systemName.replace(/'/g, "\\'")}')">查看详情</button>
+                            ${dominantStatus.status === 'draft' ? '<button class="btn btn-sm btn-primary engineer-only" onclick="submitSystemRecords(\'' + systemName.replace(/'/g, "\\'") + '\')">提交审批</button>' : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateRoleBasedUI();
+        }
+
+        // 查看系统详情（弹窗显示该系统下所有组件）
+        function viewComponentSystemDetail(systemName) {
+            const systemRecords = componentRecordsGroupedBySystem[systemName] || [];
+            const modal = document.getElementById('component-system-detail-modal-overlay');
+            const title = document.getElementById('component-system-detail-title');
+            const tbody = document.getElementById('component-system-detail-body');
+
+            title.textContent = `${systemName} - ${systemRecords.length} 个组件`;
+
+            if (systemRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无数据</td></tr>';
+            } else {
+                tbody.innerHTML = systemRecords.map(record => `
+                    <tr>
+                        <td>${record.component?.name || '-'}</td>
+                        <td>${record.component?.version || '-'}</td>
+                        <td>${record.component?.license || '-'}</td>
+                        <td><span class="badge ${RISK_MAP[record.component?.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[record.component?.license_risk_level]?.label || '-'}</span></td>
+                        <td>${record.component?.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
+                        <td><span class="badge ${COMPONENT_STATUS_CLASS[record.status] || 'badge-secondary'}">${COMPONENT_STATUS_LABELS[record.status] || record.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeComponentSystemDetailModal() {
+            document.getElementById('component-system-detail-modal-overlay').classList.remove('active');
+        }
+
+        // 批量提交审批
+        async function submitSystemRecords(systemName) {
+            const systemRecords = componentRecordsGroupedBySystem[systemName] || [];
+            const draftRecords = systemRecords.filter(r => r.status === 'draft');
+
+            if (draftRecords.length === 0) {
+                showToast('该系统下没有可提交的草稿记录', 'warning');
+                return;
+            }
+
+            if (!confirm(`确定要提交 ${systemName} 下的 ${draftRecords.length} 个组件记录进行审批吗？`)) {
+                return;
+            }
+
+            try {
+                for (const record of draftRecords) {
+                    await authFetch(`${API_BASE}/compliance-records/${record.id}/submit`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+                }
+                showToast('提交成功', 'success');
+                loadComponentRecords();
+            } catch (error) {
+                showToast('提交失败：' + error.message, 'error');
+            }
         }
 
         // 加载组件列表
@@ -2579,9 +2838,11 @@
                 radio.parentElement.style.fontWeight = radio.value === isModified ? '600' : 'normal';
             });
 
-            // 隐藏步骤指示器和导航按钮，显示复制按钮组
+            // 隐藏步骤指示器和导航按钮，保留 PDF 导出按钮
             document.querySelector('.step-indicator').style.display = 'none';
-            document.querySelector('#declaration-modal-overlay .modal-footer .step-buttons').style.display = 'none';
+            document.getElementById('prev-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
 
             // 显示"关闭"按钮（替换"取消"按钮）
             const cancelBtn = document.querySelector('#declaration-modal-overlay .modal-footer .btn-secondary');

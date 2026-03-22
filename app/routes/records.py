@@ -4,8 +4,8 @@
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
 from app.database import get_db
@@ -34,13 +34,14 @@ async def list_records(
     limit: int = Query(20, ge=1, le=100),
     status: Optional[RecordStatusEnum] = None,
     system_name: Optional[str] = None,
+    response: Response = None,
     current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """获取合规记录列表（支持状态和系统过滤）"""
     from app.models.component import Component
 
-    query = db.query(ComplianceRecord).join(Component, isouter=True)
+    query = db.query(ComplianceRecord).join(Component, isouter=True).options(joinedload(ComplianceRecord.component))
 
     if status:
         query = query.filter(ComplianceRecord.status == status)
@@ -58,7 +59,15 @@ async def list_records(
             )
         )
 
+    # 获取总数
+    total = query.count()
+
     records = query.order_by(ComplianceRecord.created_at.desc()).offset(skip).limit(limit).all()
+
+    # 在 response header 中返回总数
+    if response:
+        response.headers["X-Total-Count"] = str(total)
+
     return records
 
 
@@ -92,7 +101,7 @@ async def create_record(
 @router.get("/{record_id}", response_model=ComplianceRecordResponse)
 async def get_record(record_id: int, db: Session = Depends(get_db)):
     """获取合规记录详情"""
-    record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
+    record = db.query(ComplianceRecord).options(joinedload(ComplianceRecord.component)).filter(ComplianceRecord.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
     return record

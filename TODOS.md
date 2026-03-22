@@ -2,51 +2,71 @@
 
 ## Legal Declaration Features
 
-### P2: 审批时间线显示
-**Priority:** P2
-
-**What:** 在法务声明查看模态框中显示审批时间线（安全审批时间、法务审批时间、各阶段审批人）
-
-**Why:** 用户需要知道声明的审批历史，了解谁在什么时候审批了此声明
-
-**Pros:**
-- 提高审批流程透明度
-- 方便追溯审批责任
-- 用户更有信心
-
-**Cons:**
-- 需要后端 API 支持（返回审批历史）
-- 前端需要额外的 UI 空间
-
-**Context:** 从 CEO review  deferred。当前声明查看模态框只显示声明内容，不显示审批流程信息。
-
-**Depends on:** 后端需要添加审批历史 API 或扩展现有 API 返回审批时间线数据
-
----
-
 ### P3: 导出 PDF 功能
 **Priority:** P3
+**Status:** SKIPPED
 
 **What:** 允许用户将法务声明导出为 PDF 文件
 
 **Why:** 法务/安全团队可能需要离线存档或打印声明
 
-**Pros:**
-- 方便存档
-- 支持离线审查
-- 符合某些企业的合规要求
-
 **Cons:**
 - 需要 PDF 生成库（如 jsPDF 或后端生成）
 - 增加前端复杂度或后端负担
 
-**Context:** 从 CEO review deferred。当前只有网页查看，无导出功能。
-
-**Depends on:** 选择合适的 PDF 生成方案（前端 vs 后端）
+**Decision:** CEO review 决定跳过此功能，优先级低于其他核心功能。
 
 ---
 
 ## Completed
+
+### 历史复用提醒功能
+**Completed:** 2026-03-22
+
+**What:** 当研发填写法务声明时，系统自动提示"这个组件在 X 个系统中已获批"，并显示审批详情列表
+
+**Why:** 避免同一组件在不同项目中重复审批，提高研发填写效率和信心
+
+**Implementation:**
+- 后端：`GET /api/legal-declarations/{declaration_id}/history-suggestions` 端点
+- 服务：`DeclarationHistoryService.get_history_suggestions()` 查询同一组件（name+version）的已批准声明
+- 前端：声明表单 Modal 中的 `history-reminder` 组件和 `loadHistorySuggestions()` 函数
+- 数据库：Component 表已有 `uq_component_name_version` 复合约束支持快速查询
+
+---
+
+### 审批时间线显示（简化版）
+**Completed:** 2026-03-22
+
+**What:** 在法务声明查看模态框中显示审批时间线（安全审批时间、法务审批时间、各阶段审批人）
+
+**Why:** 用户需要知道声明的审批历史，了解谁在什么时候审批了此声明
+
+**Implementation:**
+- 数据：ComplianceRecord 模型已有 `security_reviewed_at`, `reviewed_by_security`, `legal_approved_at`, `approved_by_legal` 字段
+- 后端：`GET /api/compliance-records/{record_id}/declaration` 返回 `approval_timeline` 字段
+- 前端：声明表单 Modal 中的 `decl-approval-timeline-container` 渲染时间线 UI
+
+---
+
+### SPDX 批量导入（完整版）
+**Completed:** 2026-03-22
+
+**What:** 研发上传 SPDX 文件，系统自动解析并批量创建法务声明草稿，自动填充 80% 字段
+
+**Why:** 减少研发填写几百个组件的负担，从 SPDX 解析自动填充许可证、下载链接等字段
+
+**Implementation:**
+- 服务：`app/services/spdx_parser.py` — SPDX 解析服务（支持 JSON 和 tag-value 格式）
+- 服务：`app/services/declaration_auto_filler.py` — 自动填充服务（SPDX 数据 + 历史记录 + AI 辅助）
+- 后端：`POST /api/legal-declarations/bulk-import` — 批量导入端点
+- 后端：`POST /api/legal-declarations/bulk-import/preview` — 预览端点（带预填充数据）
+- 前端：SPDX 导入模态框，支持分页浏览、批量编辑、进度显示
+
+---
+
+### 组件全局审批（方案 A）
+**Completed:** 2026-03-22
 
 ### 组件全局审批（方案 A）
 **Completed:** 2026-03-22

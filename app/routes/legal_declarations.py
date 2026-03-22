@@ -676,15 +676,21 @@ async def export_declaration_pdf(
             system_name=record.system_name,
             approval_timeline=approval_timeline
         )
+
     except Exception as e:
         logger.error(f"生成 PDF 失败：{e}")
-        raise HTTPException(status_code=500, detail="PDF 生成失败，请稍后重试")
+        raise HTTPException(status_code=500, detail=f"PDF 生成失败：{str(e)}")
 
     # 返回 PDF 文件
-    filename = f"{component.name.replace('/', '-').replace(' ', '_')}-{component.version}-法务声明.pdf"
+    # 使用 RFC 5987 编码处理中文文件名 (HTTP header 只支持 latin-1)
+    from urllib.parse import quote
+    filename_ascii = f"{component.name.replace('/', '-').replace(' ', '_')}-{component.version}-declaration.pdf"
+    filename_utf8 = quote(f"{component.name.replace('/', '-')}-{component.version}-法务声明.pdf")
 
     return StreamingResponse(
         BytesIO(pdf_data),
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{filename_ascii}\"; filename*=UTF-8''{filename_utf8}"
+        }
     )

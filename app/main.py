@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import traceback
 
 from app.config import get_settings
 from app.exceptions import AppException
@@ -49,6 +50,15 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy", "version": "0.1.0"}
+
+    # 全局异常处理器
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Unhandled exception: {exc}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Request: {request.method} {request.url}")
+        raise exc
+
 
     # 静态文件服务
     app.mount("/static", StaticFiles(directory="static"), name="static")

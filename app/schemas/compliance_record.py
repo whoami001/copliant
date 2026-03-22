@@ -51,6 +51,9 @@ class ComponentRef(BaseModel):
     id: int
     name: str
     version: str
+    license: Optional[str] = None
+    license_risk_level: Optional[str] = None
+    is_approved: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
