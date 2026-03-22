@@ -1413,7 +1413,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#components" class="nav-link" data-page="components">
+                    <a href="#components" class="nav-link engineer-only" data-page="components">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
@@ -2267,22 +2267,22 @@
             // 根据角色显示/隐藏特定按钮
             const isAdmin = currentUser && currentUser.role === 'admin';
 
-            // 研发可见按钮
-            const engineerButtons = document.querySelectorAll('.engineer-only');
-            engineerButtons.forEach(btn => {
-                btn.style.display = (isAdmin || hasRole('engineer')) ? 'inline-flex' : 'none';
+            // 研发可见按钮和导航项
+            const engineerItems = document.querySelectorAll('.engineer-only');
+            engineerItems.forEach(el => {
+                el.style.display = (isAdmin || hasRole('engineer')) ? '' : 'none';
             });
 
-            // 安全可见按钮
-            const securityButtons = document.querySelectorAll('.security-only');
-            securityButtons.forEach(btn => {
-                btn.style.display = (isAdmin || hasRole('security')) ? 'inline-flex' : 'none';
+            // 安全可见按钮和导航项
+            const securityItems = document.querySelectorAll('.security-only');
+            securityItems.forEach(el => {
+                el.style.display = (isAdmin || hasRole('security')) ? '' : 'none';
             });
 
-            // 法务可见按钮
-            const legalButtons = document.querySelectorAll('.legal-only');
-            legalButtons.forEach(btn => {
-                btn.style.display = (isAdmin || hasRole('legal')) ? 'inline-flex' : 'none';
+            // 法务可见按钮和导航项
+            const legalItems = document.querySelectorAll('.legal-only');
+            legalItems.forEach(el => {
+                el.style.display = (isAdmin || hasRole('legal')) ? '' : 'none';
             });
         }
 
@@ -2407,10 +2407,23 @@
                             const status = item.status;
                             let actionButtons = '';
 
-                            // 根据状态显示不同的操作按钮
-                            if (status === 'pending_security' || status === 'pending_legal') {
-                                // 待审批状态：研发只能催促
-                                actionButtons = `<button class="btn btn-sm btn-warning engineer-only" onclick="urgeRecord(${item.id}, '${status}')">催促</button>`;
+                            // 根据状态和用户角色显示不同的操作按钮
+                            if (status === 'pending_security') {
+                                // 待安全校验：安全用户可以审批，研发可以催促
+                                actionButtons = `
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-sm btn-success security-only" onclick="approveRecord(${item.id}, 'security')">审批</button>
+                                        <button class="btn btn-sm btn-warning engineer-only" onclick="urgeRecord(${item.id}, '${status}')">催促</button>
+                                    </div>
+                                `;
+                            } else if (status === 'pending_legal') {
+                                // 待法务审批：法务用户可以审批，研发可以催促
+                                actionButtons = `
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-sm btn-success legal-only" onclick="approveRecord(${item.id}, 'legal')">审批</button>
+                                        <button class="btn btn-sm btn-warning engineer-only" onclick="urgeRecord(${item.id}, '${status}')">催促</button>
+                                    </div>
+                                `;
                             } else if (status === 'draft') {
                                 // 草稿状态：研发可以编辑/提交
                                 actionButtons = `<button class="btn btn-sm btn-primary engineer-only" onclick="handleRecord(${item.id})">处理</button>`;
@@ -2819,6 +2832,31 @@
                 }
             } catch (error) {
                 showToast('催促失败：' + error.message, 'error');
+            }
+        }
+
+        // 审批记录（安全或法务审批）
+        async function approveRecord(id, type) {
+            const approver = type === 'security' ? '安全' : '法务';
+            if (!confirm(`确定要${approver}审批通过吗？`)) return;
+
+            try {
+                const endpoint = type === 'security' ? 'approve' : 'approve';
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/${endpoint}`, {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                });
+
+                if (res.ok) {
+                    showToast(`${approver}审批通过`, 'success');
+                    // 重新加载待办事项
+                    loadDashboard();
+                } else {
+                    const error = await res.json();
+                    showToast('审批失败：' + (error.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('审批失败：' + error.message, 'error');
             }
         }
 
