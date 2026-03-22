@@ -18,22 +18,21 @@
 
 ---
 
-## UX Improvements (Deferred)
+## Completed
 
-### Record Detail Page UI
-**Priority:** P3
-**Status:** DEFERRED
-**Found by:** /qa on 2026-03-22
+### 组件系统详情批量编辑功能
+**Completed:** 2026-03-22
 
-**What:** 创建合规记录的详情页面 UI，替代当前直接打开 API JSON 的 MVP 方案
+**What:** 在「组件导入」页面的「按系统分组」视图中，点击「操作」列的「查看详情」按钮后，打开批量编辑模态框（与上传 SPDX 文件后的预览界面相同）
 
-**Why:** 当前点击"处理"按钮会打开裸 API 端点（JSON 格式），对用户体验不友好，也不适合生产环境
+**Why:** 研发人员可能未完成填写就保存了进度，需要从这里继续编辑未完成的草稿记录
 
-**Cons:**
-- 需要设计详情页的字段布局和编辑功能
-- 增加前端页面复杂度
-
-**Repro:** 点击待办事项中的"处理"按钮 → 打开 `/api/compliance-records/{id}` JSON 页面
+**Implementation:**
+- 前端：新增 `viewComponentSystemDetail()` 函数，从 API 加载系统下所有草稿状态的记录
+- 数据流：将 `ComplianceRecord` 转换为批量编辑格式，包含 `declaration` 数据
+- 编辑模式：通过 `window.isEditMode` 标记区分新建/编辑模式
+- 提交逻辑：编辑模式下调用 `PUT /api/legal-declarations/{id}` 更新已有声明
+- 只读回退：当系统下没有草稿记录时，显示 `viewComponentSystemDetailReadonly()` 只读弹窗
 
 ---
 
