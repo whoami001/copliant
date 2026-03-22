@@ -48,4 +48,28 @@
 
 ## Completed
 
-*None yet*
+### 组件全局审批（方案 A）
+**Completed:** 2026-03-22
+
+**What:** 当任何项目的合规记录被法务审批通过后，自动标记组件为全局已审批（`Component.is_approved = true`）
+
+**Why:** 避免同一组件在不同项目中重复审批，提高效率
+
+**Implementation:**
+- 修改 `app/routes/records.py` `approve_record()` 函数
+- 法务审批通过时自动更新 `record.component.is_approved = True`
+
+---
+
+### Component 模型新增来源字段
+**Completed:** 2026-03-22
+
+**What:** 为 Component 模型添加 `source` 字段，标识组件来源（Black Duck 导入/手动创建/批量导入）
+
+**Why:** 追踪组件数据来源，便于后续管理和审计
+
+**Implementation:**
+- 模型字段：`source = Column(String(50), default="blackduck", comment="组件来源：blackduck/manual/import")`
+- 数据库迁移：`migrations/versions/005_add_source_field_to_component.py`
+
+---

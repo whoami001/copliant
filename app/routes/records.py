@@ -138,10 +138,8 @@ async def submit_record(
         raise HTTPException(status_code=403, detail="权限不足：只能提交自己创建的记录")
 
     approval_service = get_approval_flow_service(db)
-    # MVP: 虚拟用户
-    user = User(id=1, email="mvp@company.com", role=UserRole.ENGINEER)
 
-    record = approval_service.submit_for_review(record, user)
+    record = approval_service.submit_for_review(record, current_user)
     db.commit()
     db.refresh(record)
 
@@ -170,6 +168,10 @@ async def approve_record(
         # 法务审批通过
         user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
         record = approval_service.legal_approve(record, user, approve=True, comments=approve_data.comments)
+
+        # 方案 A: 组件全局审批 — 法务通过后，自动标记组件为已审批
+        record.component.is_approved = True
+        db.add(record.component)
     else:
         raise HTTPException(status_code=400, detail="当前状态不能执行审批操作")
 

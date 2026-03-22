@@ -23,6 +23,7 @@ class Component(Base):
     license_risk_level = Column(String(20), default="unknown")  # safe/caution/warning/unknown
     black_duck_report_id = Column(String(100))
     is_approved = Column(Boolean, default=False)
+    source = Column(String(50), default="blackduck", comment="组件来源：blackduck/manual/import")
 
     created_by = Column(Integer, ForeignKey("users.id"))
     updated_by = Column(Integer, ForeignKey("users.id"))
