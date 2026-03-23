@@ -180,21 +180,21 @@ class ApprovalFlowService:
         comments: str,
     ) -> ComplianceRecord:
         """
-        要求修改（法务用）
+        要求修改（安全或法务用）
 
         Args:
             record: 合规记录
-            user: 法务用户
+            user: 安全或法务用户
             comments: 修改意见
 
         Returns:
             更新后的记录
         """
-        if record.status != RecordStatus.PENDING_LEGAL:
-            raise ValidationError("记录不在法务审批状态")
+        if record.status not in [RecordStatus.PENDING_SECURITY, RecordStatus.PENDING_LEGAL]:
+            raise ValidationError("记录不在审批状态")
 
-        if user.role not in [UserRole.LEGAL, UserRole.ADMIN]:
-            raise ForbiddenError("只有法务角色可以要求修改")
+        if user.role not in [UserRole.SECURITY, UserRole.LEGAL, UserRole.ADMIN]:
+            raise ForbiddenError("只有安全或法务角色可以要求修改")
 
         old_status = record.status
         record.status = RecordStatus.DRAFT

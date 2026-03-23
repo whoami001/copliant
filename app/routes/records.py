@@ -21,6 +21,7 @@ from app.schemas.compliance_record import (
 from app.models.compliance_record import ComplianceRecord, RecordStatus
 from app.models.user import User, UserRole
 from app.services.approval_flow import get_approval_flow_service
+from app.services.notification import get_notification_service, NotificationType
 from app.core.permissions import get_current_user_from_token, can
 from app.utils.logger import get_logger
 
@@ -179,12 +180,10 @@ async def approve_record(
 
     if record.status == RecordStatus.PENDING_SECURITY:
         # 安全校验通过
-        user = User(id=2, email="security@company.com", role=UserRole.SECURITY)
-        record = approval_service.security_review(record, user, pass_review=True, comments=approve_data.comments)
+        record = approval_service.security_review(record, current_user, pass_review=True, comments=approve_data.comments)
     elif record.status == RecordStatus.PENDING_LEGAL:
         # 法务审批通过
-        user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
-        record = approval_service.legal_approve(record, user, approve=True, comments=approve_data.comments)
+        record = approval_service.legal_approve(record, current_user, approve=True, comments=approve_data.comments)
 
         # 方案 A: 组件全局审批 — 法务通过后，自动标记组件为已审批
         record.component.is_approved = True
@@ -211,15 +210,41 @@ async def reject_record(
         raise HTTPException(status_code=404, detail="Record not found")
 
     approval_service = get_approval_flow_service(db)
+    notification_service = get_notification_service(db)
 
     if record.status == RecordStatus.PENDING_SECURITY:
-        user = User(id=2, email="security@company.com", role=UserRole.SECURITY)
-        record = approval_service.security_review(record, user, pass_review=False, comments=reject_data.comments)
+        # 安全校验驳回
+        record = approval_service.security_review(record, current_user, pass_review=False, comments=reject_data.get_rejection_reason())
+
+        # 发送通知给研发人员
+        if record.filled_by:
+            filler = db.query(User).filter(User.id == record.filled_by).first()
+            if filler:
+                notification_service.notify_security_rejected(
+                    user=filler,
+                    record=record,
+                    reason=reject_data.get_rejection_reason(),
+                )
+
     elif record.status == RecordStatus.PENDING_LEGAL:
-        user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
-        record = approval_service.legal_approve(record, user, approve=False, comments=reject_data.comments)
+        # 法务审批驳回（要求修改）
+        record = approval_service.legal_approve(record, current_user, approve=False, comments=reject_data.get_rejection_reason())
+
+        # 发送通知给研发人员
+        if record.filled_by:
+            filler = db.query(User).filter(User.id == record.filled_by).first()
+            if filler:
+                notification_service.notify_legal_rejected(
+                    user=filler,
+                    record=record,
+                    reason=reject_data.get_rejection_reason(),
+                )
     else:
         raise HTTPException(status_code=400, detail="当前状态不能执行驳回操作")
+
+    # 保存驳回原因和需要补充的字段
+    record.rejection_reason = reject_data.get_rejection_reason()
+    record.required_fields = reject_data.required_fields
 
     db.commit()
     db.refresh(record)
@@ -234,15 +259,42 @@ async def request_changes(
     current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
-    """要求修改（法务用）"""
+    """要求修改（安全或法务用）"""
     record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
 
-    approval_service = get_approval_flow_service(db)
+    # 保存原状态用于判断发送哪种通知
+    old_status = record.status
 
-    user = User(id=3, email="legal@company.com", role=UserRole.LEGAL)
-    record = approval_service.request_changes(record, user, comments=reject_data.comments)
+    approval_service = get_approval_flow_service(db)
+    notification_service = get_notification_service(db)
+
+    record = approval_service.request_changes(record, current_user, comments=reject_data.get_rejection_reason())
+
+    # 发送通知给研发人员
+    if record.filled_by:
+        filler = db.query(User).filter(User.id == record.filled_by).first()
+        if filler:
+            # 根据原状态发送不同类型的通知
+            if old_status == RecordStatus.PENDING_SECURITY:
+                # 安全校验阶段要求补充信息
+                notification_service.notify_security_rejected(
+                    user=filler,
+                    record=record,
+                    reason=reject_data.get_rejection_reason(),
+                )
+            else:
+                # 法务审批阶段要求补充信息
+                notification_service.notify_legal_rejected(
+                    user=filler,
+                    record=record,
+                    reason=reject_data.get_rejection_reason(),
+                )
+
+    # 保存要求补充的原因和字段列表
+    record.rejection_reason = reject_data.get_rejection_reason()
+    record.required_fields = reject_data.required_fields
 
     db.commit()
     db.refresh(record)
@@ -258,6 +310,7 @@ async def urge_record(
 ):
     """催促审批（研发可以催促安全加快处理）"""
     from app.models.urgency import Urgency
+    from app.services.notification import NotificationType
 
     record = db.query(ComplianceRecord).filter(ComplianceRecord.id == record_id).first()
     if not record:
@@ -280,6 +333,25 @@ async def urge_record(
     )
     db.add(urgency)
     db.commit()
+
+    # 发送通知给安全或法务人员
+    notification_service = get_notification_service(db)
+    target_users = []
+    if record.status == RecordStatus.PENDING_SECURITY:
+        # 获取所有安全用户
+        target_users = db.query(User).filter(User.role == UserRole.SECURITY, User.is_active == True).all()
+    elif record.status == RecordStatus.PENDING_LEGAL:
+        # 获取所有法务用户
+        target_users = db.query(User).filter(User.role == UserRole.LEGAL, User.is_active == True).all()
+
+    for target_user in target_users:
+        notification_service.create_notification(
+            user=target_user,
+            title="您有待处理的审批请求被催促",
+            message=f"研发人员催促审批：{record.component.name}@{record.component.version} - {record.system_name}",
+            notification_type=NotificationType.URGENCY_ADDED,
+            related_record=record,
+        )
 
     logger.info(f"用户 {current_user.id} 催促记录 {record_id}")
     return record
