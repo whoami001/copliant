@@ -444,6 +444,16 @@
             display: flex;
         }
 
+        /* 批量审批操作选择模态框 - 更高层级 */
+        #batch-approval-action-modal-overlay {
+            z-index: 1100;
+        }
+
+        /* 批量要求补充信息模态框 - 更高层级 */
+        #batch-request-changes-modal-overlay {
+            z-index: 1100;
+        }
+
         .modal {
             background: var(--surface);
             border-radius: var(--radius-lg);
@@ -1721,6 +1731,110 @@
         </div>
     </div>
 
+    <!-- 系统待办详情弹窗（用于按系统分组视图） -->
+    <div class="modal-overlay" id="system-todo-detail-modal-overlay">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="system-todo-detail-title">系统详情</h3>
+                <button class="modal-close" onclick="document.getElementById('system-todo-detail-modal-overlay').classList.remove('active')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <colgroup>
+                        <col style="width: 25%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                        <col style="width: 15%;">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>组件名称</th>
+                            <th>版本</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="system-todo-detail-body">
+                        <tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="document.getElementById('system-todo-detail-modal-overlay').classList.remove('active')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量审批操作选择模态框 -->
+    <div class="modal-overlay" id="batch-approval-action-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="batch-approval-action-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="batch-approval-action-modal-title">批量审批 - 选择操作</h3>
+                <button class="modal-close" onclick="closeBatchApprovalActionModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">请选择审批操作类型：</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-primary" id="batch-approve-confirm-btn" style="padding: 16px; text-align: left; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 20px;">✓</span>
+                        <div>
+                            <div style="font-weight: 600;">审批通过</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">直接通过所选组件的审批</div>
+                        </div>
+                    </button>
+                    <button class="btn btn-secondary" id="batch-request-changes-btn" style="padding: 16px; text-align: left; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 20px;">📝</span>
+                        <div>
+                            <div style="font-weight: 600;">要求补充信息</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">退回并要求研发补充特定字段</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量要求补充信息模态框 -->
+    <div class="modal-overlay" id="batch-request-changes-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="batch-request-changes-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="batch-request-changes-title">要求补充信息</h3>
+                <button class="modal-close" onclick="closeBatchRequestChangesModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 8px; display: block;">需要补充的字段：</label>
+                    <div id="request-changes-fields-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label" style="font-weight: 600; margin-bottom: 8px; display: block;">要求补充的原因：</label>
+                    <textarea id="request-changes-reason" class="form-control" rows="3" placeholder="请说明为什么需要补充这些信息..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchRequestChangesModal()">取消</button>
+                <button class="btn btn-primary" onclick="executeBatchRequestChanges()">确认要求</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 法务声明表单模态框（分步表单） -->
     <div class="modal-overlay" id="declaration-modal-overlay">
         <div class="modal modal-large">
@@ -1966,6 +2080,7 @@
                                     <th class="col-usage">使用方式</th>
                                     <th class="col-modified">是否修改</th>
                                     <th class="col-source">来源</th>
+                                    <th class="col-requirements">特殊使用要求</th>
                                 </tr>
                             </thead>
                             <tbody id="batch-edit-tbody">
@@ -2242,6 +2357,12 @@
                 // 获取用户信息
                 await fetchCurrentUser();
 
+                // 加载当前页面数据
+                const currentPage = document.querySelector('.page.active');
+                if (currentPage && currentPage.id === 'page-dashboard') {
+                    await loadDashboard();
+                }
+
                 closeLoginModal();
                 showToast('登录成功', 'success');
             } catch (error) {
@@ -2426,10 +2547,81 @@
                 document.getElementById('stat-avg-days').textContent = stats.avg_processing_days + '天';
                 document.getElementById('stat-total').textContent = stats.total_records;
 
-                renderTodoList(todos.items);
+                // 根据用户角色决定使用哪种待办列表显示
+                // 安全和法务用户使用按系统分组的视图
+                if (currentUser && (currentUser.role === 'security' || currentUser.role === 'legal' || currentUser.role === 'admin')) {
+                    // 加载按系统分组的待办事项
+                    const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`);
+                    const todoGrouped = await todoGroupedRes.json();
+                    renderSystemGroupedTodoList(todoGrouped.items);
+                } else {
+                    // 研发用户使用传统列表视图
+                    renderTodoList(todos.items);
+                }
             } catch (error) {
                 showToast('加载数据失败：' + error.message, 'error');
             }
+        }
+
+        // 渲染按系统分组的待办列表（安全/法务用户）
+        function renderSystemGroupedTodoList(items) {
+            const container = document.getElementById('todo-list');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">太棒了！</div>
+                        <div class="empty-state-desc">所有合规记录都已处理完成</div>
+                    </div>
+                `;
+                updateRoleBasedUI();
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>系统名称</th>
+                            <th>组件数量</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => {
+                            const status = item.status;
+                            let actionButtons = '';
+
+                            // 根据状态显示操作按钮
+                            if (status === 'pending_security') {
+                                // 待安全校验：批量审批（打开批量编辑表格，带审批功能）
+                                actionButtons = `
+                                    <button class="btn btn-sm btn-success" onclick="batchApproveTodoSystem('${escapeHtml(item.system_name)}', '${status}', [${item.record_ids.join(',')}])">批量审批</button>
+                                `;
+                            } else if (status === 'pending_legal') {
+                                // 待法务审批：批量审批（打开批量编辑表格，带审批功能）
+                                actionButtons = `
+                                    <button class="btn btn-sm btn-success" onclick="batchApproveTodoSystem('${escapeHtml(item.system_name)}', '${status}', [${item.record_ids.join(',')}])">批量审批</button>
+                                `;
+                            }
+
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(item.system_name)}</td>
+                                    <td>${item.component_count} 个</td>
+                                    <td><span class="badge ${STATUS_MAP[status]?.class || 'badge-secondary'}">${STATUS_MAP[status]?.label || status}</span></td>
+                                    <td>${new Date(item.earliest_created_at).toLocaleDateString('zh-CN')}</td>
+                                    <td>${actionButtons}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            updateRoleBasedUI();
         }
 
         function renderTodoList(items) {
@@ -2463,6 +2655,9 @@
                             const status = item.status;
                             let actionButtons = '';
 
+                            // 是否有审批意见（驳回原因或要求补充字段）
+                            const hasRejectionReason = item.rejection_reason || (item.required_fields && item.required_fields.length > 0);
+
                             // 根据状态和用户角色显示不同的操作按钮
                             if (status === 'pending_security') {
                                 // 待安全校验：安全用户可以审批，研发可以催促
@@ -2488,19 +2683,72 @@
                                 actionButtons = `<button class="btn btn-sm btn-primary engineer-only" onclick="handleRecord(${item.id})">重新处理</button>`;
                             }
 
+                            // 审批意见详情行（仅当有驳回原因或要求补充字段时显示）
+                            const rejectionDetailRow = hasRejectionReason ? `
+                                <tr class="rejection-detail-row" id="rejection-detail-${item.id}" style="display: none;">
+                                    <td colspan="4" style="background: var(--bg); padding: 12px 16px;">
+                                        <div style="display: flex; gap: 16px;">
+                                            ${item.rejection_reason ? `
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--danger);">📋 审批意见</div>
+                                                    <div style="color: var(--text); font-size: 14px;">${escapeHtml(item.rejection_reason)}</div>
+                                                </div>
+                                            ` : ''}
+                                            ${item.required_fields && item.required_fields.length > 0 ? `
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--warning);">⚠️ 需要补充的字段</div>
+                                                    <div style="color: var(--text); font-size: 14px;">${item.required_fields.map(f => `<span class="badge badge-secondary" style="margin-right: 4px;">${escapeHtml(f)}</span>`).join('')}</div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ` : '';
+
+                            // 展开/收起按钮（仅当有审批意见时显示）
+                            const toggleBtn = hasRejectionReason ? `
+                                <button class="btn btn-sm btn-secondary" onclick="toggleRejectionDetail(${item.id})" style="margin-top: 4px;">
+                                    查看详情
+                                </button>
+                            ` : '';
+
                             return `
                                 <tr>
-                                    <td>${item.record_name}</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            ${item.record_name}
+                                            ${hasRejectionReason ? '<span class="badge badge-danger" style="font-size: 10px;">有审批意见</span>' : ''}
+                                        </div>
+                                    </td>
                                     <td>${item.system_name}</td>
                                     <td><span class="badge ${STATUS_MAP[item.status]?.class || 'badge-secondary'}">${STATUS_MAP[item.status]?.label || item.status}</span></td>
-                                    <td>${actionButtons}</td>
+                                    <td>
+                                        <div style="display: flex; gap: 8px; align-items: flex-start;">
+                                            <div>${actionButtons}</div>
+                                            ${toggleBtn}
+                                        </div>
+                                    </td>
                                 </tr>
+                                ${rejectionDetailRow}
                             `;
                         }).join('')}
                     </tbody>
                 </table>
             `;
             updateRoleBasedUI();  // 渲染完成后更新按钮可见性
+        }
+
+        // 展开/收起审批意见详情
+        function toggleRejectionDetail(recordId) {
+            const detailRow = document.getElementById(`rejection-detail-${recordId}`);
+            const btn = event.target;
+            if (detailRow.style.display === 'none') {
+                detailRow.style.display = '';
+                btn.textContent = '收起';
+            } else {
+                detailRow.style.display = 'none';
+                btn.textContent = '查看详情';
+            }
         }
 
         // 分页状态
@@ -2948,6 +3196,396 @@
                 }
             } catch (error) {
                 showToast('审批失败：' + error.message, 'error');
+            }
+        }
+
+        // 批量审批记录（用于按系统分组视图）
+        async function batchApproveRecord(recordIds, type) {
+            const approver = type === 'security' ? '安全' : '法务';
+            if (!confirm(`确定要批量${approver}审批通过 ${recordIds.length} 个组件吗？`)) return;
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const id of recordIds) {
+                try {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${id}/approve`, {
+                        method: 'POST',
+                        body: JSON.stringify({ comments: `批量${approver}审批通过` })
+                    });
+                    if (res.ok) successCount++;
+                    else failedCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                showToast(`批量审批完成：成功 ${successCount} 个，失败 ${failedCount} 个`, 'success');
+                loadDashboard();
+            } else {
+                showToast('批量审批失败：' + (failedCount > 0 ? '所有组件都失败' : '未知错误'), 'error');
+            }
+        }
+
+        // 批量审批待办系统（打开批量编辑表格，带审批功能）
+        async function batchApproveTodoSystem(systemName, status, recordIds) {
+            // 加载所有记录的详情
+            try {
+                const records = [];
+                for (const id of recordIds) {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${id}`);
+                    if (res.ok) {
+                        records.push(await res.json());
+                    }
+                }
+
+                if (records.length === 0) {
+                    showToast('该系统下没有组件记录', 'warning');
+                    return;
+                }
+
+                // 将记录转换为批量编辑格式
+                const importItems = records.map(record => {
+                    const decl = record.declaration || {};
+                    const component = record.component || {};
+                    return {
+                        record_id: record.id,
+                        declaration_id: decl.id || null,
+                        component_id: record.component_id,
+                        component_name: component.name || '-',
+                        component_version: component.version || '-',
+                        license_name: component.license || '-',
+                        url_to_source: decl.url_to_source || component.url_to_source || '',
+                        license_info_url: decl.license_info_url || '',
+                        license_text_url: decl.license_text_url || '',
+                        purpose_of_use: decl.purpose_of_use || '',
+                        usage_type: decl.usage_type || '',
+                        is_modified: decl.is_modified || 'no',
+                        source: component.source || 'manual',
+                        // 特殊使用要求和补充信息
+                        special_requirements: component.special_requirements || null,
+                        requires_additional_info: component.requires_additional_info || false,
+                        additional_info_fields: component.additional_info_fields || [],
+                        // 审批要求补充的字段
+                        rejection_reason: record.rejection_reason || null,
+                        required_fields: record.required_fields || [],
+                    };
+                });
+
+                // 设置全局变量
+                window.batchImportData = importItems;
+                window.systemName = systemName;
+                window.isEditMode = false;
+                window.viewMode = 'approval'; // 标记为审批视图
+                window.approvalType = status === 'pending_security' ? 'security' : 'legal';
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = Math.ceil(importItems.length / window.pageSize);
+
+                // 设置下拉框初始值
+                document.getElementById('page-size-select').value = '200';
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(importItems);
+
+                // 渲染分页
+                renderPagination(importItems.length);
+
+                // 打开批量导入模态框
+                document.getElementById('spdx-import-modal-overlay').classList.add('active');
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = 'none';
+                document.getElementById('import-preview-btn').style.display = 'none';
+
+                // 根据审批类型显示不同的按钮
+                const approveBtn = document.getElementById('import-submit-btn');
+                const approveType = status === 'pending_security' ? '安全审批' : '法务审批';
+                approveBtn.textContent = `批量${approveType}`;
+                approveBtn.style.display = '';
+                approveBtn.onclick = function() {
+                    batchApproveRecordFromView();
+                };
+
+                document.getElementById('import-system-name').value = systemName;
+
+            } catch (error) {
+                showToast('加载详情失败：' + error.message, 'error');
+            }
+        }
+
+        // 查看系统详情待办（显示批量编辑表格，支持直接审批）
+        async function viewSystemTodo(systemName, status, recordIds) {
+            // 加载所有记录的详情
+            try {
+                const records = [];
+                for (const id of recordIds) {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${id}`);
+                    if (res.ok) {
+                        records.push(await res.json());
+                    }
+                }
+
+                if (records.length === 0) {
+                    showToast('该系统下没有组件记录', 'warning');
+                    return;
+                }
+
+                // 将记录转换为批量编辑格式
+                const importItems = records.map(record => {
+                    const decl = record.declaration || {};
+                    const component = record.component || {};
+                    return {
+                        record_id: record.id,
+                        declaration_id: decl.id || null,
+                        component_id: record.component_id,
+                        component_name: component.name || '-',
+                        component_version: component.version || '-',
+                        license_name: component.license || '-',
+                        url_to_source: decl.url_to_source || component.url_to_source || '',
+                        license_info_url: decl.license_info_url || '',
+                        license_text_url: decl.license_text_url || '',
+                        purpose_of_use: decl.purpose_of_use || '',
+                        usage_type: decl.usage_type || '',
+                        is_modified: decl.is_modified || 'no',
+                        source: component.source || 'manual',
+                        // 特殊使用要求和补充信息
+                        special_requirements: component.special_requirements || null,
+                        requires_additional_info: component.requires_additional_info || false,
+                        additional_info_fields: component.additional_info_fields || [],
+                        // 审批要求补充的字段
+                        rejection_reason: record.rejection_reason || null,
+                        required_fields: record.required_fields || [],
+                    };
+                });
+
+                // 设置全局变量
+                window.batchImportData = importItems;
+                window.systemName = systemName;
+                window.isEditMode = false;
+                window.viewMode = 'approval'; // 标记为审批视图
+                window.approvalType = status === 'pending_security' ? 'security' : 'legal';
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = Math.ceil(importItems.length / window.pageSize);
+
+                // 设置下拉框初始值
+                document.getElementById('page-size-select').value = '200';
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(importItems);
+
+                // 渲染分页
+                renderPagination(importItems.length);
+
+                // 打开批量导入模态框
+                document.getElementById('spdx-import-modal-overlay').classList.add('active');
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = 'none';
+                document.getElementById('import-preview-btn').style.display = 'none';
+
+                // 根据审批类型显示不同的按钮
+                const approveBtn = document.getElementById('import-submit-btn');
+                const approveType = status === 'pending_security' ? '安全审批' : '法务审批';
+                approveBtn.textContent = `批量${approveType}通过`;
+                approveBtn.style.display = '';
+                approveBtn.onclick = function() {
+                    batchApproveRecordFromView();
+                };
+
+                document.getElementById('import-system-name').value = systemName;
+
+            } catch (error) {
+                showToast('加载详情失败：' + error.message, 'error');
+            }
+        }
+
+        // 从审批视图批量审批
+        async function batchApproveRecordFromView() {
+            const items = window.batchImportData;
+            const approvalType = window.approvalType || 'security';
+            const approver = approvalType === 'security' ? '安全' : '法务';
+
+            if (!items || items.length === 0) {
+                showToast('没有可审批的数据', 'warning');
+                return;
+            }
+
+            // 收集选中的项目
+            const selectedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                if (checkbox && checkbox.checked) {
+                    selectedItems.push(items[i]);
+                }
+            }
+
+            if (selectedItems.length === 0) {
+                showToast('请至少选择一个组件', 'warning');
+                return;
+            }
+
+            // 显示操作选择：通过 or 要求补充信息
+            const action = showBatchApprovalActionModal(approvalType, selectedItems.length);
+        }
+
+        // 显示批量审批操作选择模态框
+        function showBatchApprovalActionModal(approvalType, count) {
+            const modal = document.getElementById('batch-approval-action-modal-overlay');
+            const modalTitle = document.getElementById('batch-approval-action-modal-title');
+            const approver = approvalType === 'security' ? '安全' : '法务';
+            modalTitle.textContent = `批量${approver}审批 - 选择操作`;
+            modal.classList.add('active');
+
+            // 存储到全局
+            window.currentApprovalType = approvalType;
+            window.currentApprovalCount = count;
+
+            // 绑定按钮事件
+            document.getElementById('batch-approve-confirm-btn').onclick = function() {
+                closeBatchApprovalActionModal();
+                executeBatchApprove();
+            };
+            document.getElementById('batch-request-changes-btn').onclick = function() {
+                closeBatchApprovalActionModal();
+                showBatchRequestChangesModal();
+            };
+        }
+
+        function closeBatchApprovalActionModal() {
+            document.getElementById('batch-approval-action-modal-overlay').classList.remove('active');
+        }
+
+        // 执行批量审批通过
+        async function executeBatchApprove() {
+            const items = window.batchImportData;
+            const approvalType = window.currentApprovalType || 'security';
+            const approver = approvalType === 'security' ? '安全' : '法务';
+
+            const selectedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                if (checkbox && checkbox.checked) {
+                    selectedItems.push(items[i]);
+                }
+            }
+
+            if (!confirm(`确定要批量${approver}审批通过 ${selectedItems.length} 个组件吗？`)) return;
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const item of selectedItems) {
+                try {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${item.record_id}/approve`, {
+                        method: 'POST',
+                        body: JSON.stringify({ comments: `批量${approver}审批通过` })
+                    });
+                    if (res.ok) successCount++;
+                    else failedCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                showToast(`批量审批完成：成功 ${successCount} 个，失败 ${failedCount} 个`, 'success');
+                closeSpdxImportModal();
+                loadDashboard();
+            } else {
+                showToast('批量审批失败：' + (failedCount > 0 ? '所有组件都失败' : '未知错误'), 'error');
+            }
+        }
+
+        // 显示批量要求补充信息模态框
+        function showBatchRequestChangesModal() {
+            const modal = document.getElementById('batch-request-changes-modal-overlay');
+            modal.classList.add('active');
+
+            const fields = [
+                { id: 'purpose_of_use', name: '使用目的' },
+                { id: 'usage_type', name: '使用方式' },
+                { id: 'license_info_url', name: '许可证链接' },
+                { id: 'license_text_url', name: '许可证全文' },
+                { id: 'url_to_source', name: '源码地址' },
+                { id: 'is_modified', name: '是否修改' },
+            ];
+
+            const fieldsList = document.getElementById('request-changes-fields-list');
+            fieldsList.innerHTML = fields.map(f => `
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; padding: 8px 0;">
+                    <input type="checkbox" class="request-field-checkbox" value="${f.id}">
+                    <span>${f.name}</span>
+                </label>
+            `).join('');
+        }
+
+        function closeBatchRequestChangesModal() {
+            document.getElementById('batch-request-changes-modal-overlay').classList.remove('active');
+        }
+
+        // 执行批量要求补充信息
+        async function executeBatchRequestChanges() {
+            const items = window.batchImportData;
+            const approvalType = window.currentApprovalType || 'security';
+
+            const selectedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                if (checkbox && checkbox.checked) {
+                    selectedItems.push(items[i]);
+                }
+            }
+
+            // 获取选择的字段
+            const selectedFields = Array.from(document.querySelectorAll('.request-field-checkbox:checked'))
+                .map(cb => cb.value);
+
+            if (selectedFields.length === 0) {
+                showToast('请至少选择一个需要补充的字段', 'warning');
+                return;
+            }
+
+            const reason = document.getElementById('request-changes-reason').value.trim();
+            if (!reason) {
+                showToast('请填写要求补充信息的原因', 'warning');
+                return;
+            }
+
+            let successCount = 0;
+            let failedCount = 0;
+
+            for (const item of selectedItems) {
+                try {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${item.record_id}/request-changes`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            comments: reason,
+                            rejection_reason: reason,
+                            required_fields: selectedFields
+                        })
+                    });
+                    if (res.ok) successCount++;
+                    else failedCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+            }
+
+            closeBatchRequestChangesModal();
+
+            if (successCount > 0) {
+                showToast(`已要求补充信息：成功 ${successCount} 个，失败 ${failedCount} 个`, 'success');
+                closeSpdxImportModal();
+                loadDashboard();
+            } else {
+                showToast('批量要求补充信息失败', 'error');
             }
         }
 
@@ -3570,8 +4208,16 @@
             document.getElementById('import-back-btn').style.display = 'none';
             document.getElementById('import-preview-btn').style.display = '';
             document.getElementById('import-submit-btn').style.display = 'none';
+            document.getElementById('import-submit-btn').textContent = '提交导入';
+            document.getElementById('import-submit-btn').onclick = function() { submitBatchEdit(); };
             document.getElementById('import-progress').style.display = 'none';
             document.getElementById('import-result').style.display = 'none';
+            // 重置全局状态变量
+            window.viewMode = null;
+            window.approvalType = null;
+            window.batchImportData = null;
+            window.systemName = null;
+            window.isEditMode = false;
         }
 
         // 返回第一步
@@ -3581,6 +4227,8 @@
             document.getElementById('import-back-btn').style.display = 'none';
             document.getElementById('import-preview-btn').style.display = '';
             document.getElementById('import-submit-btn').style.display = 'none';
+            document.getElementById('import-submit-btn').textContent = '提交导入';
+            document.getElementById('import-submit-btn').onclick = function() { submitBatchEdit(); };
             // 重置分页
             window.currentPage = 1;
             window.totalPages = 0;
@@ -3682,6 +4330,10 @@
 
             tbody.innerHTML = pageItems.map((item, index) => {
                 const globalIndex = startIndex + index; // 全局索引
+                const specialReqs = item.special_requirements || '';
+                const requiresInfo = item.requires_additional_info || false;
+                const additionalFields = item.additional_info_fields || [];
+
                 return `
                 <tr data-index="${globalIndex}">
                     <td class="col-select">
@@ -3717,6 +4369,11 @@
                         <span class="badge ${item.source === 'history' ? 'badge-success' : 'badge-secondary'}">
                             ${item.source === 'history' ? '历史' : 'SPDX'}
                         </span>
+                    </td>
+                    <td class="col-requirements">
+                        ${specialReqs ? `<span class="badge badge-warning" title="${escapeHtml(specialReqs)}">有特殊要求</span>` : '<span class="text-secondary">-</span>'}
+                        ${requiresInfo ? `<br/><span class="badge badge-danger" title="需要补充：${additionalFields.join(', ')}">需补充信息</span>` : ''}
+                        ${item.rejection_reason ? `<br/><span class="badge badge-secondary" style="font-size: 10px;" title="原因：${escapeHtml(item.rejection_reason)}">已驳回</span>` : ''}
                     </td>
                 </tr>
             `}).join('');
@@ -3928,9 +4585,11 @@
 
             try {
                 let savedCount = 0;
+                let createdCount = 0;
+
                 for (const item of selectedItems) {
-                    // 编辑模式：更新已有声明
-                    if (isEditMode && item.declaration_id) {
+                    // 如果有 declaration_id，更新已有声明
+                    if (item.declaration_id) {
                         const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
                             method: 'PUT',
                             body: JSON.stringify({
@@ -3945,11 +4604,12 @@
                         });
                         if (declRes.ok) savedCount++;
                     }
-                    // 新建模式：如果有 declaration_id，也更新
-                    else if (item.declaration_id) {
-                        const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
-                            method: 'PUT',
+                    // 如果没有 declaration_id，但有 record_id，创建新声明
+                    else if (item.record_id) {
+                        const declRes = await authFetch(`${API_BASE}/legal-declarations`, {
+                            method: 'POST',
                             body: JSON.stringify({
+                                compliance_record_id: item.record_id,
                                 purpose_of_use: item.purpose_of_use,
                                 url_to_source: item.url_to_source || '',
                                 license_info_url: item.license_info_url || '',
@@ -3959,11 +4619,14 @@
                                 usage_type: item.usage_type,
                             })
                         });
-                        if (declRes.ok) savedCount++;
+                        if (declRes.ok) createdCount++;
                     }
                 }
 
-                showToast(`已保存 ${savedCount} 个组件的进度`, 'success');
+                const totalMsg = savedCount > 0 ? `已保存 ${savedCount} 个` : '';
+                const createMsg = createdCount > 0 ? `已创建 ${createdCount} 个` : '';
+                const msg = [totalMsg, createMsg].filter(m => m).join('，') || '无操作';
+                showToast(`${msg}组件的进度`, 'success');
             } catch (error) {
                 showToast('保存失败：' + error.message, 'error');
             }
