@@ -30,9 +30,12 @@ def create_app() -> FastAPI:
     )
 
     # CORS 中间件
+    allowed_hosts = settings.allowed_hosts
+    origins = ["*"] if allowed_hosts == "*" else [h.strip() for h in allowed_hosts.split(",") if h.strip()]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # 内部工具，生产环境需要限制
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

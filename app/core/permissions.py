@@ -47,14 +47,11 @@ def get_current_user_from_token(
         # 从数据库获取真实用户
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            # 如果用户不存在于数据库，返回虚拟用户（兼容旧数据）
-            role_str = payload.get("role", "engineer")
-            return User(
-                id=1,
-                email=email,
-                name="MVP User",
-                role=getattr(UserRole, role_str.upper(), UserRole.ENGINEER),
-                is_active=True
+            # 用户不存在于数据库，拒绝访问
+            logger.warning(f"用户 {email} 尝试访问但不在数据库中")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户不存在"
             )
 
         return user

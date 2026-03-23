@@ -2158,6 +2158,62 @@
             document.getElementById('login-modal-overlay').classList.remove('active');
         }
 
+        // ESC 键关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // 检查是否有打开的模态框
+                const modals = [
+                    'login-modal-overlay',
+                    'permission-denied-modal-overlay',
+                    'component-system-detail-modal-overlay',
+                    'spdx-import-modal-overlay'
+                ];
+                for (const modalId of modals) {
+                    const modal = document.getElementById(modalId);
+                    if (modal && modal.classList.contains('active')) {
+                        modal.classList.remove('active');
+                        return;
+                    }
+                }
+            }
+        });
+
+        // 模态框焦点陷阱 - 打开模态框时将焦点限制在模态框内
+        function trapFocusInModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+
+            const focusableElements = modal.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstFocusable = focusableElements[0];
+            const lastFocusable = focusableElements[focusableElements.length - 1];
+
+            modal.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    if (e.shiftKey) {
+                        if (document.activeElement === firstFocusable) {
+                            e.preventDefault();
+                            lastFocusable.focus();
+                        }
+                    } else {
+                        if (document.activeElement === lastFocusable) {
+                            e.preventDefault();
+                            firstFocusable.focus();
+                        }
+                    }
+                }
+            });
+        }
+
+        // 重新打开登录模态框时应用焦点陷阱
+        const originalShowLoginModal = showLoginModal;
+        showLoginModal = function() {
+            originalShowLoginModal();
+            trapFocusInModal('login-modal-overlay');
+            document.getElementById('login-email').focus();
+        };
+
         async function doLogin() {
             const email = document.getElementById('login-email').value;
             const code = document.getElementById('login-code').value;
@@ -2497,7 +2553,16 @@
             const tbody = document.getElementById('records-table-body');
 
             if (!records || records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无记录</div></td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <div class="empty-state-title">暂无合规记录</div>
+                            <div class="empty-state-desc">点击"新建合规记录"按钮创建第一条记录</div>
+                            <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">新建合规记录</button>
+                        </td>
+                    </tr>
+                `;
                 updateRoleBasedUI();
                 return;
             }
@@ -2569,7 +2634,16 @@
             const tbody = document.getElementById('component-records-table-body');
 
             if (!records || records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><div>暂无记录</div></td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div class="empty-state-title">暂无组件导入记录</div>
+                            <div class="empty-state-desc">上传 SPDX 文件批量导入组件，或从合规记录中添加</div>
+                            <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">上传 SPDX 文件</button>
+                        </td>
+                    </tr>
+                `;
                 updateRoleBasedUI();
                 return;
             }
@@ -2691,7 +2765,15 @@
             title.textContent = `${systemName} - ${systemRecords.length} 个组件`;
 
             if (systemRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无数据</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">📄</div>
+                            <div class="empty-state-title">暂无组件</div>
+                            <div class="empty-state-desc">该系统下还没有组件记录</div>
+                        </td>
+                    </tr>
+                `;
             } else {
                 tbody.innerHTML = systemRecords.map(record => `
                     <tr>
@@ -2761,7 +2843,16 @@
             const tbody = document.getElementById('components-table-body');
 
             if (!components || components.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div>暂无组件</div></td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">🧩</div>
+                            <div class="empty-state-title">暂无组件</div>
+                            <div class="empty-state-desc">上传 SPDX 文件批量导入组件</div>
+                            <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">上传 SPDX 文件</button>
+                        </td>
+                    </tr>
+                `;
                 return;
             }
 

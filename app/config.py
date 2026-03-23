@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "text"  # text or json
 
+    # CORS 配置
+    allowed_hosts: str = "*"  # 生产环境改为具体域名，逗号分隔
+
     # 分页配置
     default_page_size: int = 20
     max_page_size: int = 100
