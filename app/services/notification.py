@@ -128,7 +128,11 @@ class NotificationService:
         if unread_only:
             query = query.filter(Notification.is_read == False)
 
-        return query.order_by(Notification.created_at.desc()).offset(skip).limit(limit).all()
+        # 未读通知排在前面，同按创建时间倒序
+        return query.order_by(
+            Notification.is_read.asc(),
+            Notification.created_at.desc()
+        ).offset(skip).limit(limit).all()
 
     def get_unread_count(self, user: User) -> int:
         """获取用户未读通知数"""
