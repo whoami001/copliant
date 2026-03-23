@@ -1393,6 +1393,142 @@
                 align-self: flex-end;
             }
         }
+
+        /* 通知中心样式 */
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 12px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+
+        .notification-item {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .notification-item:hover {
+            background-color: var(--bg);
+        }
+
+        .notification-item.unread {
+            background-color: var(--danger-bg);
+            border-left: 3px solid var(--danger);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .notification-type {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .notification-type.security_rejected {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .notification-type.legal_rejected {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .notification-type.legal_denied {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .notification-type.urgency_added {
+            background: var(--info-bg, #E0F2FE);
+            color: var(--info-text, #075985);
+        }
+
+        .notification-message {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        .notification-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-sm);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .empty-state-notifications {
+            text-align: center;
+            padding: calc(var(--spacing-xl) * 2) var(--spacing-lg);
+            color: var(--text-secondary);
+        }
+
+        .notification-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .notification-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .notification-tab {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .notification-tab:hover {
+            background: var(--primary-light);
+        }
+
+        .notification-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -1428,6 +1564,15 @@
                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                         </svg>
 组件导入
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#notifications" class="nav-link" data-page="notifications">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        消息中心
+                        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
                     </a>
                 </li>
             </ul>
@@ -1625,6 +1770,31 @@
                                     <tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 消息中心页面 -->
+            <div id="page-notifications" class="page">
+                <div class="notification-page-header">
+                    <h2 class="card-title">消息中心</h2>
+                    <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsAsRead()">
+                        标记全部为已读
+                    </button>
+                </div>
+
+                <div class="notification-tabs">
+                    <div class="notification-tab active" onclick="switchNotificationTab('all')">全部消息</div>
+                    <div class="notification-tab" onclick="switchNotificationTab('unread')">未读消息</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <div id="notification-list">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2490,6 +2660,9 @@
                         // Token 失效，清除状态
                         logout();
                         showLoginModal();
+                    } else {
+                        // 登录成功，加载未读通知数
+                        loadUnreadNotificationCount();
                     }
                 } catch (e) {
                     logout();
@@ -2515,13 +2688,17 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
-            document.getElementById(`page-${page}`).classList.add('active');
-            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            const pageEl = document.getElementById(`page-${page}`);
+            const navEl = document.querySelector(`[data-page="${page}"]`);
+
+            if (pageEl) pageEl.classList.add('active');
+            if (navEl) navEl.classList.add('active');
 
             const titles = {
                 'dashboard': '仪表板',
                 'records': '合规记录',
-                'components': '组件管理'
+                'components': '组件管理',
+                'notifications': '消息中心'
             };
             document.getElementById('page-title').textContent = titles[page];
 
@@ -2529,6 +2706,7 @@
             if (page === 'dashboard') loadDashboard();
             else if (page === 'records') loadRecords();
             else if (page === 'components') loadComponentRecords();
+            else if (page === 'notifications') loadNotifications();
         }
 
         // 加载仪表板数据
@@ -2799,6 +2977,7 @@
 
         function renderRecordsTable(records) {
             const tbody = document.getElementById('records-table-body');
+            if (!tbody) return;
 
             if (!records || records.length === 0) {
                 tbody.innerHTML = `
@@ -2880,6 +3059,7 @@
         // 渲染组件导入页面表格（按系统分组）
         function renderComponentRecordsTable(records) {
             const tbody = document.getElementById('component-records-table-body');
+            if (!tbody) return;
 
             if (!records || records.length === 0) {
                 tbody.innerHTML = `
@@ -3089,6 +3269,7 @@
 
         function renderComponentsTable(components) {
             const tbody = document.getElementById('components-table-body');
+            if (!tbody) return;
 
             if (!components || components.length === 0) {
                 tbody.innerHTML = `
@@ -4889,13 +5070,149 @@
 
             // 处理 hash 路由
             const hash = window.location.hash.slice(1) || 'dashboard';
-            if (['dashboard', 'records', 'components'].includes(hash)) {
+            if (['dashboard', 'records', 'components', 'notifications'].includes(hash)) {
                 showPage(hash);
             }
         });
 
         // 强制刷新缓存版本
-        const APP_VERSION = '1.1.0';
+        const APP_VERSION = '1.2.0-notification';
+
+        // ==================== 通知中心功能 ====================
+
+        let currentNotificationTab = 'all'; // 'all' 或 'unread'
+
+        // 加载通知列表
+        async function loadNotifications() {
+            try {
+                const unreadOnly = currentNotificationTab === 'unread';
+                const res = await authFetch(`${API_BASE}/notifications?unread_only=${unreadOnly}`);
+                if (!res.ok) throw new Error('加载失败');
+                const data = await res.json();
+                renderNotifications(data.items);
+            } catch (error) {
+                document.getElementById('notification-list').innerHTML = `
+                    <div class="empty-state-notifications">
+                        <p>加载失败：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染通知列表
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notification-list');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-notifications">
+                        <div class="empty-state-icon">🔔</div>
+                        <div class="empty-state-title">暂无消息</div>
+                        <div class="empty-state-desc">当您的合规记录被驳回或被催促时，您会收到通知</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(item => {
+                const typeLabel = {
+                    'security_rejected': '安全驳回',
+                    'legal_rejected': '法务驳回',
+                    'legal_denied': '法务拒绝',
+                    'urgency_added': '被催促'
+                }[item.type] || item.type;
+
+                const timeAgo = getTimeAgo(new Date(item.created_at));
+                const recordLink = item.related_record_id ? `onclick="viewRecord(${item.related_record_id})"` : '';
+
+                return `
+                    <div class="notification-item ${item.is_read ? '' : 'unread'}" data-id="${item.id}">
+                        <div class="notification-header">
+                            <span class="notification-title">${escapeHtml(item.title)}</span>
+                            <span class="notification-type ${item.type}">${typeLabel}</span>
+                        </div>
+                        <div class="notification-message" ${recordLink}>${escapeHtml(item.message)}</div>
+                        <div class="notification-meta">
+                            <span>${timeAgo}</span>
+                            ${!item.is_read ? `<button class="btn btn-sm btn-secondary" onclick="markNotificationAsRead(${item.id})">标记为已读</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换通知标签
+        function switchNotificationTab(tab, event) {
+            currentNotificationTab = tab;
+            document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            loadNotifications();
+        }
+
+        // 标记单个通知为已读
+        async function markNotificationAsRead(id) {
+            try {
+                const res = await authFetch(`${API_BASE}/notifications/${id}/mark-as-read`, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('标记失败');
+                loadNotifications();
+                loadUnreadNotificationCount();
+            } catch (error) {
+                showToast('标记失败：' + error.message, 'error');
+            }
+        }
+
+        // 标记所有通知为已读
+        async function markAllNotificationsAsRead() {
+            try {
+                const res = await authFetch(`${API_BASE}/notifications/mark-all-as-read`, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('标记失败');
+                loadNotifications();
+                loadUnreadNotificationCount();
+                showToast('已全部标记为已读', 'success');
+            } catch (error) {
+                showToast('标记失败：' + error.message, 'error');
+            }
+        }
+
+        // 加载未读通知数
+        async function loadUnreadNotificationCount() {
+            try {
+                const res = await authFetch(`${API_BASE}/notifications/unread-count`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const badge = document.getElementById('notification-badge');
+
+                if (data.unread_count > 0) {
+                    badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('加载未读通知数失败:', error);
+            }
+        }
+
+        // 时间格式化
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days}天前`;
+            if (hours > 0) return `${hours}小时前`;
+            if (minutes > 0) return `${minutes}分钟前`;
+            return '刚刚';
+        }
+
+        // ==================== 初始化 ====================
         console.log('App version:', APP_VERSION);
     </script>
 </body>
