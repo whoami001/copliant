@@ -5291,21 +5291,26 @@
                                 component = component[0];
                             }
 
-                            // 2. 创建合规记录
-                            const recordRes = await authFetch(`${API_BASE}/compliance-records`, {
-                                method: 'POST',
-                                body: JSON.stringify({
-                                    component_id: component.id,
-                                    system_name: systemName,
-                                })
-                            });
-                            const record = await recordRes.json();
+                            // 2. 使用原有 record_id 或创建新记录
+                            let recordId = item.record_id;
+                            if (!recordId) {
+                                // 创建新合规记录
+                                const recordRes = await authFetch(`${API_BASE}/compliance-records`, {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        component_id: component.id,
+                                        system_name: systemName,
+                                    })
+                                });
+                                const record = await recordRes.json();
+                                recordId = record.id;
+                            }
 
                             // 3. 创建法务声明
                             const declRes = await authFetch(`${API_BASE}/legal-declarations`, {
                                 method: 'POST',
                                 body: JSON.stringify({
-                                    compliance_record_id: record.id,
+                                    compliance_record_id: recordId,
                                     purpose_of_use: item.purpose_of_use,
                                     url_to_source: item.url_to_source || '',
                                     license_info_url: item.license_info_url || '',
