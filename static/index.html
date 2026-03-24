@@ -109,6 +109,11 @@
             color: var(--primary);
         }
 
+        .nav-link:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: -2px;
+        }
+
         /* 主内容区 */
         .main-content {
             flex: 1;
@@ -271,8 +276,8 @@
 
         .table th {
             background: var(--bg);
-            font-weight: 500;
-            color: var(--text-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
             font-size: 14px;
         }
 
@@ -1055,7 +1060,7 @@
             padding: var(--spacing-sm) var(--spacing-md);
             text-align: left;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-primary);
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
         }
@@ -2647,8 +2652,11 @@
 
                 if (res.ok) {
                     const user = await res.json();
-                    updateUserUI(user);
                     return user;
+                } else if (res.status === 401) {
+                    // Token 失效，清除登录状态
+                    logout();
+                    return null;
                 }
             } catch (error) {
                 console.error('获取用户信息失败:', error);
@@ -2755,13 +2763,15 @@
             if (savedUser && authToken) {
                 try {
                     const user = await fetchCurrentUser();
-                    if (!user) {
-                        // Token 失效，清除状态
+                    if (user) {
+                        // 登录成功，更新 UI
+                        updateUserUI(user);
+                        // 加载未读通知数
+                        loadUnreadNotificationCount();
+                    } else {
+                        // Token 失效或获取失败，清除状态
                         logout();
                         showLoginModal();
-                    } else {
-                        // 登录成功，加载未读通知数
-                        loadUnreadNotificationCount();
                     }
                 } catch (e) {
                     logout();
@@ -2771,6 +2781,17 @@
                 // 未登录，显示登录框
                 authLoading = false;  // 未登录状态不需要 loading
                 showLoginModal();
+            } else {
+                // 有 token 但没有 savedUser，尝试获取
+                authLoading = true;
+                const user = await fetchCurrentUser();
+                if (user) {
+                    updateUserUI(user);
+                    loadUnreadNotificationCount();
+                } else {
+                    authLoading = false;
+                    showLoginModal();
+                }
             }
         }
 
