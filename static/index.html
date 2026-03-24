@@ -2846,15 +2846,16 @@
                 document.getElementById('stat-total').textContent = stats.total_records;
 
                 // 根据用户角色决定使用哪种待办列表显示
-                // 安全和法务用户使用按系统分组的视图
-                if (currentUser && (currentUser.role === 'security' || currentUser.role === 'legal' || currentUser.role === 'admin')) {
-                    // 加载按系统分组的待办事项
-                    const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`);
-                    const todoGrouped = await todoGroupedRes.json();
-                    renderSystemGroupedTodoList(todoGrouped.items);
+                // 所有用户都使用按系统分组的视图
+                const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`);
+                const todoGrouped = await todoGroupedRes.json();
+
+                if (currentUser && currentUser.role === 'engineer') {
+                    // 研发用户：使用专门的分组视图（支持批量处理）
+                    renderEngineerGroupedTodoList(todoGrouped.items);
                 } else {
-                    // 研发用户使用传统列表视图
-                    renderTodoList(todos.items);
+                    // 安全/法务/管理：使用通用分组视图
+                    renderSystemGroupedTodoList(todoGrouped.items);
                 }
             } catch (error) {
                 showToast('加载数据失败：' + error.message, 'error');
@@ -2912,6 +2913,61 @@
                                     <td>${item.component_count} 个</td>
                                     <td><span class="badge ${STATUS_MAP[status]?.class || 'badge-secondary'}">${STATUS_MAP[status]?.label || status}</span></td>
                                     <td>${new Date(item.earliest_created_at).toLocaleDateString('zh-CN')}</td>
+                                    <td>${actionButtons}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+            updateRoleBasedUI();
+        }
+
+        // 渲染研发用户的待办列表（按系统分组，支持批量处理）
+        function renderEngineerGroupedTodoList(items) {
+            const container = document.getElementById('todo-list');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">太棒了！</div>
+                        <div class="empty-state-desc">所有合规记录都已处理完成</div>
+                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">创建新的合规记录</button>
+                    </div>
+                `;
+                updateRoleBasedUI();
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>系统名称</th>
+                            <th>组件数量</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${items.map(item => {
+                            const status = item.status;
+                            let actionButtons = '';
+
+                            // 研发用户：处理整个系统的组件
+                            if (status === 'draft' || status === 'rejected') {
+                                const btnText = status === 'rejected' ? '重新处理' : '处理';
+                                actionButtons = `
+                                    <button class="btn btn-sm btn-primary engineer-only" onclick="handleSystem('${escapeHtml(item.system_name)}', [${item.record_ids.join(',')}])">${btnText} (${item.component_count}个组件)</button>
+                                `;
+                            }
+
+                            return `
+                                <tr>
+                                    <td>${escapeHtml(item.system_name)}</td>
+                                    <td>${item.component_count} 个</td>
+                                    <td><span class="badge ${STATUS_MAP[status]?.class || 'badge-secondary'}">${STATUS_MAP[status]?.label || status}</span></td>
                                     <td>${actionButtons}</td>
                                 </tr>
                             `;
@@ -3446,10 +3502,163 @@
             }
         }
 
-        // 处理记录
-        function handleRecord(id) {
-            window.location.hash = 'records';
-            setTimeout(() => viewRecord(id), 100);
+        // 处理记录（打开编辑模态框）
+        async function handleRecord(id) {
+            try {
+                // 获取记录详情
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}`);
+                if (!res.ok) {
+                    showToast('加载记录失败', 'error');
+                    return;
+                }
+
+                const record = await res.json();
+                const decl = record.declaration || {};
+                const component = record.component || {};
+
+                // 转换为批量编辑格式（单个项目）
+                const importItems = [{
+                    record_id: record.id,
+                    declaration_id: decl.id || null,
+                    component_id: record.component_id,
+                    component_name: component.name || '-',
+                    component_version: component.version || '-',
+                    license_name: component.license || '-',
+                    url_to_source: decl.url_to_source || component.url_to_source || '',
+                    license_info_url: decl.license_info_url || '',
+                    license_text_url: decl.license_text_url || '',
+                    purpose_of_use: decl.purpose_of_use || '',
+                    usage_type: decl.usage_type || '',
+                    is_modified: decl.is_modified || 'no',
+                    source: component.source || 'manual',
+                    // 驳回信息（如果有）
+                    rejection_reason: record.rejection_reason || null,
+                    required_fields: record.required_fields || [],
+                }];
+
+                // 设置全局变量
+                window.batchImportData = importItems;
+                window.systemName = record.system_name || '未命名系统';
+                window.isEditMode = true;
+                window.editingRecordId = id; // 标记为编辑单个记录
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = 1;
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(importItems);
+
+                // 渲染分页
+                renderPagination(importItems.length);
+
+                // 打开批量导入模态框，直接显示编辑步骤
+                document.getElementById('spdx-import-modal-overlay').classList.add('active');
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = 'none';
+                document.getElementById('import-preview-btn').style.display = 'none';
+
+                // 设置提交按钮
+                const submitBtn = document.getElementById('import-submit-btn');
+                submitBtn.textContent = record.status === 'rejected' ? '重新提交' : '提交';
+                submitBtn.style.display = '';
+                submitBtn.onclick = function() { submitBatchEdit(); };
+
+                document.getElementById('import-system-name').value = record.system_name || '';
+
+                // 隐藏批量审批按钮（如果是审批视图的话）
+                window.viewMode = 'edit';
+                window.approvalType = null;
+
+            } catch (error) {
+                showToast('加载记录失败：' + error.message, 'error');
+            }
+        }
+
+        // 处理整个系统的多个组件（打开批量编辑模态框）
+        async function handleSystem(systemName, recordIds) {
+            try {
+                // 加载所有记录的详情
+                const records = [];
+                for (const id of recordIds) {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${id}`);
+                    if (res.ok) {
+                        records.push(await res.json());
+                    }
+                }
+
+                if (records.length === 0) {
+                    showToast('该系统下没有组件记录', 'warning');
+                    return;
+                }
+
+                // 将记录转换为批量编辑格式
+                const importItems = records.map(record => {
+                    const decl = record.declaration || {};
+                    const component = record.component || {};
+                    return {
+                        record_id: record.id,
+                        declaration_id: decl.id || null,
+                        component_id: record.component_id,
+                        component_name: component.name || '-',
+                        component_version: component.version || '-',
+                        license_name: component.license || '-',
+                        url_to_source: decl.url_to_source || component.url_to_source || '',
+                        license_info_url: decl.license_info_url || '',
+                        license_text_url: decl.license_text_url || '',
+                        purpose_of_use: decl.purpose_of_use || '',
+                        usage_type: decl.usage_type || '',
+                        is_modified: decl.is_modified || 'no',
+                        source: component.source || 'manual',
+                        // 驳回信息（如果有）
+                        rejection_reason: record.rejection_reason || null,
+                        required_fields: record.required_fields || [],
+                    };
+                });
+
+                // 设置全局变量
+                window.batchImportData = importItems;
+                window.systemName = systemName;
+                window.isEditMode = true;
+
+                // 初始化分页
+                window.currentPage = 1;
+                window.pageSize = 200;
+                window.totalPages = Math.ceil(importItems.length / window.pageSize);
+
+                // 设置下拉框初始值
+                document.getElementById('page-size-select').value = '200';
+
+                // 渲染批量编辑表格
+                renderBatchEditTable(importItems);
+
+                // 渲染分页
+                renderPagination(importItems.length);
+
+                // 打开批量导入模态框，直接显示编辑步骤
+                document.getElementById('spdx-import-modal-overlay').classList.add('active');
+                document.getElementById('import-step-1').style.display = 'none';
+                document.getElementById('import-step-2').style.display = '';
+                document.getElementById('import-back-btn').style.display = 'none';
+                document.getElementById('import-preview-btn').style.display = 'none';
+
+                // 设置提交按钮
+                const submitBtn = document.getElementById('import-submit-btn');
+                submitBtn.textContent = '提交';
+                submitBtn.style.display = '';
+                submitBtn.onclick = function() { submitBatchEdit(); };
+
+                document.getElementById('import-system-name').value = systemName;
+
+                // 标记为编辑模式
+                window.viewMode = 'edit';
+                window.approvalType = null;
+
+            } catch (error) {
+                showToast('加载系统详情失败：' + error.message, 'error');
+            }
         }
 
         // 催促审批
@@ -4990,7 +5199,7 @@
                     try {
                         // 如果是编辑模式，直接更新已有的声明
                         if (isEditMode && item.record_id && item.declaration_id) {
-                            // 更新法务声明
+                            // 1. 更新法务声明
                             const declRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}`, {
                                 method: 'PUT',
                                 body: JSON.stringify({
@@ -5004,7 +5213,18 @@
                                 })
                             });
 
-                            if (declRes.ok) {
+                            if (!declRes.ok) {
+                                failedCount++;
+                                continue;
+                            }
+
+                            // 2. 提交声明（将记录状态从 draft/rejected 改为 pending_security）
+                            const submitRes = await authFetch(`${API_BASE}/legal-declarations/${item.declaration_id}/submit`, {
+                                method: 'POST',
+                                body: JSON.stringify({})
+                            });
+
+                            if (submitRes.ok) {
                                 successCount++;
                             } else {
                                 failedCount++;

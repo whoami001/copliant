@@ -288,10 +288,10 @@ async def submit_declaration(
                 }
             )
 
-        if record.status != RecordStatus.DRAFT:
+        if record.status not in [RecordStatus.DRAFT, RecordStatus.REJECTED]:
             raise HTTPException(
                 status_code=400,
-                detail=f"当前状态不能提交：{record.status.value}，仅 DRAFT 状态可提交"
+                detail=f"当前状态不能提交：{record.status.value}，仅 DRAFT 和 REJECTED 状态可提交"
             )
 
         # 更新记录状态

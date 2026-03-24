@@ -29,9 +29,14 @@ async def get_dashboard_todo(
 
     # 根据角色过滤待办事项
     if current_user.role == UserRole.ENGINEER:
-        # 研发：显示草稿状态和已驳回的记录（自己的）
-        pending_records = (
-            db.query(ComplianceRecord)
+        # 研发：显示草稿状态和已驳回的记录（自己的），按系统分组
+        query = (
+            db.query(
+                ComplianceRecord.system_name,
+                func.count(ComplianceRecord.id).label('component_count'),
+                func.min(ComplianceRecord.status).label('status'),
+                func.array_agg(ComplianceRecord.id).label('record_ids'),
+            )
             .filter(
                 ComplianceRecord.filled_by == current_user.id,
                 ComplianceRecord.status.in_([
@@ -39,9 +44,31 @@ async def get_dashboard_todo(
                     RecordStatus.REJECTED,
                 ])
             )
-            .order_by(ComplianceRecord.created_at.desc())
-            .all()
+            .group_by(ComplianceRecord.system_name)
+            .order_by(func.min(ComplianceRecord.created_at).desc())
         )
+        results = query.all()
+
+        # 将分组结果转换为扁平列表（兼容前端现有逻辑）
+        items = []
+        for row in results:
+            # 获取该系统下所有记录的详情
+            records = db.query(ComplianceRecord).filter(
+                ComplianceRecord.id.in_(row.record_ids)
+            ).all()
+
+            for record in records:
+                items.append(
+                    DashboardTodoItem(
+                        id=record.id,
+                        record_name=f"{record.component.name}@{record.component.version}",
+                        system_name=record.system_name,
+                        status=record.status.value,
+                        requires_action=True,
+                        rejection_reason=record.rejection_reason,
+                        required_fields=record.required_fields,
+                    )
+                )
     elif current_user.role == UserRole.SECURITY:
         # 安全：显示待安全校验的记录
         pending_records = (
@@ -50,6 +77,18 @@ async def get_dashboard_todo(
             .order_by(ComplianceRecord.created_at.desc())
             .all()
         )
+        items = [
+            DashboardTodoItem(
+                id=record.id,
+                record_name=f"{record.component.name}@{record.component.version}",
+                system_name=record.system_name,
+                status=record.status.value,
+                requires_action=True,
+                rejection_reason=record.rejection_reason,
+                required_fields=record.required_fields,
+            )
+            for record in pending_records
+        ]
     elif current_user.role == UserRole.LEGAL:
         # 法务：显示待法务审批的记录
         pending_records = (
@@ -58,6 +97,18 @@ async def get_dashboard_todo(
             .order_by(ComplianceRecord.created_at.desc())
             .all()
         )
+        items = [
+            DashboardTodoItem(
+                id=record.id,
+                record_name=f"{record.component.name}@{record.component.version}",
+                system_name=record.system_name,
+                status=record.status.value,
+                requires_action=True,
+                rejection_reason=record.rejection_reason,
+                required_fields=record.required_fields,
+            )
+            for record in pending_records
+        ]
     else:
         # Admin：显示所有待处理记录
         pending_records = (
@@ -69,19 +120,18 @@ async def get_dashboard_todo(
             .order_by(ComplianceRecord.created_at.desc())
             .all()
         )
-
-    items = [
-        DashboardTodoItem(
-            id=record.id,
-            record_name=f"{record.component.name}@{record.component.version}",
-            system_name=record.system_name,
-            status=record.status.value,
-            requires_action=True,
-            rejection_reason=record.rejection_reason,
-            required_fields=record.required_fields,
-        )
-        for record in pending_records
-    ]
+        items = [
+            DashboardTodoItem(
+                id=record.id,
+                record_name=f"{record.component.name}@{record.component.version}",
+                system_name=record.system_name,
+                status=record.status.value,
+                requires_action=True,
+                rejection_reason=record.rejection_reason,
+                required_fields=record.required_fields,
+            )
+            for record in pending_records
+        ]
 
     return DashboardTodoResponse(items=items, total=len(items))
 
@@ -178,8 +228,40 @@ async def get_dashboard_todo_system_grouped(
             )
             for row in results
         ]
+    elif current_user.role == UserRole.ENGINEER:
+        # 研发：按系统分组显示草稿和已驳回的记录（自己的）
+        query = (
+            db.query(
+                ComplianceRecord.system_name,
+                func.count(ComplianceRecord.id).label('component_count'),
+                func.min(ComplianceRecord.status).label('status'),
+                func.array_agg(ComplianceRecord.id).label('record_ids'),
+            )
+            .filter(
+                ComplianceRecord.filled_by == current_user.id,
+                ComplianceRecord.status.in_([
+                    RecordStatus.DRAFT,
+                    RecordStatus.REJECTED,
+                ])
+            )
+            .group_by(ComplianceRecord.system_name)
+            .order_by(func.min(ComplianceRecord.created_at).desc())
+        )
+        results = query.all()
+
+        items = [
+            DashboardSystemGroupedTodoItem(
+                system_name=row.system_name or '未命名系统',
+                component_count=row.component_count,
+                status=row.status.value if isinstance(row.status, RecordStatus) else row.status,
+                earliest_created_at='',
+                record_ids=list(row.record_ids) if row.record_ids else [],
+                first_record_id=row.record_ids[0] if row.record_ids else None,
+            )
+            for row in results
+        ]
     else:
-        # Engineer：不支持按系统分组，返回空
+        # 其他角色：返回空
         items = []
 
     return DashboardSystemGroupedTodoResponse(items=items, total=len(items))
