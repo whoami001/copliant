@@ -4133,8 +4133,8 @@
         }
 
         function viewRecord(id) {
-            window.open(`/api/compliance-records/${id}`, '_blank');
-            // MVP 简化：直接打开 API，生产环境应该有详情页
+            // 打开合规记录详情（只读模式）
+            viewDeclaration(id);
         }
 
         // 查看法务声明（只读模式）
