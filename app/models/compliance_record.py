@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Enum as SQLEnum, JSON
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -39,6 +39,10 @@ class ComplianceRecord(Base):
 
     comments = Column(Text)
 
+    # 驳回/要求补充信息字段
+    rejection_reason = Column(Text, nullable=True, comment="驳回/要求补充的原因")
+    required_fields = Column(JSON, nullable=True, comment="审批人要求补充的字段列表")
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -55,6 +59,7 @@ class ComplianceRecord(Base):
         cascade="all, delete-orphan"
     )
     urgencies = relationship("Urgency", back_populates="record")
+    notifications = relationship("Notification", back_populates="record")
 
     def __repr__(self) -> str:
         return f"<ComplianceRecord(id={self.id}, component_id={self.component_id}, status={self.status})>"

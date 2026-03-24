@@ -40,6 +40,7 @@ class User(Base):
     approved_records = relationship("ComplianceRecord", foreign_keys="ComplianceRecord.approved_by_legal", back_populates="legal_approver")
     approval_actions = relationship("ApprovalHistory", foreign_keys="ApprovalHistory.actor", back_populates="actor_rel")
     urgencies = relationship("Urgency", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

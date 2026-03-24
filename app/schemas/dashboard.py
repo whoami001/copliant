@@ -11,6 +11,9 @@ class DashboardTodoItem(BaseModel):
     system_name: str
     status: str
     requires_action: bool
+    # 审批意见（驳回原因/要求补充信息）
+    rejection_reason: Optional[str] = None
+    required_fields: Optional[List[str]] = None
 
 
 class DashboardTodoResponse(BaseModel):
@@ -25,3 +28,20 @@ class DashboardStatsResponse(BaseModel):
     approved_this_month: int
     avg_processing_days: float
     total_records: int
+
+
+class DashboardSystemGroupedTodoItem(BaseModel):
+    """按系统分组的待办事项项"""
+    system_name: str
+    component_count: int
+    status: str
+    earliest_created_at: str
+    record_ids: List[int]
+    # 用于显示操作按钮
+    first_record_id: int
+
+
+class DashboardSystemGroupedTodoResponse(BaseModel):
+    """按系统分组的待办事项响应"""
+    items: List[DashboardSystemGroupedTodoItem]
+    total: int

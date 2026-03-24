@@ -1,7 +1,7 @@
 """合规记录相关 Schema"""
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, ConfigDict
 import enum
 
@@ -43,7 +43,13 @@ class ComplianceRecordApprove(BaseModel):
 
 class ComplianceRecordReject(BaseModel):
     """审批驳回请求"""
-    comments: str  # 驳回必须填写原因
+    comments: Optional[str] = None  # 驳回原因 (向后兼容)
+    rejection_reason: Optional[str] = None  # 要求补充的原因
+    required_fields: Optional[list] = None  # 需要补充的字段列表
+
+    def get_rejection_reason(self) -> Optional[str]:
+        """获取驳回原因，优先使用 rejection_reason，否则使用 comments"""
+        return self.rejection_reason or self.comments
 
 
 class ComponentRef(BaseModel):
@@ -73,6 +79,8 @@ class ComplianceRecordResponse(ComplianceRecordBase):
     created_at: datetime
     updated_at: datetime
     declaration: Optional["DeclarationRef"] = None
+    rejection_reason: Optional[str] = None
+    required_fields: Optional[list] = None  # JSON array of field names
 
     model_config = ConfigDict(from_attributes=True)
 

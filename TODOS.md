@@ -20,6 +20,26 @@
 
 ## Completed
 
+### 站内通知中心
+**Completed:** 2026-03-23
+
+**What:** 研发人员可以通过站内通知中心收到安全/法务驳回、拒绝或催促的留言通知
+
+**Why:**
+- 之前安全和法务在审批时填写的留言，研发人员无法主动获知
+- 需要登录 Dashboard 查看待办列表或点击"查看详情"才能看到留言
+- 缺少主动通知机制
+
+**Implementation:**
+- 模型：新增 `Notification` 模型，支持 4 种通知类型（security_rejected、legal_rejected、legal_denied、urgency_added）
+- 服务：`NotificationService` 提供创建通知、获取列表、标记已读等功能
+- API：新增 `/api/notifications` 相关端点（列表、未读数、标记已读）
+- 路由：records.py 在 reject 和 request_changes 时自动发送通知给研发人员
+- 前端：新增"消息中心"页面，支持全部/未读标签切换、未读数角标显示
+- 数据库迁移：`migrations/versions/008_create_notifications_table.py`
+
+---
+
 ### 组件系统详情批量编辑功能
 **Completed:** 2026-03-22
 

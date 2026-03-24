@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, UniqueConstraint, JSON
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -29,6 +29,11 @@ class Component(Base):
     updated_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # 特殊使用要求和补充信息字段
+    special_requirements = Column(Text, nullable=True, comment="特殊使用要求，如'修改后需开源'、'不可商业分发'")
+    requires_additional_info = Column(Boolean, default=False, comment="是否需要补充信息")
+    additional_info_fields = Column(JSON, nullable=True, comment="需要补充的字段列表，如 ['security_review_notes', 'export_control_info']")
 
     # 唯一约束：name + version
     __table_args__ = (

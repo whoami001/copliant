@@ -25,6 +25,9 @@ class ComponentUpdate(BaseModel):
     copyright: Optional[str] = None
     usage_type: Optional[str] = None
     license_risk_level: Optional[str] = None
+    special_requirements: Optional[str] = None
+    requires_additional_info: Optional[bool] = None
+    additional_info_fields: Optional[list] = None  # JSON array of field names
 
 
 class ComponentResponse(ComponentBase):
@@ -35,6 +38,9 @@ class ComponentResponse(ComponentBase):
     created_at: datetime
     updated_at: datetime
     created_by: Optional[int] = None
+    special_requirements: Optional[str] = None
+    requires_additional_info: bool = False
+    additional_info_fields: Optional[list] = None  # JSON array of field names
 
     model_config = ConfigDict(from_attributes=True)
 

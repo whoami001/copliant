@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, extract
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse, DashboardTodoItem
+from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse, DashboardTodoItem, DashboardSystemGroupedTodoItem, DashboardSystemGroupedTodoResponse
 from app.models.compliance_record import ComplianceRecord, RecordStatus
 from app.models.user import User, UserRole
 from app.core.permissions import get_current_user_from_token
@@ -77,11 +77,112 @@ async def get_dashboard_todo(
             system_name=record.system_name,
             status=record.status.value,
             requires_action=True,
+            rejection_reason=record.rejection_reason,
+            required_fields=record.required_fields,
         )
         for record in pending_records
     ]
 
     return DashboardTodoResponse(items=items, total=len(items))
+
+
+@router.get("/todo/system-grouped", response_model=DashboardSystemGroupedTodoResponse)
+async def get_dashboard_todo_system_grouped(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    """获取我的待办事项（按系统分组显示）"""
+
+    # 根据角色过滤待办事项
+    if current_user.role == UserRole.SECURITY:
+        # 安全：按系统分组显示待安全校验的记录
+        query = (
+            db.query(
+                ComplianceRecord.system_name,
+                func.count(ComplianceRecord.id).label('component_count'),
+                func.min(ComplianceRecord.status).label('status'),
+                func.min(ComplianceRecord.created_at).label('earliest_created_at'),
+                func.array_agg(ComplianceRecord.id).label('record_ids'),
+            )
+            .filter(ComplianceRecord.status == RecordStatus.PENDING_SECURITY)
+            .group_by(ComplianceRecord.system_name)
+            .order_by(func.min(ComplianceRecord.created_at).desc())
+        )
+        results = query.all()
+
+        items = [
+            DashboardSystemGroupedTodoItem(
+                system_name=row.system_name or '未命名系统',
+                component_count=row.component_count,
+                status=RecordStatus.PENDING_SECURITY.value,
+                earliest_created_at=row.earliest_created_at.isoformat() if row.earliest_created_at else '',
+                record_ids=list(row.record_ids) if row.record_ids else [],
+                first_record_id=row.record_ids[0] if row.record_ids else None,
+            )
+            for row in results
+        ]
+    elif current_user.role == UserRole.LEGAL:
+        # 法务：按系统分组显示待法务审批的记录
+        query = (
+            db.query(
+                ComplianceRecord.system_name,
+                func.count(ComplianceRecord.id).label('component_count'),
+                func.min(ComplianceRecord.status).label('status'),
+                func.min(ComplianceRecord.created_at).label('earliest_created_at'),
+                func.array_agg(ComplianceRecord.id).label('record_ids'),
+            )
+            .filter(ComplianceRecord.status == RecordStatus.PENDING_LEGAL)
+            .group_by(ComplianceRecord.system_name)
+            .order_by(func.min(ComplianceRecord.created_at).desc())
+        )
+        results = query.all()
+
+        items = [
+            DashboardSystemGroupedTodoItem(
+                system_name=row.system_name or '未命名系统',
+                component_count=row.component_count,
+                status=RecordStatus.PENDING_LEGAL.value,
+                earliest_created_at=row.earliest_created_at.isoformat() if row.earliest_created_at else '',
+                record_ids=list(row.record_ids) if row.record_ids else [],
+                first_record_id=row.record_ids[0] if row.record_ids else None,
+            )
+            for row in results
+        ]
+    elif current_user.role == UserRole.ADMIN:
+        # Admin：按系统分组显示所有待处理记录
+        query = (
+            db.query(
+                ComplianceRecord.system_name,
+                func.count(ComplianceRecord.id).label('component_count'),
+                func.min(ComplianceRecord.status).label('status'),
+                func.min(ComplianceRecord.created_at).label('earliest_created_at'),
+                func.array_agg(ComplianceRecord.id).label('record_ids'),
+            )
+            .filter(ComplianceRecord.status.in_([
+                RecordStatus.PENDING_SECURITY,
+                RecordStatus.PENDING_LEGAL,
+            ]))
+            .group_by(ComplianceRecord.system_name)
+            .order_by(func.min(ComplianceRecord.created_at).desc())
+        )
+        results = query.all()
+
+        items = [
+            DashboardSystemGroupedTodoItem(
+                system_name=row.system_name or '未命名系统',
+                component_count=row.component_count,
+                status=row.status.value if isinstance(row.status, RecordStatus) else row.status,
+                earliest_created_at=row.earliest_created_at.isoformat() if row.earliest_created_at else '',
+                record_ids=list(row.record_ids) if row.record_ids else [],
+                first_record_id=row.record_ids[0] if row.record_ids else None,
+            )
+            for row in results
+        ]
+    else:
+        # Engineer：不支持按系统分组，返回空
+        items = []
+
+    return DashboardSystemGroupedTodoResponse(items=items, total=len(items))
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)
