@@ -29,14 +29,10 @@ async def get_dashboard_todo(
 
     # 根据角色过滤待办事项
     if current_user.role == UserRole.ENGINEER:
-        # 研发：显示草稿状态和已驳回的记录（自己的），按系统分组
-        query = (
-            db.query(
-                ComplianceRecord.system_name,
-                func.count(ComplianceRecord.id).label('component_count'),
-                func.min(ComplianceRecord.status).label('status'),
-                func.array_agg(ComplianceRecord.id).label('record_ids'),
-            )
+        # 研发：显示草稿状态和已驳回的记录（自己的）
+        # 先查询记录列表，然后在 Python 中按系统分组（兼容 SQLite）
+        pending_records = (
+            db.query(ComplianceRecord)
             .filter(
                 ComplianceRecord.filled_by == current_user.id,
                 ComplianceRecord.status.in_([
@@ -44,19 +40,19 @@ async def get_dashboard_todo(
                     RecordStatus.REJECTED,
                 ])
             )
-            .group_by(ComplianceRecord.system_name)
-            .order_by(func.min(ComplianceRecord.created_at).desc())
+            .order_by(ComplianceRecord.created_at.desc())
+            .all()
         )
-        results = query.all()
 
-        # 将分组结果转换为扁平列表（兼容前端现有逻辑）
+        # 在 Python 中按系统分组
+        from collections import defaultdict
+        system_groups = defaultdict(list)
+        for record in pending_records:
+            system_groups[record.system_name].append(record)
+
+        # 转换为扁平列表（兼容前端现有逻辑）
         items = []
-        for row in results:
-            # 获取该系统下所有记录的详情
-            records = db.query(ComplianceRecord).filter(
-                ComplianceRecord.id.in_(row.record_ids)
-            ).all()
-
+        for system_name, records in system_groups.items():
             for record in records:
                 items.append(
                     DashboardTodoItem(
@@ -200,43 +196,42 @@ async def get_dashboard_todo_system_grouped(
         ]
     elif current_user.role == UserRole.ADMIN:
         # Admin：按系统分组显示所有待处理记录
-        query = (
-            db.query(
-                ComplianceRecord.system_name,
-                func.count(ComplianceRecord.id).label('component_count'),
-                func.min(ComplianceRecord.status).label('status'),
-                func.min(ComplianceRecord.created_at).label('earliest_created_at'),
-                func.array_agg(ComplianceRecord.id).label('record_ids'),
-            )
+        # 先查询所有记录，然后在 Python 中分组（兼容 SQLite）
+        pending_records = (
+            db.query(ComplianceRecord)
             .filter(ComplianceRecord.status.in_([
                 RecordStatus.PENDING_SECURITY,
                 RecordStatus.PENDING_LEGAL,
             ]))
-            .group_by(ComplianceRecord.system_name)
-            .order_by(func.min(ComplianceRecord.created_at).desc())
+            .order_by(ComplianceRecord.created_at.desc())
+            .all()
         )
-        results = query.all()
 
-        items = [
-            DashboardSystemGroupedTodoItem(
-                system_name=row.system_name or '未命名系统',
-                component_count=row.component_count,
-                status=row.status.value if isinstance(row.status, RecordStatus) else row.status,
-                earliest_created_at=row.earliest_created_at.isoformat() if row.earliest_created_at else '',
-                record_ids=list(row.record_ids) if row.record_ids else [],
-                first_record_id=row.record_ids[0] if row.record_ids else None,
+        # 在 Python 中按系统分组
+        from collections import defaultdict
+        system_groups = defaultdict(list)
+        for record in pending_records:
+            system_groups[record.system_name].append(record)
+
+        items = []
+        for system_name, records in system_groups.items():
+            # 使用第一个记录的状态作为该系统状态
+            first_record = records[0]
+            items.append(
+                DashboardSystemGroupedTodoItem(
+                    system_name=system_name or '未命名系统',
+                    component_count=len(records),
+                    status=first_record.status.value,
+                    earliest_created_at=min(r.created_at.isoformat() for r in records),
+                    record_ids=[r.id for r in records],
+                    first_record_id=records[0].id,
+                )
             )
-            for row in results
-        ]
     elif current_user.role == UserRole.ENGINEER:
         # 研发：按系统分组显示草稿和已驳回的记录（自己的）
-        query = (
-            db.query(
-                ComplianceRecord.system_name,
-                func.count(ComplianceRecord.id).label('component_count'),
-                func.min(ComplianceRecord.status).label('status'),
-                func.array_agg(ComplianceRecord.id).label('record_ids'),
-            )
+        # 先查询所有记录，然后在 Python 中分组（兼容 SQLite）
+        pending_records = (
+            db.query(ComplianceRecord)
             .filter(
                 ComplianceRecord.filled_by == current_user.id,
                 ComplianceRecord.status.in_([
@@ -244,22 +239,29 @@ async def get_dashboard_todo_system_grouped(
                     RecordStatus.REJECTED,
                 ])
             )
-            .group_by(ComplianceRecord.system_name)
-            .order_by(func.min(ComplianceRecord.created_at).desc())
+            .order_by(ComplianceRecord.created_at.desc())
+            .all()
         )
-        results = query.all()
 
-        items = [
-            DashboardSystemGroupedTodoItem(
-                system_name=row.system_name or '未命名系统',
-                component_count=row.component_count,
-                status=row.status.value if isinstance(row.status, RecordStatus) else row.status,
-                earliest_created_at='',
-                record_ids=list(row.record_ids) if row.record_ids else [],
-                first_record_id=row.record_ids[0] if row.record_ids else None,
+        # 在 Python 中按系统分组
+        from collections import defaultdict
+        system_groups = defaultdict(list)
+        for record in pending_records:
+            system_groups[record.system_name].append(record)
+
+        items = []
+        for system_name, records in system_groups.items():
+            first_record = records[0]
+            items.append(
+                DashboardSystemGroupedTodoItem(
+                    system_name=system_name or '未命名系统',
+                    component_count=len(records),
+                    status=first_record.status.value,
+                    earliest_created_at='',
+                    record_ids=[r.id for r in records],
+                    first_record_id=records[0].id,
+                )
             )
-            for row in results
-        ]
     else:
         # 其他角色：返回空
         items = []
