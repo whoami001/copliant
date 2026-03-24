@@ -241,7 +241,7 @@ class TestLegalDeclarationCRUD:
         assert data["purpose_of_use"] == "更新后的使用目的"
 
     def test_update_declaration_non_draft(self, client, test_record, db_session):
-        """测试非 DRAFT 状态不能更新声明"""
+        """测试非 DRAFT/REJECTED 状态不能更新声明"""
         decl = LegalDeclaration(
             compliance_record_id=test_record.id,
             purpose_of_use="用于数据格式化",
@@ -255,7 +255,7 @@ class TestLegalDeclarationCRUD:
         db_session.add(decl)
         db_session.commit()
 
-        # 修改记录状态
+        # 修改记录状态为 PENDING_SECURITY（不能更新）
         test_record.status = RecordStatus.PENDING_SECURITY
         db_session.commit()
 
@@ -264,7 +264,35 @@ class TestLegalDeclarationCRUD:
             json={"purpose_of_use": "更新后的使用目的"},
         )
         assert response.status_code == 400
-        assert "仅 DRAFT 状态" in response.json()["detail"]
+        assert "DRAFT" in response.json()["detail"]
+        assert "REJECTED" in response.json()["detail"]
+
+    def test_update_declaration_rejected_status(self, client, test_record, db_session):
+        """测试 REJECTED 状态的记录可以更新声明（研发用户重新处理被驳回的记录）"""
+        decl = LegalDeclaration(
+            compliance_record_id=test_record.id,
+            purpose_of_use="用于数据格式化",
+            url_to_source="https://github.com/lodash/lodash",
+            license_info_url="https://opensource.org/licenses/MIT",
+            license_text_url="https://opensource.org/licenses/MIT",
+            license_name="MIT",
+            is_modified=IsModified.NO,
+            usage_type=UsageType.DYNAMICALLY_LINKED,
+        )
+        db_session.add(decl)
+        db_session.commit()
+
+        # 修改记录状态为 REJECTED（可以更新）
+        test_record.status = RecordStatus.REJECTED
+        db_session.commit()
+
+        response = client.put(
+            f"/api/legal-declarations/{decl.id}",
+            json={"purpose_of_use": "重新提交后的使用目的"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["purpose_of_use"] == "重新提交后的使用目的"
 
     def test_submit_declaration(self, client, test_record, db_session):
         """测试提交声明"""

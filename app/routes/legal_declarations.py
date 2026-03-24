@@ -219,7 +219,7 @@ async def update_declaration(
 ):
     """更新法务声明
 
-    仅允许 DRAFT 状态的合规记录更新声明。
+    仅允许 DRAFT 或 REJECTED 状态的合规记录更新声明。
     """
     declaration = db.query(LegalDeclaration).filter(
         LegalDeclaration.id == declaration_id
@@ -231,10 +231,10 @@ async def update_declaration(
     record = db.query(ComplianceRecord).filter(
         ComplianceRecord.id == declaration.compliance_record_id
     ).first()
-    if record and record.status != RecordStatus.DRAFT:
+    if record and record.status not in [RecordStatus.DRAFT, RecordStatus.REJECTED]:
         raise HTTPException(
             status_code=400,
-            detail=f"当前状态不能修改声明：{record.status.value}，仅 DRAFT 状态可修改"
+            detail=f"当前状态不能修改声明：{record.status.value}，仅 DRAFT 和 REJECTED 状态可修改"
         )
 
     # 更新字段
