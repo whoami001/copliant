@@ -217,6 +217,13 @@ async def get_dashboard_todo_system_grouped(
         for system_name, records in system_groups.items():
             # 使用第一个记录的状态作为该系统状态
             first_record = records[0]
+            # 聚合审批意见（收集所有记录的 rejection_reason 和 required_fields）
+            rejection_reasons = [r.rejection_reason for r in records if r.rejection_reason]
+            required_fields_set = set()
+            for r in records:
+                if r.required_fields:
+                    required_fields_set.update(r.required_fields)
+
             items.append(
                 DashboardSystemGroupedTodoItem(
                     system_name=system_name or '未命名系统',
@@ -225,6 +232,8 @@ async def get_dashboard_todo_system_grouped(
                     earliest_created_at=min(r.created_at.isoformat() for r in records),
                     record_ids=[r.id for r in records],
                     first_record_id=records[0].id,
+                    rejection_reason='; '.join(rejection_reasons) if rejection_reasons else None,
+                    required_fields=list(required_fields_set) if required_fields_set else None,
                 )
             )
     elif current_user.role == UserRole.ENGINEER:
@@ -252,6 +261,13 @@ async def get_dashboard_todo_system_grouped(
         items = []
         for system_name, records in system_groups.items():
             first_record = records[0]
+            # 聚合审批意见（收集所有记录的 rejection_reason 和 required_fields）
+            rejection_reasons = [r.rejection_reason for r in records if r.rejection_reason]
+            required_fields_set = set()
+            for r in records:
+                if r.required_fields:
+                    required_fields_set.update(r.required_fields)
+
             items.append(
                 DashboardSystemGroupedTodoItem(
                     system_name=system_name or '未命名系统',
@@ -260,6 +276,8 @@ async def get_dashboard_todo_system_grouped(
                     earliest_created_at='',
                     record_ids=[r.id for r in records],
                     first_record_id=records[0].id,
+                    rejection_reason='; '.join(rejection_reasons) if rejection_reasons else None,
+                    required_fields=list(required_fields_set) if required_fields_set else None,
                 )
             )
     else:

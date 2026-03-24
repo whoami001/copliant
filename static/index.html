@@ -2963,13 +2963,54 @@
                                 `;
                             }
 
+                            // 是否有审批意见（驳回原因或要求补充字段）
+                            const hasRejectionReason = item.rejection_reason || (item.required_fields && item.required_fields.length > 0);
+
+                            // 审批意见详情行
+                            const rejectionDetailRow = hasRejectionReason ? `
+                                <tr class="rejection-detail-row" id="rejection-detail-${item.system_name}" style="display: none;">
+                                    <td colspan="4" style="background: var(--bg); padding: 12px 16px;">
+                                        <div style="display: flex; gap: 16px;">
+                                            ${item.rejection_reason ? `
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--danger);">📋 审批意见</div>
+                                                    <div style="color: var(--text); font-size: 14px;">${escapeHtml(item.rejection_reason)}</div>
+                                                </div>
+                                            ` : ''}
+                                            ${item.required_fields && item.required_fields.length > 0 ? `
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--warning);">⚠️ 需要补充的字段</div>
+                                                    <div style="color: var(--text); font-size: 14px;">${item.required_fields.map(f => `<span class="badge badge-secondary" style="margin-right: 4px;">${escapeHtml(f)}</span>`).join('')}</div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ` : '';
+
+                            // 展开/收起按钮
+                            const toggleBtn = hasRejectionReason ? `
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <button class="btn btn-sm btn-secondary" onclick="toggleRejectionDetail('${escapeHtml(item.system_name)}')">
+                                        查看详情
+                                    </button>
+                                    ${actionButtons}
+                                </div>
+                            ` : actionButtons;
+
                             return `
                                 <tr>
-                                    <td>${escapeHtml(item.system_name)}</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            ${escapeHtml(item.system_name)}
+                                            ${hasRejectionReason ? '<span class="badge badge-danger" style="font-size: 10px;">有审批意见</span>' : ''}
+                                        </div>
+                                    </td>
                                     <td>${item.component_count} 个</td>
                                     <td><span class="badge ${STATUS_MAP[status]?.class || 'badge-secondary'}">${STATUS_MAP[status]?.label || status}</span></td>
-                                    <td>${actionButtons}</td>
+                                    <td>${toggleBtn}</td>
                                 </tr>
+                                ${rejectionDetailRow}
                             `;
                         }).join('')}
                     </tbody>
@@ -3093,13 +3134,13 @@
         }
 
         // 展开/收起审批意见详情
-        function toggleRejectionDetail(recordId) {
-            const detailRow = document.getElementById(`rejection-detail-${recordId}`);
-            const btn = event.target;
-            if (detailRow.style.display === 'none') {
+        function toggleRejectionDetail(id) {
+            const detailRow = document.getElementById(`rejection-detail-${id}`);
+            const btn = event.target.closest('button');
+            if (detailRow && detailRow.style.display === 'none') {
                 detailRow.style.display = '';
                 btn.textContent = '收起';
-            } else {
+            } else if (detailRow) {
                 detailRow.style.display = 'none';
                 btn.textContent = '查看详情';
             }

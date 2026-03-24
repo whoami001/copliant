@@ -39,6 +39,10 @@ class DashboardSystemGroupedTodoItem(BaseModel):
     record_ids: List[int]
     # 用于显示操作按钮
     first_record_id: int
+    # 审批意见（聚合该系统下所有记录的驳回原因）
+    rejection_reason: Optional[str] = None
+    # 需要补充的字段（聚合该系统下所有记录的要求）
+    required_fields: Optional[List[str]] = None
 
 
 class DashboardSystemGroupedTodoResponse(BaseModel):
