@@ -116,8 +116,8 @@ class TestRecordsEndpoints:
         data = response.json()
         assert data["id"] == record.id
         assert data["system_name"] == "test-system"
-        # 验证 declaration 字段存在（即使为 null）
-        assert "declaration" in data
+        # 验证 legal_declaration 字段存在（即使为 null）
+        assert "legal_declaration" in data
 
     def test_get_record_with_declaration(self, db_session: Session, client: TestClient, auth_headers: dict):
         """测试获取合规记录 - 带有声明"""
