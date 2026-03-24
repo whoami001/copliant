@@ -268,12 +268,15 @@ async def get_dashboard_todo_system_grouped(
                 if r.required_fields:
                     required_fields_set.update(r.required_fields)
 
+            # 计算最早创建时间（取所有记录的最小值）
+            earliest_date = min(r.created_at for r in records)
+
             items.append(
                 DashboardSystemGroupedTodoItem(
                     system_name=system_name or '未命名系统',
                     component_count=len(records),
                     status=first_record.status.value,
-                    earliest_created_at='',
+                    earliest_created_at=earliest_date.isoformat() if earliest_date else '',
                     record_ids=[r.id for r in records],
                     first_record_id=records[0].id,
                     rejection_reason='; '.join(rejection_reasons) if rejection_reasons else None,
