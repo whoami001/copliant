@@ -110,7 +110,7 @@ async def create_record(
 @router.get("/{record_id}", response_model=ComplianceRecordResponse)
 async def get_record(record_id: int, db: Session = Depends(get_db)):
     """获取合规记录详情"""
-    record = db.query(ComplianceRecord).options(joinedload(ComplianceRecord.component)).filter(ComplianceRecord.id == record_id).first()
+    record = db.query(ComplianceRecord).options(joinedload(ComplianceRecord.component), joinedload(ComplianceRecord.legal_declaration)).filter(ComplianceRecord.id == record_id).first()
     if not record:
         raise HTTPException(status_code=404, detail="Record not found")
     return record
