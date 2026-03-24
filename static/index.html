@@ -2323,6 +2323,7 @@
                                     <th class="col-index">#</th>
                                     <th class="col-name">组件名称</th>
                                     <th class="col-version">版本</th>
+                                    <th class="col-license-name">许可证名称</th>
                                     <th class="col-url-source">组件源码下载地址</th>
                                     <th class="col-license-info">源码中许可证链接</th>
                                     <th class="col-license-text">官方许可证链接</th>
@@ -4881,7 +4882,6 @@
                     <td class="col-index">${globalIndex + 1}</td>
                     <td class="col-name">${escapeHtml(item.component_name)}</td>
                     <td class="col-version">${escapeHtml(item.component_version)}</td>
-                    <td class="col-license-name">${escapeHtml(item.license_name || '')}</td>
                     <td class="col-url-source" title="${escapeHtml(item.url_to_source || '')}">${escapeHtml(item.url_to_source) || '-'}</td>
                     <td class="col-license-info">
                         <textarea class="editable-cell" id="license-info-${globalIndex}" placeholder="填写许可证说明 URL...">${escapeHtml(item.license_info_url || '')}</textarea>
