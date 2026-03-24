@@ -73,25 +73,21 @@ class LegalDeclarationUpdate(BaseModel):
     )
     url_to_source: Optional[str] = Field(
         None,
-        min_length=1,
         max_length=500,
         description="源代码下载位置"
     )
     license_info_url: Optional[str] = Field(
         None,
-        min_length=1,
         max_length=500,
         description="许可证说明页面"
     )
     license_text_url: Optional[str] = Field(
         None,
-        min_length=1,
         max_length=500,
         description="许可证全文 URL"
     )
     license_name: Optional[str] = Field(
         None,
-        min_length=1,
         max_length=100,
         description="SPDX 许可证 ID"
     )
