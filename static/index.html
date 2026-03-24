@@ -2330,7 +2330,6 @@
                                     <th class="col-usage">使用方式</th>
                                     <th class="col-modified">是否修改</th>
                                     <th class="col-source">来源</th>
-                                    <th class="col-requirements">特殊使用要求</th>
                                 </tr>
                             </thead>
                             <tbody id="batch-edit-tbody">
@@ -3814,10 +3813,6 @@
                         usage_type: decl.usage_type || '',
                         is_modified: decl.is_modified || 'no',
                         source: component.source || 'manual',
-                        // 特殊使用要求和补充信息
-                        special_requirements: component.special_requirements || null,
-                        requires_additional_info: component.requires_additional_info || false,
-                        additional_info_fields: component.additional_info_fields || [],
                         // 审批要求补充的字段
                         rejection_reason: record.rejection_reason || null,
                         required_fields: record.required_fields || [],
@@ -3903,10 +3898,6 @@
                         usage_type: decl.usage_type || '',
                         is_modified: decl.is_modified || 'no',
                         source: component.source || 'manual',
-                        // 特殊使用要求和补充信息
-                        special_requirements: component.special_requirements || null,
-                        requires_additional_info: component.requires_additional_info || false,
-                        additional_info_fields: component.additional_info_fields || [],
                         // 审批要求补充的字段
                         rejection_reason: record.rejection_reason || null,
                         required_fields: record.required_fields || [],
@@ -4881,9 +4872,6 @@
 
             tbody.innerHTML = pageItems.map((item, index) => {
                 const globalIndex = startIndex + index; // 全局索引
-                const specialReqs = item.special_requirements || '';
-                const requiresInfo = item.requires_additional_info || false;
-                const additionalFields = item.additional_info_fields || [];
 
                 return `
                 <tr data-index="${globalIndex}">
@@ -4920,11 +4908,6 @@
                         <span class="badge ${item.source === 'history' ? 'badge-success' : 'badge-secondary'}">
                             ${item.source === 'history' ? '历史' : 'SPDX'}
                         </span>
-                    </td>
-                    <td class="col-requirements">
-                        ${specialReqs ? `<span class="badge badge-warning" title="${escapeHtml(specialReqs)}">有特殊要求</span>` : '<span class="text-secondary">-</span>'}
-                        ${requiresInfo ? `<br/><span class="badge badge-danger" title="需要补充：${additionalFields.join(', ')}">需补充信息</span>` : ''}
-                        ${item.rejection_reason ? `<br/><span class="badge badge-secondary" style="font-size: 10px;" title="原因：${escapeHtml(item.rejection_reason)}">已驳回</span>` : ''}
                     </td>
                 </tr>
             `}).join('');
