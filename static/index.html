@@ -5317,7 +5317,17 @@
                             });
 
                             if (declRes.ok) {
-                                successCount++;
+                                const decl = await declRes.json();
+                                // 4. 提交声明（将记录状态从 draft 改为 pending_security）
+                                const submitRes = await authFetch(`${API_BASE}/legal-declarations/${decl.id}/submit`, {
+                                    method: 'POST',
+                                    body: JSON.stringify({})
+                                });
+                                if (submitRes.ok) {
+                                    successCount++;
+                                } else {
+                                    failedCount++;
+                                }
                             } else {
                                 failedCount++;
                             }
