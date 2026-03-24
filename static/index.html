@@ -5479,7 +5479,7 @@
             }
         }
 
-        // 渲染通知列表
+        // 渲染通知列表（按系统分组）
         function renderNotifications(notifications) {
             const container = document.getElementById('notification-list');
 
@@ -5494,27 +5494,69 @@
                 return;
             }
 
-            container.innerHTML = notifications.map(item => {
+            // 按系统名称分组通知
+            const systemGroups = new Map();
+            notifications.forEach(item => {
+                // 从消息中提取系统名称（格式：「component@version - system_name」）
+                const match = item.message.match(/(?:^|「)[^「」]+@\S+\s*-\s*([^\n」]+)/);
+                const systemName = match ? match[1].trim() : '其他';
+
+                if (!systemGroups.has(systemName)) {
+                    systemGroups.set(systemName, []);
+                }
+                systemGroups.get(systemName).push(item);
+            });
+
+            // 渲染分组后的通知
+            container.innerHTML = Array.from(systemGroups.entries()).map(([systemName, items]) => {
+                const latestItem = items[0]; // 最新的通知
                 const typeLabel = {
                     'security_rejected': '安全驳回',
                     'legal_rejected': '法务驳回',
                     'legal_denied': '法务拒绝',
                     'urgency_added': '被催促'
-                }[item.type] || item.type;
+                }[latestItem.type] || latestItem.type;
 
-                const timeAgo = getTimeAgo(new Date(item.created_at));
-                const recordLink = item.related_record_id ? `onclick="viewRecord(${item.related_record_id})"` : '';
+                const timeAgo = getTimeAgo(new Date(latestItem.created_at));
+                const hasUnread = items.some(i => !i.is_read);
+                const recordIds = items.filter(i => i.related_record_id).map(i => i.related_record_id);
+                const actionBtn = !latestItem.is_read
+                    ? `<button class="btn btn-sm btn-secondary" onclick="markNotificationAsRead(${latestItem.id})">标记为已读</button>`
+                    : '';
+
+                const viewBtn = recordIds.length > 0
+                    ? `<button class="btn btn-sm btn-primary" onclick="viewRecord(${recordIds[0]})">处理</button>`
+                    : '';
 
                 return `
-                    <div class="notification-item ${item.is_read ? '' : 'unread'}" data-id="${item.id}">
-                        <div class="notification-header">
-                            <span class="notification-title">${escapeHtml(item.title)}</span>
-                            <span class="notification-type ${item.type}">${typeLabel}</span>
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-weight: 600; font-size: 16px;">${escapeHtml(systemName)}</span>
+                                ${hasUnread ? `<span class="badge badge-danger">${items.length} 条消息</span>` : ''}
+                                <span class="notification-type ${latestItem.type}">${typeLabel}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                ${viewBtn}
+                                ${actionBtn}
+                            </div>
                         </div>
-                        <div class="notification-message" ${recordLink}>${escapeHtml(item.message)}</div>
-                        <div class="notification-meta">
-                            <span>${timeAgo}</span>
-                            ${!item.is_read ? `<button class="btn btn-sm btn-secondary" onclick="markNotificationAsRead(${item.id})">标记为已读</button>` : ''}
+                        <div class="card-body" style="padding: 16px;">
+                            ${items.map(item => {
+                                const itemTimeAgo = getTimeAgo(new Date(item.created_at));
+                                const itemRecordLink = item.related_record_id ? `onclick="viewRecord(${item.related_record_id})"` : '';
+                                return `
+                                    <div class="notification-item ${item.is_read ? '' : 'unread'}" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);" data-id="${item.id}">
+                                        <div class="notification-header">
+                                            <span class="notification-title">${escapeHtml(item.title)}</span>
+                                        </div>
+                                        <div class="notification-message" ${itemRecordLink} style="cursor: pointer; margin: 8px 0;">${escapeHtml(item.message)}</div>
+                                        <div class="notification-meta">
+                                            <span style="color: var(--text-secondary); font-size: 13px;">${itemTimeAgo}</span>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `;
