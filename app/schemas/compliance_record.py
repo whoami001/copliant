@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, field_validator
 import enum
 
 
@@ -78,11 +78,12 @@ class ComplianceRecordResponse(ComplianceRecordBase):
     legal_approved_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    declaration: Optional["DeclarationRef"] = Field(None, alias="legal_declaration")
+    # 使用 legal_declaration 作为字段名，与 SQLAlchemy 模型一致
+    legal_declaration: Optional["DeclarationRef"] = None
     rejection_reason: Optional[str] = None
     required_fields: Optional[list] = None  # JSON array of field names
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DeclarationRef(BaseModel):

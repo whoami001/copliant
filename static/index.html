@@ -2121,6 +2121,10 @@
                         <h4 class="section-title">组件信息</h4>
                         <div class="component-info-card">
                             <div class="info-row">
+                                <span class="info-label">系统名称:</span>
+                                <span class="info-value" id="decl-system-name">-</span>
+                            </div>
+                            <div class="info-row">
                                 <span class="info-label">组件名称:</span>
                                 <span class="info-value" id="decl-component-name">-</span>
                             </div>
@@ -3637,22 +3641,23 @@
 
                 // 将记录转换为批量编辑格式
                 const importItems = records.map(record => {
-                    const decl = record.declaration || {};
+                    const decl = record.legal_declaration || {};
                     const component = record.component || {};
+                    console.log('[handleSystem] Record:', record.id, 'legal_declaration:', decl, 'decl.id:', decl?.id);
                     return {
                         record_id: record.id,
-                        declaration_id: decl.id || null,
+                        declaration_id: decl?.id || null,
                         component_id: record.component_id,
                         component_name: component.name || '-',
                         component_version: component.version || '-',
                         license_name: component.license || '-',
-                        url_to_source: decl.url_to_source || component.url_to_source || '',
-                        license_info_url: decl.license_info_url || '',
-                        license_text_url: decl.license_text_url || '',
-                        purpose_of_use: decl.purpose_of_use || '',
-                        usage_type: decl.usage_type || '',
-                        is_modified: decl.is_modified || 'no',
-                        source: component.source || 'manual',
+                        url_to_source: decl?.url_to_source || component?.url_to_source || '',
+                        license_info_url: decl?.license_info_url || '',
+                        license_text_url: decl?.license_text_url || '',
+                        purpose_of_use: decl?.purpose_of_use || '',
+                        usage_type: decl?.usage_type || '',
+                        is_modified: decl?.is_modified || 'no',
+                        source: component?.source || 'manual',
                         // 驳回信息（如果有）
                         rejection_reason: record.rejection_reason || null,
                         required_fields: record.required_fields || [],
@@ -4169,6 +4174,7 @@
             modalTitle.textContent = '法务声明详情（只读）';
 
             // 填充组件信息
+            document.getElementById('decl-system-name').textContent = decl.compliance_record?.system_name || '-';
             document.getElementById('decl-component-name').textContent = decl.component?.name || '-';
             document.getElementById('decl-component-version').textContent = decl.component?.version || '-';
             document.getElementById('decl-component-license').textContent = decl.component?.license || '-';
@@ -5219,6 +5225,7 @@
             try {
                 let successCount = 0;
                 let failedCount = 0;
+                let errorMessages = []; // 收集错误信息
 
                 for (const item of selectedItems) {
                     try {
@@ -5239,6 +5246,8 @@
                             });
 
                             if (!declRes.ok) {
+                                const errData = await declRes.json().catch(() => ({}));
+                                errorMessages.push(`${item.component_name}: 更新声明失败 - ${errData.detail || declRes.statusText}`);
                                 failedCount++;
                                 continue;
                             }
@@ -5252,6 +5261,8 @@
                             if (submitRes.ok) {
                                 successCount++;
                             } else {
+                                const errData = await submitRes.json().catch(() => ({}));
+                                errorMessages.push(`${item.component_name}: 提交失败 - ${errData.detail || submitRes.statusText}`);
                                 failedCount++;
                             }
                         } else {
@@ -5305,6 +5316,13 @@
                                 })
                             });
 
+                            if (!declRes.ok) {
+                                const errData = await declRes.json().catch(() => ({}));
+                                errorMessages.push(`${item.component_name}: 创建声明失败 - ${errData.detail || declRes.statusText}`);
+                                failedCount++;
+                                continue;
+                            }
+
                             if (declRes.ok) {
                                 const decl = await declRes.json();
                                 // 4. 提交声明（将记录状态从 draft 改为 pending_security）
@@ -5315,6 +5333,8 @@
                                 if (submitRes.ok) {
                                     successCount++;
                                 } else {
+                                    const errData = await submitRes.json().catch(() => ({}));
+                                    errorMessages.push(`${item.component_name}: 提交失败 - ${errData.detail || submitRes.statusText}`);
                                     failedCount++;
                                 }
                             } else {
@@ -5355,7 +5375,12 @@
                     }, 1500);
                 } else {
                     const errorText = isEditMode ? '更新失败：没有成功更新任何组件' : '导入失败：没有成功导入任何组件';
-                    showToast(errorText, 'error');
+                    // 显示详细的错误信息
+                    if (errorMessages.length > 0) {
+                        showToast(errorText + ' | ' + errorMessages.join(', '), 'error');
+                    } else {
+                        showToast(errorText, 'error');
+                    }
                 }
 
             } catch (error) {
@@ -5517,6 +5542,18 @@
                     'urgency_added': '被催促'
                 }[latestItem.type] || latestItem.type;
 
+                // 检测是否有混合类型
+                const uniqueTypes = [...new Set(items.map(i => i.type))];
+                const hasMixedTypes = uniqueTypes.length > 1;
+                const typeBadges = hasMixedTypes
+                    ? uniqueTypes.map(type => `<span class="notification-type ${type}" style="margin-left: 4px;">${{
+                        'security_rejected': '安全',
+                        'legal_rejected': '法务',
+                        'legal_denied': '法务',
+                        'urgency_added': '催促'
+                    }[type] || type}</span>`).join('')
+                    : `<span class="notification-type ${latestItem.type}">${typeLabel}</span>`;
+
                 const timeAgo = getTimeAgo(new Date(latestItem.created_at));
                 const hasUnread = items.some(i => !i.is_read);
                 const recordIds = items.filter(i => i.related_record_id).map(i => i.related_record_id);
@@ -5534,7 +5571,7 @@
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span style="font-weight: 600; font-size: 16px;">${escapeHtml(systemName)}</span>
                                 ${hasUnread ? `<span class="badge badge-danger">${items.length} 条消息</span>` : ''}
-                                <span class="notification-type ${latestItem.type}">${typeLabel}</span>
+                                ${typeBadges}
                             </div>
                             <div style="display: flex; gap: 8px;">
                                 ${viewBtn}
@@ -5545,12 +5582,21 @@
                             ${items.map(item => {
                                 const itemTimeAgo = getTimeAgo(new Date(item.created_at));
                                 const itemRecordLink = item.related_record_id ? `onclick="viewRecord(${item.related_record_id})"` : '';
+                                const messageBadge = item.type === 'security_rejected'
+                                    ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text); font-size: 11px; margin-right: 6px;">安全</span>'
+                                    : item.type === 'legal_rejected'
+                                    ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text); font-size: 11px; margin-right: 6px;">法务</span>'
+                                    : item.type === 'legal_denied'
+                                    ? '<span class="badge" style="background: var(--danger-bg); color: var(--danger-text); font-size: 11px; margin-right: 6px;">法务</span>'
+                                    : '';
                                 return `
                                     <div class="notification-item ${item.is_read ? '' : 'unread'}" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);" data-id="${item.id}">
                                         <div class="notification-header">
                                             <span class="notification-title">${escapeHtml(item.title)}</span>
                                         </div>
-                                        <div class="notification-message" ${itemRecordLink} style="cursor: pointer; margin: 8px 0;">${escapeHtml(item.message)}</div>
+                                        <div class="notification-message" ${itemRecordLink} style="cursor: pointer; margin: 8px 0;">
+                                            ${messageBadge}${escapeHtml(item.message)}
+                                        </div>
                                         <div class="notification-meta">
                                             <span style="color: var(--text-secondary); font-size: 13px;">${itemTimeAgo}</span>
                                         </div>
