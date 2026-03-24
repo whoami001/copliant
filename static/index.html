@@ -4725,7 +4725,7 @@
 
                 showToast('提交成功', 'success');
                 closeDeclarationModal();
-                loadRecords();
+                loadDashboard(); // 刷新仪表板待办事项
             } catch (error) {
                 showToast('提交失败：' + error.message, 'error');
             }
@@ -5349,7 +5349,7 @@
                     setTimeout(() => {
                         closeSpdxImportModal();
                         if (isEditMode) {
-                            loadComponentRecords(); // 刷新组件导入页面
+                            loadDashboard(); // 刷新仪表板待办事项
                         } else {
                             loadComponents();
                         }
