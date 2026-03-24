@@ -1325,13 +1325,80 @@
             .sidebar {
                 width: 100%;
                 height: auto;
-                position: relative;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                z-index: 1000;
                 border-right: none;
-                border-bottom: 1px solid var(--border);
+                box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
             }
 
             .main-content {
                 margin-left: 0;
+                padding-top: 60px;
+            }
+
+            /* 移动端顶部栏 */
+            .header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                z-index: 100;
+                padding: var(--spacing-md) var(--spacing-lg);
+                margin-bottom: 0;
+            }
+
+            /* 移动端菜单切换按钮 */
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                color: var(--text-primary);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 999;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            /* 移动端显示菜单切换按钮 */
+            .menu-toggle {
+                display: flex !important;
+                margin-right: var(--spacing-md);
+            }
+
+            /* 移动端隐藏用户角色文字 */
+            .user-role {
+                display: none;
+            }
+
+            /* 移动端侧边栏内导航优化 */
+            .sidebar .nav-link {
+                padding: var(--spacing-lg);
             }
 
             .stats-grid {
@@ -1533,6 +1600,9 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- 移动端覆盖层 -->
+        <div class="overlay" id="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
         <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="logo">
@@ -1581,6 +1651,11 @@
         <!-- 主内容区 -->
         <main class="main-content">
             <header class="header">
+                <button class="menu-toggle" id="menu-toggle" onclick="toggleMobileMenu()" style="display: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
                 <h1 class="header-title" id="page-title">仪表板</h1>
                 <div class="user-menu" id="user-menu" onclick="toggleUserDropdown()">
                     <div class="user-avatar" id="user-avatar">U</div>
@@ -2380,6 +2455,21 @@
             return res;
         }
 
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            const isOpen = sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+
+            // 防止背景滚动
+            if (isOpen) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+
         // 用户菜单下拉
         function toggleUserDropdown() {
             const dropdown = document.getElementById('user-dropdown');
@@ -2443,9 +2533,18 @@
             document.getElementById('login-modal-overlay').classList.remove('active');
         }
 
-        // ESC 键关闭模态框
+        // ESC 键关闭模态框和移动菜单
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                // 关闭移动菜单
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('mobile-overlay');
+                if (sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                    return;
+                }
+
                 // 检查是否有打开的模态框
                 const modals = [
                     'login-modal-overlay',
