@@ -2996,7 +2996,7 @@
                             const toggleBtn = hasRejectionReason ? `
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
                                     <button class="btn btn-sm btn-secondary" onclick="toggleRejectionDetail('${escapeHtml(item.system_name)}')">
-                                        查看详情
+                                        审批意见
                                     </button>
                                     ${actionButtons}
                                 </div>
@@ -3107,7 +3107,7 @@
                             // 展开/收起按钮（仅当有审批意见时显示）
                             const toggleBtn = hasRejectionReason ? `
                                 <button class="btn btn-sm btn-secondary" onclick="toggleRejectionDetail(${item.id})" style="margin-top: 4px;">
-                                    查看详情
+                                    审批意见
                                 </button>
                             ` : '';
 
