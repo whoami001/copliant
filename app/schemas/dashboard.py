@@ -14,6 +14,8 @@ class DashboardTodoItem(BaseModel):
     # 审批意见（驳回原因/要求补充信息）
     rejection_reason: Optional[str] = None
     required_fields: Optional[List[str]] = None
+    # 审批意见来源（security/legal）
+    rejection_source: Optional[str] = None
 
 
 class DashboardTodoResponse(BaseModel):
@@ -43,6 +45,8 @@ class DashboardSystemGroupedTodoItem(BaseModel):
     rejection_reason: Optional[str] = None
     # 需要补充的字段（聚合该系统下所有记录的要求）
     required_fields: Optional[List[str]] = None
+    # 审批意见来源列表（用于区分安全/法务意见）
+    rejection_sources: Optional[List[str]] = None
 
 
 class DashboardSystemGroupedTodoResponse(BaseModel):

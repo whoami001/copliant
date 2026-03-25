@@ -2977,7 +2977,11 @@
                                         <div style="display: flex; gap: 16px;">
                                             ${item.rejection_reason ? `
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--danger);">📋 审批意见</div>
+                                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                                        <span style="font-weight: 600; color: var(--danger);">📋 审批意见</span>
+                                                        ${item.rejection_sources && item.rejection_sources.includes('security') ? '<span class="badge" style="background: #DBEAFE; color: #1D4ED8; font-size: 11px;">安全</span>' : ''}
+                                                        ${item.rejection_sources && item.rejection_sources.includes('legal') ? '<span class="badge" style="background: #FCE7F3; color: #9D174D; font-size: 11px;">法务</span>' : ''}
+                                                    </div>
                                                     <div style="color: var(--text); font-size: 14px;">${escapeHtml(item.rejection_reason)}</div>
                                                 </div>
                                             ` : ''}
@@ -3089,7 +3093,11 @@
                                         <div style="display: flex; gap: 16px;">
                                             ${item.rejection_reason ? `
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 600; margin-bottom: 4px; color: var(--danger);">📋 审批意见</div>
+                                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                                                        <span style="font-weight: 600; color: var(--danger);">📋 审批意见</span>
+                                                        ${item.rejection_source === 'security' ? '<span class="badge" style="background: #DBEAFE; color: #1D4ED8; font-size: 11px;">安全</span>' : ''}
+                                                        ${item.rejection_source === 'legal' ? '<span class="badge" style="background: #FCE7F3; color: #9D174D; font-size: 11px;">法务</span>' : ''}
+                                                    </div>
                                                     <div style="color: var(--text); font-size: 14px;">${escapeHtml(item.rejection_reason)}</div>
                                                 </div>
                                             ` : ''}

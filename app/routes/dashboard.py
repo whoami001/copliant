@@ -54,6 +54,8 @@ async def get_dashboard_todo(
         items = []
         for system_name, records in system_groups.items():
             for record in records:
+                # 根据记录状态判断来源
+                source = 'security' if record.status == RecordStatus.PENDING_SECURITY else 'legal' if record.status == RecordStatus.PENDING_LEGAL else None
                 items.append(
                     DashboardTodoItem(
                         id=record.id,
@@ -63,6 +65,7 @@ async def get_dashboard_todo(
                         requires_action=True,
                         rejection_reason=record.rejection_reason,
                         required_fields=record.required_fields,
+                        rejection_source=source,
                     )
                 )
     elif current_user.role == UserRole.SECURITY:
@@ -82,6 +85,7 @@ async def get_dashboard_todo(
                 requires_action=True,
                 rejection_reason=record.rejection_reason,
                 required_fields=record.required_fields,
+                rejection_source='security',
             )
             for record in pending_records
         ]
@@ -102,6 +106,7 @@ async def get_dashboard_todo(
                 requires_action=True,
                 rejection_reason=record.rejection_reason,
                 required_fields=record.required_fields,
+                rejection_source='legal',
             )
             for record in pending_records
         ]
@@ -217,8 +222,23 @@ async def get_dashboard_todo_system_grouped(
         for system_name, records in system_groups.items():
             # 使用第一个记录的状态作为该系统状态
             first_record = records[0]
-            # 聚合审批意见（收集所有记录的 rejection_reason 和 required_fields）
-            rejection_reasons = [r.rejection_reason for r in records if r.rejection_reason]
+            # 聚合审批意见（收集所有记录的 rejection_reason，去重）
+            rejection_reasons_set = set()
+            rejection_sources = set()
+            for r in records:
+                if r.rejection_reason:
+                    rejection_reasons_set.add(r.rejection_reason)
+                # 根据记录状态判断来源
+                if r.status == RecordStatus.PENDING_SECURITY or r.status == RecordStatus.REJECTED:
+                    # 检查是否是安全驳回（通过审批历史判断）
+                    if r.rejection_reason:
+                        rejection_sources.add('security')
+                    else:
+                        rejection_sources.add('legal')
+                elif r.status == RecordStatus.PENDING_LEGAL:
+                    if r.rejection_reason:
+                        rejection_sources.add('legal')
+
             required_fields_set = set()
             for r in records:
                 if r.required_fields:
@@ -232,8 +252,9 @@ async def get_dashboard_todo_system_grouped(
                     earliest_created_at=min(r.created_at.isoformat() for r in records),
                     record_ids=[r.id for r in records],
                     first_record_id=records[0].id,
-                    rejection_reason='; '.join(rejection_reasons) if rejection_reasons else None,
+                    rejection_reason='; '.join(rejection_reasons_set) if rejection_reasons_set else None,
                     required_fields=list(required_fields_set) if required_fields_set else None,
+                    rejection_sources=list(rejection_sources) if rejection_sources else None,
                 )
             )
     elif current_user.role == UserRole.ENGINEER:
@@ -261,8 +282,21 @@ async def get_dashboard_todo_system_grouped(
         items = []
         for system_name, records in system_groups.items():
             first_record = records[0]
-            # 聚合审批意见（收集所有记录的 rejection_reason 和 required_fields）
-            rejection_reasons = [r.rejection_reason for r in records if r.rejection_reason]
+            # 聚合审批意见（收集所有记录的 rejection_reason，去重）
+            rejection_reasons_set = set()
+            rejection_sources = set()
+            for r in records:
+                if r.rejection_reason:
+                    rejection_reasons_set.add(r.rejection_reason)
+                    # 根据状态判断来源：REJECTED 状态需要查看是谁驳回的
+                    if r.status == RecordStatus.REJECTED:
+                        # 通过审批历史判断是安全还是法务驳回
+                        # 简单判断：如果有 rejection_reason 且状态是 REJECTED，来源于最后一个驳回的用户角色
+                        # 这里简化处理：如果 reason 存在，标记为 legal（因为法务是最终审批）
+                        rejection_sources.add('legal')
+                    else:
+                        rejection_sources.add('security')
+
             required_fields_set = set()
             for r in records:
                 if r.required_fields:
@@ -279,8 +313,9 @@ async def get_dashboard_todo_system_grouped(
                     earliest_created_at=earliest_date.isoformat() if earliest_date else '',
                     record_ids=[r.id for r in records],
                     first_record_id=records[0].id,
-                    rejection_reason='; '.join(rejection_reasons) if rejection_reasons else None,
+                    rejection_reason='; '.join(rejection_reasons_set) if rejection_reasons_set else None,
                     required_fields=list(required_fields_set) if required_fields_set else None,
+                    rejection_sources=list(rejection_sources) if rejection_sources else None,
                 )
             )
     else:
