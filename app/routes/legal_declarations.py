@@ -215,11 +215,13 @@ async def get_declaration_by_record(
 async def update_declaration(
     declaration_id: int,
     update_data: LegalDeclarationUpdate,
+    current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
     """更新法务声明
 
     仅允许 DRAFT 或 REJECTED 状态的合规记录更新声明。
+    仅允许声明创建者（Engineer）和管理员更新。
     """
     declaration = db.query(LegalDeclaration).filter(
         LegalDeclaration.id == declaration_id
@@ -236,6 +238,29 @@ async def update_declaration(
             status_code=400,
             detail=f"当前状态不能修改声明：{record.status.value}，仅 DRAFT 和 REJECTED 状态可修改"
         )
+
+    # 检查权限：只有声明创建者（Engineer）和管理员可以更新
+    if not can(current_user, "create_declaration"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "INSUFFICIENT_PERMISSION",
+                "required_roles": ["engineer", "admin"],
+                "message": "权限不足：只有研发和管理员可以更新法务声明"
+            }
+        )
+
+    # 额外检查：工程师只能更新自己的声明
+    # 注意：filled_by 为 None 时允许更新（批量导入场景），更新时会设置 filled_by
+    if current_user.role == UserRole.ENGINEER and record.filled_by is not None and record.filled_by != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="权限不足：只能更新自己创建的声明"
+        )
+
+    # 如果 filled_by 为空，设置为当前用户（批量导入场景）
+    if record.filled_by is None:
+        record.filled_by = current_user.id
 
     # 更新字段
     update_dict = update_data.model_dump(exclude_unset=True)
@@ -297,6 +322,10 @@ async def submit_declaration(
         # 更新记录状态
         record.status = RecordStatus.PENDING_SECURITY
         record.submitted_at = datetime.utcnow()
+
+        # 如果 filled_by 为空，设置为当前用户（批量导入场景）
+        if record.filled_by is None:
+            record.filled_by = current_user.id
 
         db.commit()
         db.refresh(declaration)
