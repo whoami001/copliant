@@ -2383,9 +2383,9 @@
                     <div class="form-group">
                         <label class="form-label required" for="import-system-name">系统名称</label>
                         <select class="form-select" id="import-system-name">
-                            <option value="">请选择或输入系统名称</option>
+                            <option value="">请选择系统名称</option>
                         </select>
-                        <span class="form-hint">可选：从列表中选择或输入新的系统名称</span>
+                        <span class="form-hint">从列表中选择系统名称</span>
                     </div>
                     <div class="form-group">
                         <label class="form-label required" for="spdx-file">SPDX 文件</label>
@@ -5013,28 +5013,13 @@
                 const select = document.getElementById('import-system-name');
                 if (!select) return; // 如果下拉框不存在，直接返回
 
-                select.innerHTML = '<option value="">请选择或输入系统名称</option>' +
+                // 研发只能从已有列表中选择系统名称，不能自定义输入
+                select.innerHTML = '<option value="">请选择系统名称</option>' +
                     systemNames.map(item =>
                         `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`
-                    ).join('') +
-                    '<option value="__custom__">—— 输入新系统名称 ——</option>';
+                    ).join('');
 
-                // 监听选择变化，如果选择自定义则显示输入框
-                select.addEventListener('change', function() {
-                    if (this.value === '__custom__') {
-                        const customName = prompt('请输入新的系统名称：');
-                        if (customName) {
-                            // 添加到选项中并选中
-                            const option = document.createElement('option');
-                            option.value = escapeHtml(customName);
-                            option.textContent = escapeHtml(customName);
-                            select.add(option, select.options[select.options.length - 1]);
-                            select.value = escapeHtml(customName);
-                        } else {
-                            select.value = '';
-                        }
-                    }
-                });
+                // 移除自定义输入的监听器（不再需要）
             } catch (error) {
                 console.error('加载系统名称失败:', error);
             }
