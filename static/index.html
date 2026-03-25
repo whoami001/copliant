@@ -2742,7 +2742,13 @@
                 localStorage.setItem('auth_token', authToken);
 
                 // 获取用户信息
-                await fetchCurrentUser();
+                const user = await fetchCurrentUser();
+                if (user) {
+                    // 更新用户 UI 和角色相关 UI
+                    updateUserUI(user);
+                    // 加载未读通知数
+                    loadUnreadNotificationCount();
+                }
 
                 // 加载当前页面数据
                 const currentPage = document.querySelector('.page.active');
