@@ -3491,7 +3491,7 @@
                 // 将记录转换为批量编辑格式
                 const importItems = records.map(record => {
                     // 从 declaration 对象中提取数据（如果有）
-                    const decl = record.declaration || {};
+                    const decl = record.legal_declaration || {};
                     return {
                         record_id: record.id,
                         declaration_id: decl.id || null,
@@ -3667,7 +3667,7 @@
                 }
 
                 const record = await res.json();
-                const decl = record.declaration || {};
+                const decl = record.legal_declaration || {};
                 const component = record.component || {};
 
                 // 转换为批量编辑格式（单个项目）
@@ -3952,7 +3952,7 @@
 
                 // 将记录转换为批量编辑格式
                 const importItems = records.map(record => {
-                    const decl = record.declaration || {};
+                    const decl = record.legal_declaration || {};
                     const component = record.component || {};
                     return {
                         record_id: record.id,
@@ -4037,7 +4037,7 @@
 
                 // 将记录转换为批量编辑格式
                 const importItems = records.map(record => {
-                    const decl = record.declaration || {};
+                    const decl = record.legal_declaration || {};
                     const component = record.component || {};
                     return {
                         record_id: record.id,
