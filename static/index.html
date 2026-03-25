@@ -1724,12 +1724,6 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">待办事项</h2>
-                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 5v14M5 12h14"/>
-                            </svg>
-                            新建合规记录
-                        </button>
                     </div>
                     <div class="card-body">
                         <div id="todo-list">
@@ -1746,12 +1740,6 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">合规记录列表</h2>
-                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 5v14M5 12h14"/>
-                            </svg>
-                            新建合规记录
-                        </button>
                     </div>
                     <div class="card-body">
                         <div style="margin-bottom: 16px; display: flex; gap: 12px;">
@@ -1768,25 +1756,28 @@
                         <div style="overflow-x: auto;">
                             <table class="table" style="min-width: 800px; table-layout: fixed;">
                                 <colgroup>
-                                    <col style="width: 25%;">
                                     <col style="width: 15%;">
                                     <col style="width: 15%;">
-                                    <col style="width: 12%;">
+                                    <col style="width: 15%;">
+                                    <col style="width: 10%;">
+                                    <col style="width: 10%;">
                                     <col style="width: 8%;">
-                                    <col style="width: 15%;">
+                                    <col style="width: 17%;">
                                 </colgroup>
                                 <thead>
                                     <tr>
+                                        <th>系统名称</th>
                                         <th>名称</th>
                                         <th>版本</th>
                                         <th>许可证</th>
                                         <th>风险等级</th>
                                         <th>已审批</th>
+                                        <th>审批意见</th>
                                         <th>创建时间</th>
                                     </tr>
                                 </thead>
                                 <tbody id="records-table-body">
-                                    <tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>
+                                    <tr><td colspan="8" class="loading"><div class="spinner"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2313,7 +2304,10 @@
                 <div id="import-step-1">
                     <div class="form-group">
                         <label class="form-label required" for="import-system-name">系统名称</label>
-                        <input type="text" class="form-input" id="import-system-name" placeholder="例如：订单管理系统">
+                        <select class="form-select" id="import-system-name">
+                            <option value="">请选择或输入系统名称</option>
+                        </select>
+                        <span class="form-hint">可选：从列表中选择或输入新的系统名称</span>
                     </div>
                     <div class="form-group">
                         <label class="form-label required" for="spdx-file">SPDX 文件</label>
@@ -2972,7 +2966,6 @@
                         <div class="empty-state-icon">📋</div>
                         <div class="empty-state-title">太棒了！</div>
                         <div class="empty-state-desc">所有合规记录都已处理完成</div>
-                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">创建新的合规记录</button>
                     </div>
                 `;
                 updateRoleBasedUI();
@@ -3071,7 +3064,6 @@
                         <div class="empty-state-icon">📋</div>
                         <div class="empty-state-title">太棒了！</div>
                         <div class="empty-state-desc">所有合规记录都已处理完成</div>
-                        <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">创建新的合规记录</button>
                     </div>
                 `;
                 updateRoleBasedUI();  // 更新按钮可见性
@@ -3249,8 +3241,8 @@
                         <td colspan="6" class="empty-state">
                             <div class="empty-state-icon">📋</div>
                             <div class="empty-state-title">暂无合规记录</div>
-                            <div class="empty-state-desc">点击"新建合规记录"按钮创建第一条记录</div>
-                            <button class="btn btn-primary engineer-only" onclick="showNewRecordModal()" :disabled="authLoading">新建合规记录</button>
+                            <div class="empty-state-desc">上传 SPDX 文件批量导入组件</div>
+                            <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">上传 SPDX 文件</button>
                         </td>
                     </tr>
                 `;
@@ -3260,11 +3252,22 @@
 
             tbody.innerHTML = records.map(record => `
                 <tr>
+                    <td>${escapeHtml(record.system_name) || '-'}</td>
                     <td>${record.component?.name || '-'}</td>
                     <td>${record.component?.version || '-'}</td>
                     <td>${record.component?.license || '-'}</td>
                     <td><span class="badge ${RISK_MAP[record.component?.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[record.component?.license_risk_level]?.label || '-'}</span></td>
                     <td>${record.component?.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
+                    <td style="font-size: 12px; max-width: 200px;">
+                        ${record.security_comments || record.legal_comments || record.rejection_reason ? `
+                            <div style="color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${record.security_comments ? '安全：' + escapeHtml(record.security_comments) : ''}
+                                ${record.security_comments && record.legal_comments ? '<br/>' : ''}
+                                ${record.legal_comments ? '法务：' + escapeHtml(record.legal_comments) : ''}
+                                ${record.rejection_reason ? '<span style="color: var(--error-text);">驳回：' + escapeHtml(record.rejection_reason) + '</span>' : ''}
+                            </div>
+                        ` : '-'}
+                    </td>
                     <td>${record.created_at ? new Date(record.created_at).toLocaleDateString('zh-CN') : '-'}</td>
                 </tr>
             `).join('');
@@ -3559,35 +3562,6 @@
                     <td>${comp.created_at ? new Date(comp.created_at).toLocaleDateString('zh-CN') : '-'}</td>
                 </tr>
             `).join('');
-        }
-
-        // 显示新建记录模态框（简化版：直接 prompt）
-        function showNewRecordModal() {
-            const systemName = prompt('请输入系统名称：');
-            if (!systemName) return;
-
-            // 直接创建空记录，用户可以在草稿状态下继续编辑
-            createEmptyRecord(systemName);
-        }
-
-        async function createEmptyRecord(systemName) {
-            try {
-                const res = await authFetch(`${API_BASE}/compliance-records`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        system_name: systemName
-                    })
-                });
-
-                if (!res.ok) throw new Error('创建失败');
-
-                const record = await res.json();
-                showToast('创建成功，请在草稿中继续编辑', 'success');
-                loadRecords();
-            } catch (error) {
-                showToast('创建失败：' + error.message, 'error');
-            }
         }
 
         // 处理记录（打开编辑模态框）
@@ -4929,9 +4903,45 @@
 
         // ==================== SPDX 批量导入相关函数 ====================
 
+        // 加载系统名称列表到下拉框
+        async function loadSystemNames() {
+            try {
+                const res = await authFetch(`${API_BASE}/system-names`);
+                if (!res.ok) throw new Error('加载失败');
+                const systemNames = await res.json();
+
+                const select = document.getElementById('import-system-name');
+                select.innerHTML = '<option value="">请选择或输入系统名称</option>' +
+                    systemNames.map(item =>
+                        `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`
+                    ).join('') +
+                    '<option value="__custom__">—— 输入新系统名称 ——</option>';
+
+                // 监听选择变化，如果选择自定义则显示输入框
+                select.addEventListener('change', function() {
+                    if (this.value === '__custom__') {
+                        const customName = prompt('请输入新的系统名称：');
+                        if (customName) {
+                            // 添加到选项中并选中
+                            const option = document.createElement('option');
+                            option.value = escapeHtml(customName);
+                            option.textContent = escapeHtml(customName);
+                            select.add(option, select.options[select.options.length - 1]);
+                            select.value = escapeHtml(customName);
+                        } else {
+                            select.value = '';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('加载系统名称失败:', error);
+            }
+        }
+
         // 打开 SPDX 导入模态框
         function showSpdxImportModal() {
             document.getElementById('spdx-import-modal-overlay').classList.add('active');
+            loadSystemNames();  // 加载系统名称列表
             document.getElementById('import-system-name').value = '';
             document.getElementById('spdx-file').value = '';
             document.getElementById('import-progress').style.display = 'none';

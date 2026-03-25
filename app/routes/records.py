@@ -43,10 +43,12 @@ async def list_records(
     """获取合规记录列表（支持状态、系统名和组件名过滤）"""
     from app.models.component import Component
     from app.models.legal_declaration import LegalDeclaration
+    from app.models.approval_history import ApprovalHistory
 
     query = db.query(ComplianceRecord).join(Component, isouter=True).options(
         joinedload(ComplianceRecord.component),
-        joinedload(ComplianceRecord.legal_declaration)
+        joinedload(ComplianceRecord.legal_declaration),
+        joinedload(ComplianceRecord.approval_history)
     )
 
     if status:
@@ -72,6 +74,20 @@ async def list_records(
     total = query.count()
 
     records = query.order_by(ComplianceRecord.created_at.desc()).offset(skip).limit(limit).all()
+
+    # 聚合审批意见
+    for record in records:
+        security_comments = []
+        legal_comments = []
+        for history in record.approval_history:
+            if history.action == 'approve' and history.comments:
+                if history.role == 'security':
+                    security_comments.append(history.comments)
+                elif history.role == 'legal':
+                    legal_comments.append(history.comments)
+        # 添加额外属性供 Schema 使用
+        record.security_comments = '; '.join(security_comments) if security_comments else None
+        record.legal_comments = '; '.join(legal_comments) if legal_comments else None
 
     # 在 response header 中返回总数
     if response:

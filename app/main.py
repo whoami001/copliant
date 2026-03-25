@@ -12,7 +12,7 @@ import traceback
 
 from app.config import get_settings
 from app.exceptions import AppException
-from app.routes import auth, components, records, approvals, dashboard, legal_declarations, notifications
+from app.routes import auth, components, records, approvals, dashboard, legal_declarations, notifications, system_names
 from app.utils import logger
 
 settings = get_settings()
@@ -49,6 +49,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router, prefix=f"{settings.api_prefix}/dashboard", tags=["dashboard"])
     app.include_router(legal_declarations.router, prefix=f"{settings.api_prefix}/legal-declarations", tags=["legal-declarations"])
     app.include_router(notifications.router, prefix=f"{settings.api_prefix}/notifications", tags=["notifications"])
+    app.include_router(system_names.router, prefix=f"{settings.api_prefix}/system-names", tags=["system-names"])
 
     # 健康检查
     @app.get("/health")

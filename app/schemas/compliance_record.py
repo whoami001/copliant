@@ -82,6 +82,9 @@ class ComplianceRecordResponse(ComplianceRecordBase):
     legal_declaration: Optional["DeclarationRef"] = None
     rejection_reason: Optional[str] = None
     required_fields: Optional[list] = None  # JSON array of field names
+    # 审批意见（从 approval_history 聚合）
+    security_comments: Optional[str] = None
+    legal_comments: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
