@@ -1946,19 +1946,6 @@
         </div>
     </div>
 
-    <!-- 403 权限拒绝模态框 -->
-    <div class="modal-overlay" id="permission-denied-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="permission-denied-title" aria-describedby="permission-denied-desc">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="permission-denied-title">权限不足</h3>
-                <button class="modal-close" onclick="closePermissionDeniedModal()" aria-label="关闭">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-
     <!-- 添加/编辑系统名称模态框 -->
     <div class="modal-overlay" id="system-name-modal-overlay">
         <div class="modal">
@@ -2007,6 +1994,17 @@
     </div>
 
     <!-- 403 权限拒绝模态框 -->
+    <div class="modal-overlay" id="permission-denied-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="permission-denied-title" aria-describedby="permission-denied-desc">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="permission-denied-title">权限不足</h3>
+                <button class="modal-close" onclick="closePermissionDeniedModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
                 <p id="permission-denied-desc" style="color: var(--text-secondary); margin-bottom: 16px;">您的角色没有权限执行此操作</p>
                 <div id="permission-required-info" style="background: var(--bg); padding: 12px; border-radius: 6px; font-size: 14px;">
                     <strong>需要以下角色之一：</strong>
