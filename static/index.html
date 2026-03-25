@@ -5540,6 +5540,9 @@
                     const purpose = document.getElementById(`purpose-${i}`).value.trim();
                     const usageType = document.getElementById(`usage-${i}`).value;
                     const isModified = document.getElementById(`modified-${i}`).value;
+                    // 收集许可证链接字段（从表单中读取）
+                    const licenseInfo = document.getElementById(`license-info-${i}`)?.value || '';
+                    const licenseText = document.getElementById(`license-text-${i}`)?.value || '';
 
                     if (!purpose) {
                         showToast(`请填写第 ${i + 1} 个组件的使用目的`, 'warning');
@@ -5555,6 +5558,8 @@
                         purpose_of_use: purpose,
                         usage_type: usageType,
                         is_modified: isModified,
+                        license_info_url: licenseInfo,
+                        license_text_url: licenseText,
                     });
                 }
             }
