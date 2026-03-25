@@ -4308,18 +4308,25 @@
             `;
 
             // 隐藏步骤指示器和导航按钮
-            modalOverlay.querySelector('.step-indicator').style.display = 'none';
-            document.getElementById('prev-btn').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('submit-btn').style.display = 'none';
+            const stepIndicator = modalOverlay.querySelector('.step-indicator');
+            if (stepIndicator) stepIndicator.style.display = 'none';
+            const prevBtn = document.getElementById('prev-btn');
+            if (prevBtn) prevBtn.style.display = 'none';
+            const nextBtn = document.getElementById('next-btn');
+            if (nextBtn) nextBtn.style.display = 'none';
+            const submitBtn = document.getElementById('submit-btn');
+            if (submitBtn) submitBtn.style.display = 'none';
 
             // 隐藏导出 PDF 按钮
-            document.getElementById('export-pdf-btn').style.display = 'none';
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            if (exportPdfBtn) exportPdfBtn.style.display = 'none';
 
             // 显示"关闭"按钮
             const cancelBtn = modalOverlay.querySelector('.modal-footer .btn-secondary');
-            cancelBtn.textContent = '关闭';
-            cancelBtn.onclick = closeDeclarationModal;
+            if (cancelBtn) {
+                cancelBtn.textContent = '关闭';
+                cancelBtn.onclick = closeDeclarationModal;
+            }
 
             // 显示模态框
             modalOverlay.classList.add('active');
