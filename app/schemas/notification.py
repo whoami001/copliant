@@ -14,6 +14,8 @@ class NotificationTypeSchema(str, enum.Enum):
     LEGAL_REJECTED = "legal_rejected"
     LEGAL_DENIED = "legal_denied"
     URGENCY_ADDED = "urgency_added"
+    LEGAL_APPROVED = "legal_approved"
+    SECURITY_APPROVED = "security_approved"
 
 
 class NotificationBase(BaseModel):

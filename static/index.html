@@ -1859,9 +1859,18 @@
             <div id="page-notifications" class="page">
                 <div class="notification-page-header">
                     <h2 class="card-title">消息中心</h2>
-                    <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsAsRead()">
-                        标记全部为已读
-                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="notification-time-filter" onchange="loadNotifications()" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
+                            <option value="24">最近 24 小时</option>
+                            <option value="72">最近 3 天</option>
+                            <option value="168">最近 7 天</option>
+                            <option value="720">最近 30 天</option>
+                            <option value="0">全部消息</option>
+                        </select>
+                        <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsAsRead()">
+                            标记全部为已读
+                        </button>
+                    </div>
                 </div>
 
                 <div class="notification-tabs">
@@ -2051,6 +2060,31 @@
                         </div>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 法务审批通过填写备注模态框 -->
+    <div class="modal-overlay" id="legal-approve-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="legal-approve-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="legal-approve-title">法务审批通过</h3>
+                <button class="modal-close" onclick="closeLegalApproveModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">备注（可选）</label>
+                    <textarea id="legal-approve-comments" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; resize: vertical;" placeholder="输入审批备注，例如：'材料齐全，符合合规要求'"></textarea>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 13px;">备注将随审批结果一起发送给研发人员。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLegalApproveModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmLegalApprove()">确认通过</button>
             </div>
         </div>
     </div>
@@ -2391,6 +2425,7 @@
         let currentUser = null;
         let authToken = localStorage.getItem('auth_token');
         let authLoading = true;  // 认证加载中状态
+        let pendingLegalApproveRecordId = null;  // 待法务审批通过的记录 ID
 
         // 状态映射
         const STATUS_MAP = {
@@ -3740,19 +3775,59 @@
 
         // 审批记录（安全或法务审批）
         async function approveRecord(id, type) {
-            const approver = type === 'security' ? '安全' : '法务';
-            if (!confirm(`确定要${approver}审批通过吗？`)) return;
+            if (type === 'legal') {
+                // 法务审批：打开模态框让用户填写备注（可选）
+                pendingLegalApproveRecordId = id;
+                document.getElementById('legal-approve-modal-overlay').classList.remove('hidden');
+                document.getElementById('legal-approve-modal-overlay').setAttribute('aria-hidden', 'false');
+                document.getElementById('legal-approve-comments').value = '';  // 清空备注框
+                return;
+            }
+
+            // 安全审批：直接确认
+            if (!confirm('确定要安全审批通过吗？')) return;
 
             try {
-                const endpoint = type === 'security' ? 'approve' : 'approve';
-                const res = await authFetch(`${API_BASE}/compliance-records/${id}/${endpoint}`, {
+                const res = await authFetch(`${API_BASE}/compliance-records/${id}/approve`, {
                     method: 'POST',
                     body: JSON.stringify({})
                 });
 
                 if (res.ok) {
-                    showToast(`${approver}审批通过`, 'success');
+                    showToast('安全审批通过', 'success');
                     // 重新加载待办事项
+                    loadDashboard();
+                } else {
+                    const error = await res.json();
+                    showToast('审批失败：' + (error.detail || '未知错误'), 'error');
+                }
+            } catch (error) {
+                showToast('审批失败：' + error.message, 'error');
+            }
+        }
+
+        // 关闭法务审批通过模态框
+        function closeLegalApproveModal() {
+            document.getElementById('legal-approve-modal-overlay').classList.add('hidden');
+            document.getElementById('legal-approve-modal-overlay').setAttribute('aria-hidden', 'true');
+            pendingLegalApproveRecordId = null;
+        }
+
+        // 确认法务审批通过
+        async function confirmLegalApprove() {
+            if (!pendingLegalApproveRecordId) return;
+
+            const comments = document.getElementById('legal-approve-comments').value.trim();
+
+            try {
+                const res = await authFetch(`${API_BASE}/compliance-records/${pendingLegalApproveRecordId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ comments: comments || undefined })
+                });
+
+                if (res.ok) {
+                    showToast('法务审批通过', 'success');
+                    closeLegalApproveModal();
                     loadDashboard();
                 } else {
                     const error = await res.json();
@@ -5499,7 +5574,24 @@
         async function loadNotifications() {
             try {
                 const unreadOnly = currentNotificationTab === 'unread';
-                const res = await authFetch(`${API_BASE}/notifications?unread_only=${unreadOnly}`);
+                const timeFilter = document.getElementById('notification-time-filter').value;
+                // 默认行为：未读 + 最近 24 小时已读
+                // unread_only=null 表示默认行为
+                // unread_only=true 表示只未读
+                // unread_only=false 表示所有（不受时间限制）
+
+                let url = `${API_BASE}/notifications?`;
+                if (unreadOnly) {
+                    url += `unread_only=true&`;
+                } else if (timeFilter === '0') {
+                    // 显示所有消息
+                    url += `unread_only=false&`;
+                } else {
+                    // 默认行为：未读 + 最近 X 小时已读
+                    url += `hours=${timeFilter}&`;
+                }
+
+                const res = await authFetch(url);
                 if (!res.ok) throw new Error('加载失败');
                 const data = await res.json();
                 renderNotifications(data.items);
@@ -5547,7 +5639,9 @@
                     'security_rejected': '安全驳回',
                     'legal_rejected': '法务驳回',
                     'legal_denied': '法务拒绝',
-                    'urgency_added': '被催促'
+                    'urgency_added': '被催促',
+                    'legal_approved': '法务通过',
+                    'security_approved': '安全通过'
                 }[latestItem.type] || latestItem.type;
 
                 // 检测是否有混合类型
@@ -5558,7 +5652,9 @@
                         'security_rejected': '安全',
                         'legal_rejected': '法务',
                         'legal_denied': '法务',
-                        'urgency_added': '催促'
+                        'urgency_added': '催促',
+                        'legal_approved': '法务',
+                        'security_approved': '安全'
                     }[type] || type}</span>`).join('')
                     : `<span class="notification-type ${latestItem.type}">${typeLabel}</span>`;
 
@@ -5596,6 +5692,10 @@
                                     ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text); font-size: 11px; margin-right: 6px;">法务</span>'
                                     : item.type === 'legal_denied'
                                     ? '<span class="badge" style="background: var(--danger-bg); color: var(--danger-text); font-size: 11px; margin-right: 6px;">法务</span>'
+                                    : item.type === 'legal_approved'
+                                    ? '<span class="badge" style="background: var(--success-bg); color: var(--success-text); font-size: 11px; margin-right: 6px;">法务</span>'
+                                    : item.type === 'security_approved'
+                                    ? '<span class="badge" style="background: var(--success-bg); color: var(--success-text); font-size: 11px; margin-right: 6px;">安全</span>'
                                     : '';
                                 return `
                                     <div class="notification-item ${item.is_read ? '' : 'unread'}" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);" data-id="${item.id}">
@@ -5622,6 +5722,15 @@
             currentNotificationTab = tab;
             document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
+
+            // 切换到未读标签时，隐藏时间筛选器
+            const timeFilter = document.getElementById('notification-time-filter');
+            if (tab === 'unread') {
+                timeFilter.style.display = 'none';
+            } else {
+                timeFilter.style.display = 'block';
+            }
+
             loadNotifications();
         }
 

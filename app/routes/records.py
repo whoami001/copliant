@@ -177,13 +177,35 @@ async def approve_record(
         raise HTTPException(status_code=404, detail="Record not found")
 
     approval_service = get_approval_flow_service(db)
+    notification_service = get_notification_service(db)
 
     if record.status == RecordStatus.PENDING_SECURITY:
         # 安全校验通过
         record = approval_service.security_review(record, current_user, pass_review=True, comments=approve_data.comments)
+
+        # 发送通知给研发人员
+        if record.filled_by:
+            filler = db.query(User).filter(User.id == record.filled_by).first()
+            if filler:
+                notification_service.notify_security_approved(
+                    user=filler,
+                    record=record,
+                    comments=approve_data.comments,
+                )
+
     elif record.status == RecordStatus.PENDING_LEGAL:
         # 法务审批通过
         record = approval_service.legal_approve(record, current_user, approve=True, comments=approve_data.comments)
+
+        # 发送通知给研发人员
+        if record.filled_by:
+            filler = db.query(User).filter(User.id == record.filled_by).first()
+            if filler:
+                notification_service.notify_legal_approved(
+                    user=filler,
+                    record=record,
+                    comments=approve_data.comments,
+                )
 
         # 方案 A: 组件全局审批 — 法务通过后，自动标记组件为已审批
         record.component.is_approved = True

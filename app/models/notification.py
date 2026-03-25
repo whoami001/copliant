@@ -12,9 +12,11 @@ import enum
 class NotificationType(str, enum.Enum):
     """通知类型枚举"""
     SECURITY_REJECTED = "security_rejected"  # 安全驳回
-    LEGAL_REJECTED = "legal_rejected"  # 法务驳回
+    LEGAL_REJECTED = "legal_rejected"  # 法务驳回（要求修改）
     LEGAL_DENIED = "legal_denied"  # 法务拒绝
     URGENCY_ADDED = "urgency_added"  # 被催促
+    LEGAL_APPROVED = "legal_approved"  # 法务审批通过
+    SECURITY_APPROVED = "security_approved"  # 安全审批通过
 
 
 class Notification(Base):

@@ -104,12 +104,49 @@ class NotificationService:
             related_record=record,
         )
 
+    def notify_legal_approved(
+        self,
+        user: User,
+        record: ComplianceRecord,
+        comments: Optional[str] = None,
+    ) -> Notification:
+        """通知法务审批通过"""
+        message = f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」已通过法务审批。"
+        if comments:
+            message += f"\n\n备注：{comments}"
+        return self.create_notification(
+            user=user,
+            title="法务审批通过",
+            message=message,
+            notification_type=NotificationType.LEGAL_APPROVED,
+            related_record=record,
+        )
+
+    def notify_security_approved(
+        self,
+        user: User,
+        record: ComplianceRecord,
+        comments: Optional[str] = None,
+    ) -> Notification:
+        """通知安全审批通过"""
+        message = f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」已通过安全校验。"
+        if comments:
+            message += f"\n\n备注：{comments}"
+        return self.create_notification(
+            user=user,
+            title="安全校验通过",
+            message=message,
+            notification_type=NotificationType.SECURITY_APPROVED,
+            related_record=record,
+        )
+
     def get_user_notifications(
         self,
         user: User,
         skip: int = 0,
         limit: int = 50,
         unread_only: bool = False,
+        hours: Optional[int] = None,
     ) -> List[Notification]:
         """
         获取用户通知列表
@@ -119,14 +156,21 @@ class NotificationService:
             skip: 跳过数量
             limit: 限制数量
             unread_only: 是否只获取未读
+            hours: 限制最近 X 小时的通知（用于已读消息）
 
         Returns:
             通知列表
         """
+        from datetime import timedelta
+
         query = self.db.query(Notification).filter(Notification.user_id == user.id)
 
         if unread_only:
             query = query.filter(Notification.is_read == False)
+        elif hours is not None:
+            # 已读消息只显示最近 X 小时的
+            cutoff = datetime.utcnow() - timedelta(hours=hours)
+            query = query.filter(Notification.created_at >= cutoff)
 
         # 未读通知排在前面，同按创建时间倒序
         return query.order_by(
