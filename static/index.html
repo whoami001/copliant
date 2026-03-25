@@ -1650,6 +1650,15 @@
                         <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
                     </a>
                 </li>
+                <li class="nav-item admin-only" style="display: none;">
+                    <a href="#settings" class="nav-link" data-page="settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        系统管理
+                    </a>
+                </li>
             </ul>
         </aside>
 
@@ -1879,6 +1888,28 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 系统管理页面 -->
+            <div id="page-settings" class="page admin-only" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">系统名称管理</h2>
+                        <button class="btn btn-primary" onclick="showAddSystemNameModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 4v16m8-8H4"/>
+                            </svg>
+                            添加系统名称
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="system-names-list">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -1927,6 +1958,55 @@
                 </button>
             </div>
             <div class="modal-body">
+
+    <!-- 添加/编辑系统名称模态框 -->
+    <div class="modal-overlay" id="system-name-modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="system-name-modal-title">添加系统名称</h3>
+                <button class="modal-close" onclick="closeSystemNameModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="system-name-id">
+                <div class="form-group">
+                    <label class="form-label required" for="system-name-input">系统名称</label>
+                    <input type="text" class="form-input" id="system-name-input" placeholder="例如：风控平台、数据中台">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSystemNameModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveSystemName()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal-overlay" id="delete-system-name-modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">确认删除</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除系统名称 "<span id="delete-system-name-text"></span>" 吗？</p>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">删除后可能影响已有的合规记录。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
+                <button class="btn btn-danger" onclick="confirmDeleteSystemName()">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 403 权限拒绝模态框 -->
                 <p id="permission-denied-desc" style="color: var(--text-secondary); margin-bottom: 16px;">您的角色没有权限执行此操作</p>
                 <div id="permission-required-info" style="background: var(--bg); padding: 12px; border-radius: 6px; font-size: 14px;">
                     <strong>需要以下角色之一：</strong>
@@ -2771,6 +2851,12 @@
             legalItems.forEach(el => {
                 el.style.display = (isAdmin || hasRole('legal')) ? '' : 'none';
             });
+
+            // 管理员可见页面和导航项
+            const adminItems = document.querySelectorAll('.admin-only');
+            adminItems.forEach(el => {
+                el.style.display = isAdmin ? '' : 'none';
+            });
         }
 
         // 快速切换用户
@@ -2851,7 +2937,8 @@
                 'dashboard': '仪表板',
                 'records': '合规记录',
                 'components': '组件管理',
-                'notifications': '消息中心'
+                'notifications': '消息中心',
+                'settings': '系统管理'
             };
             document.getElementById('page-title').textContent = titles[page];
 
@@ -2860,6 +2947,7 @@
             else if (page === 'records') loadRecords();
             else if (page === 'components') loadComponentRecords();
             else if (page === 'notifications') loadNotifications();
+            else if (page === 'settings') loadSystemNames();
         }
 
         // 加载仪表板数据
@@ -4905,12 +4993,22 @@
 
         // 加载系统名称列表到下拉框
         async function loadSystemNames() {
+            // 如果是设置页面，渲染管理表格
+            const settingsPage = document.getElementById('page-settings');
+            if (settingsPage && settingsPage.classList.contains('active')) {
+                loadSystemNamesManagement();
+                return;
+            }
+
+            // 否则加载到下拉框（SPDX 导入用）
             try {
                 const res = await authFetch(`${API_BASE}/system-names`);
                 if (!res.ok) throw new Error('加载失败');
                 const systemNames = await res.json();
 
                 const select = document.getElementById('import-system-name');
+                if (!select) return; // 如果下拉框不存在，直接返回
+
                 select.innerHTML = '<option value="">请选择或输入系统名称</option>' +
                     systemNames.map(item =>
                         `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`
@@ -4935,6 +5033,67 @@
                 });
             } catch (error) {
                 console.error('加载系统名称失败:', error);
+            }
+        }
+
+        // 加载系统名称管理列表（设置页面用）
+        async function loadSystemNamesManagement() {
+            const container = document.getElementById('system-names-list');
+            if (!container) return;
+
+            try {
+                const res = await authFetch(`${API_BASE}/system-names`);
+                if (!res.ok) throw new Error('加载失败');
+                const systemNames = await res.json();
+
+                if (systemNames.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📋</div>
+                            <div class="empty-state-title">暂无系统名称</div>
+                            <div class="empty-state-desc">点击右上角"添加系统名称"开始创建</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">ID</th>
+                                <th>系统名称</th>
+                                <th style="width: 150px;">创建时间</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${systemNames.map(item => `
+                                <tr>
+                                    <td>${item.id}</td>
+                                    <td>${escapeHtml(item.name)}</td>
+                                    <td>${formatDate(item.created_at)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary" onclick="showEditSystemNameModal(${item.id}, '${escapeHtml(item.name)}')">
+                                            编辑
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="showDeleteSystemNameModal(${item.id}, '${escapeHtml(item.name)}')" style="margin-left: 8px;">
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-title">加载失败</div>
+                        <div class="empty-state-desc">${error.message}</div>
+                        <button class="btn btn-primary" onclick="loadSystemNamesManagement()">重试</button>
+                    </div>
+                `;
             }
         }
 
@@ -5597,7 +5756,118 @@
             return div.innerHTML;
         }
 
-        // 执行 SPDX 导入（保留向后兼容）
+        // ==================== 系统名称管理相关函数 ====================
+
+        // 显示添加系统名称模态框
+        function showAddSystemNameModal() {
+            document.getElementById('system-name-modal-title').textContent = '添加系统名称';
+            document.getElementById('system-name-id').value = '';
+            document.getElementById('system-name-input').value = '';
+            document.getElementById('system-name-modal-overlay').classList.add('active');
+            document.getElementById('system-name-input').focus();
+        }
+
+        // 显示编辑系统名称模态框
+        function showEditSystemNameModal(id, name) {
+            document.getElementById('system-name-modal-title').textContent = '编辑系统名称';
+            document.getElementById('system-name-id').value = id;
+            document.getElementById('system-name-input').value = name;
+            document.getElementById('system-name-modal-overlay').classList.add('active');
+            document.getElementById('system-name-input').focus();
+        }
+
+        // 关闭系统名称模态框
+        function closeSystemNameModal() {
+            document.getElementById('system-name-modal-overlay').classList.remove('active');
+        }
+
+        // 保存系统名称（新增或更新）
+        async function saveSystemName() {
+            const id = document.getElementById('system-name-id').value;
+            const name = document.getElementById('system-name-input').value.trim();
+
+            if (!name) {
+                showToast('请输入系统名称', 'warning');
+                return;
+            }
+
+            try {
+                let res;
+                if (id) {
+                    // 更新
+                    res = await authFetch(`${API_BASE}/system-names/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                } else {
+                    // 新增
+                    res = await authFetch(`${API_BASE}/system-names`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                }
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({ detail: '操作失败' }));
+                    throw new Error(error.detail || '操作失败');
+                }
+
+                showToast(id ? '更新成功' : '添加成功', 'success');
+                closeSystemNameModal();
+                loadSystemNamesManagement(); // 重新加载列表
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // 显示删除确认模态框
+        let systemNameToDeleteId = null;
+
+        function showDeleteSystemNameModal(id, name) {
+            systemNameToDeleteId = id;
+            document.getElementById('delete-system-name-text').textContent = name;
+            document.getElementById('delete-system-name-modal-overlay').classList.add('active');
+        }
+
+        // 关闭删除确认模态框
+        function closeDeleteModal() {
+            document.getElementById('delete-system-name-modal-overlay').classList.remove('active');
+            systemNameToDeleteId = null;
+        }
+
+        // 确认删除系统名称
+        async function confirmDeleteSystemName() {
+            if (!systemNameToDeleteId) return;
+
+            try {
+                const res = await authFetch(`${API_BASE}/system-names/${systemNameToDeleteId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!res.ok) {
+                    const error = await res.json().catch(() => ({ detail: '删除失败' }));
+                    throw new Error(error.detail || '删除失败');
+                }
+
+                showToast('删除成功', 'success');
+                closeDeleteModal();
+                loadSystemNamesManagement(); // 重新加载列表
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // 模态框 ESC 关闭支持
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSystemNameModal();
+                closeDeleteModal();
+            }
+        });
+
+        // ==================== SPDX 批量导入相关函数 ====================
         async function doSpdxImport() {
             const systemName = document.getElementById('import-system-name').value.trim();
             const fileInput = document.getElementById('spdx-file');
@@ -5897,6 +6167,19 @@
             } catch (error) {
                 console.error('加载未读通知数失败:', error);
             }
+        }
+
+        // 时间格式化
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
 
         // 时间格式化
