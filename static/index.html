@@ -2951,7 +2951,7 @@
                                     <td>${escapeHtml(item.system_name)}</td>
                                     <td>${item.component_count} 个</td>
                                     <td><span class="badge ${STATUS_MAP[status]?.class || 'badge-secondary'}">${STATUS_MAP[status]?.label || status}</span></td>
-                                    <td>${new Date(item.earliest_created_at).toLocaleDateString('zh-CN')}</td>
+                                    <td>${item.earliest_created_at ? new Date(item.earliest_created_at).toLocaleDateString('zh-CN') : '-'}</td>
                                     <td>${actionButtons}</td>
                                 </tr>
                             `;
@@ -3265,7 +3265,7 @@
                     <td>${record.component?.license || '-'}</td>
                     <td><span class="badge ${RISK_MAP[record.component?.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[record.component?.license_risk_level]?.label || '-'}</span></td>
                     <td>${record.component?.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
-                    <td>${new Date(record.created_at).toLocaleDateString('zh-CN')}</td>
+                    <td>${record.created_at ? new Date(record.created_at).toLocaleDateString('zh-CN') : '-'}</td>
                 </tr>
             `).join('');
 
@@ -3366,7 +3366,7 @@
                         <td>${systemName}</td>
                         <td>${componentCount} 个</td>
                         <td><span class="badge ${COMPONENT_STATUS_CLASS[dominantStatus.status] || 'badge-secondary'}">${COMPONENT_STATUS_LABELS[dominantStatus.status] || dominantStatus.status}</span></td>
-                        <td>${new Date(firstRecord.created_at).toLocaleDateString('zh-CN')}</td>
+                        <td>${firstRecord.created_at ? new Date(firstRecord.created_at).toLocaleDateString('zh-CN') : '-'}</td>
                         <td>
                             <button class="btn btn-sm btn-secondary" onclick="viewComponentSystemDetail('${systemName.replace(/'/g, "\\'")}')">查看详情</button>
                             ${dominantStatus.status === 'draft' ? '<button class="btn btn-sm btn-primary engineer-only" onclick="submitSystemRecords(\'' + systemName.replace(/'/g, "\\'") + '\')">提交审批</button>' : ''}
@@ -3556,7 +3556,7 @@
                     <td>${comp.license || '-'}</td>
                     <td><span class="badge ${RISK_MAP[comp.license_risk_level]?.class || 'badge-secondary'}">${RISK_MAP[comp.license_risk_level]?.label || comp.license_risk_level}</span></td>
                     <td>${comp.is_approved ? '<span class="badge badge-success">是</span>' : '<span class="badge badge-secondary">否</span>'}</td>
-                    <td>${new Date(comp.created_at).toLocaleDateString('zh-CN')}</td>
+                    <td>${comp.created_at ? new Date(comp.created_at).toLocaleDateString('zh-CN') : '-'}</td>
                 </tr>
             `).join('');
         }
@@ -4745,7 +4745,7 @@
                         const detailsEl = document.getElementById('history-details');
                         detailsEl.innerHTML = data.suggestions.map(s => `
                             <div class="history-item">
-                                • ${s.system_name} - ${new Date(s.approved_at).toLocaleDateString('zh-CN')}
+                                • ${s.system_name} - ${s.approved_at ? new Date(s.approved_at).toLocaleDateString('zh-CN') : '-'}
                                 (${s.license_name})
                             </div>
                         `).join('');
