@@ -12,15 +12,15 @@ from datetime import datetime
 class TestDashboardEndpoints:
     """仪表板端点测试"""
 
-    def test_get_todo_empty(self, client: TestClient):
+    def test_get_todo_empty(self, client: TestClient, auth_headers: dict):
         """测试获取待办事项 - 空"""
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 0
         assert data["items"] == []
 
-    def test_get_todo_with_pending_security(self, db_session: Session, client: TestClient):
+    def test_get_todo_with_pending_security(self, db_session: Session, client: TestClient, security_auth_headers: dict):
         """测试获取待办事项 - 安全待处理"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -34,7 +34,7 @@ class TestDashboardEndpoints:
         db_session.add(record)
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=security_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 1
@@ -42,7 +42,7 @@ class TestDashboardEndpoints:
         assert data["items"][0]["status"] == "pending_security"
         assert data["items"][0]["requires_action"] is True
 
-    def test_get_todo_with_pending_legal(self, db_session: Session, client: TestClient):
+    def test_get_todo_with_pending_legal(self, db_session: Session, client: TestClient, legal_auth_headers: dict):
         """测试获取待办事项 - 法务待处理"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -56,13 +56,13 @@ class TestDashboardEndpoints:
         db_session.add(record)
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=legal_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 1
         assert data["items"][0]["status"] == "pending_legal"
 
-    def test_get_todo_excludes_approved(self, db_session: Session, client: TestClient):
+    def test_get_todo_excludes_approved(self, db_session: Session, client: TestClient, security_auth_headers: dict):
         """测试待办事项排除已通过记录"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -73,13 +73,13 @@ class TestDashboardEndpoints:
         db_session.add_all([approved, rejected])
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=security_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 0
         assert data["items"] == []
 
-    def test_get_todo_excludes_draft(self, db_session: Session, client: TestClient):
+    def test_get_todo_excludes_draft(self, db_session: Session, client: TestClient, security_auth_headers: dict):
         """测试待办事项排除草稿"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -89,12 +89,12 @@ class TestDashboardEndpoints:
         db_session.add(draft)
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=security_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 0
 
-    def test_get_todo_multiple_items(self, db_session: Session, client: TestClient):
+    def test_get_todo_multiple_items(self, db_session: Session, client: TestClient, admin_auth_headers: dict):
         """测试获取多个待办事项"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -109,15 +109,15 @@ class TestDashboardEndpoints:
             db_session.add(record)
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=admin_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 5
         assert len(data["items"]) == 5
 
-    def test_get_stats_empty(self, client: TestClient):
+    def test_get_stats_empty(self, client: TestClient, auth_headers: dict):
         """测试获取统计信息 - 空"""
-        response = client.get("/api/dashboard/stats")
+        response = client.get("/api/dashboard/stats", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert "pending_my_action" in data
@@ -127,7 +127,7 @@ class TestDashboardEndpoints:
         assert data["pending_my_action"] == 0
         assert data["total_records"] == 0
 
-    def test_get_stats_with_data(self, db_session: Session, client: TestClient):
+    def test_get_stats_with_data(self, db_session: Session, client: TestClient, admin_auth_headers: dict):
         """测试获取统计信息 - 有数据"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -142,13 +142,13 @@ class TestDashboardEndpoints:
         db_session.add_all([pending_security, pending_legal, approved, draft])
         db_session.commit()
 
-        response = client.get("/api/dashboard/stats")
+        response = client.get("/api/dashboard/stats", headers=admin_auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["pending_my_action"] == 2  # pending_security + pending_legal
         assert data["total_records"] == 4
 
-    def test_get_stats_approved_this_month(self, db_session: Session, client: TestClient):
+    def test_get_stats_approved_this_month(self, db_session: Session, client: TestClient, auth_headers: dict):
         """测试获取本月通过的统计"""
         component = Component(name="lodash", version="4.17.21", license="MIT")
         db_session.add(component)
@@ -165,20 +165,20 @@ class TestDashboardEndpoints:
         db_session.add(approved)
         db_session.commit()
 
-        response = client.get("/api/dashboard/stats")
+        response = client.get("/api/dashboard/stats", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["approved_this_month"] >= 1
 
-    def test_get_stats_avg_days_fixed(self, client: TestClient):
+    def test_get_stats_avg_days_fixed(self, client: TestClient, auth_headers: dict):
         """测试平均处理时间是固定值（MVP 实现）"""
-        response = client.get("/api/dashboard/stats")
+        response = client.get("/api/dashboard/stats", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         # MVP 版本固定为 2.3 天
         assert data["avg_processing_days"] == 2.3
 
-    def test_todo_item_structure(self, db_session: Session, client: TestClient):
+    def test_todo_item_structure(self, db_session: Session, client: TestClient, security_auth_headers: dict):
         """测试待办事项数据结构"""
         component = Component(name="axios", version="1.4.0", license="MIT")
         db_session.add(component)
@@ -192,7 +192,7 @@ class TestDashboardEndpoints:
         db_session.add(record)
         db_session.commit()
 
-        response = client.get("/api/dashboard/todo")
+        response = client.get("/api/dashboard/todo", headers=security_auth_headers)
         assert response.status_code == 200
         data = response.json()
 

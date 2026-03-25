@@ -61,6 +61,16 @@ def test_user(db_session):
 
 
 @pytest.fixture
+def auth_headers(db_session, test_user):
+    """创建认证 headers"""
+    from jose import jwt
+    from app.config import get_settings
+    settings = get_settings()
+    token = jwt.encode({"email": test_user.email}, settings.secret_key, algorithm=settings.algorithm)
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
 def test_component(db_session):
     """创建测试组件"""
     component = Component(
@@ -91,10 +101,11 @@ def test_record(db_session, test_component, test_user):
 class TestLegalDeclarationCRUD:
     """测试法务声明 CRUD 操作"""
 
-    def test_create_declaration(self, client, test_record):
+    def test_create_declaration(self, client, test_record, auth_headers):
         """测试创建声明"""
         response = client.post(
             "/api/legal-declarations",
+            headers=auth_headers,
             json={
                 "compliance_record_id": test_record.id,
                 "purpose_of_use": "用于数据格式化",
