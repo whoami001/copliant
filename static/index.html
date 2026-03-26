@@ -2529,9 +2529,11 @@
                     </svg>
                 </button>
                 <h1 class="header-title" id="page-title">仪表板</h1>
-                <div class="user-menu" id="user-menu" onclick="toggleUserDropdown()" style="position: relative;">
-                    <div class="user-avatar" id="user-avatar">U</div>
-                    <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                <div class="user-menu" id="user-menu" onclick="toggleUserDropdown()">
+                    <div class="user-avatar" id="user-avatar" style="position: relative;">
+                        U
+                        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+                    </div>
                     <span id="user-name">User</span>
                     <span class="user-role" id="user-role"></span>
                     <div class="user-dropdown" id="user-dropdown">
@@ -3744,7 +3746,8 @@
         }
 
         // 切换完整消息列表标签
-        function switchAllNotificationsTab(tab) {
+        function switchAllNotificationsTab(tab, event) {
+            if (event) event.stopPropagation();
             currentAllNotificationsTab = tab;
             document.querySelectorAll('.notifications-tabs .notification-tab-item').forEach(t => {
                 t.classList.remove('active');
