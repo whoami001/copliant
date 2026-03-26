@@ -7090,9 +7090,26 @@
                 return;
             }
 
-            // 按系统名称分组通知
+            // 按系统名称分组通知（先去重：每个 related_record_id 只显示最新的一条）
             const systemGroups = new Map();
-            notifications.forEach(item => {
+            const recordIdSeen = new Set();
+
+            // 通知列表已按时间倒序排列，最新的在前面
+            // 遍历列表，每个 related_record_id 只保留第一条（最新的）
+            const dedupedNotifications = [];
+            for (const item of notifications) {
+                const recordId = item.related_record_id;
+                if (recordId && recordIdSeen.has(recordId)) {
+                    continue; // 跳过已见过的记录 ID
+                }
+                if (recordId) {
+                    recordIdSeen.add(recordId);
+                }
+                dedupedNotifications.push(item);
+            }
+
+            // 按系统名称分组
+            dedupedNotifications.forEach(item => {
                 // 从消息中提取系统名称（格式：「component@version - system_name」）
                 const match = item.message.match(/(?:^|「)[^「」]+@\S+\s*-\s*([^\n」]+)/);
                 const systemName = match ? match[1].trim() : '其他';
