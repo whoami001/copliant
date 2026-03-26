@@ -3345,7 +3345,7 @@
         };
 
         // 认证请求封装
-        async function authFetch(url, options = {}) {
+        async function authFetch(url, options = {}, silent = false) {
             const headers = {
                 ...options.headers
             };
@@ -3369,7 +3369,11 @@
             }
 
             if (res.status === 403) {
-                // 权限不足，显示权限拒绝模态框
+                // 静默模式：不弹窗，直接抛出错误由调用方决定如何处理
+                if (silent) {
+                    throw new Error('权限不足');
+                }
+                // 显示权限拒绝模态框
                 try {
                     const err = await res.json();
                     // 优先使用结构化错误响应
@@ -3800,9 +3804,9 @@
         async function loadDashboard() {
             try {
                 const [statsRes, todoRes, statsDetailRes] = await Promise.all([
-                    authFetch(`${API_BASE}/dashboard/stats`),
-                    authFetch(`${API_BASE}/dashboard/todo`),
-                    authFetch(`${API_BASE}/dashboard/stats-detail`)
+                    authFetch(`${API_BASE}/dashboard/stats`, {}, true),
+                    authFetch(`${API_BASE}/dashboard/todo`, {}, true),
+                    authFetch(`${API_BASE}/dashboard/stats-detail`, {}, true)
                 ]);
 
                 const stats = await statsRes.json();
@@ -3824,7 +3828,7 @@
 
                 // 根据用户角色决定使用哪种待办列表显示
                 // 所有用户都使用按系统分组的视图
-                const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`);
+                const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`, {}, true);
                 const todoGrouped = await todoGroupedRes.json();
 
                 if (currentUser && currentUser.role === 'engineer') {
@@ -3835,6 +3839,12 @@
                     renderSystemGroupedTodoList(todoGrouped.items);
                 }
             } catch (error) {
+                // 权限不足时静默跳转到合规记录页
+                if (error.message === '权限不足') {
+                    showPage('records');
+                    loadRecords();
+                    return;
+                }
                 showToast('加载数据失败：' + error.message, 'error');
             }
         }
