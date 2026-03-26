@@ -59,17 +59,92 @@ class NotificationService:
         logger.info(f"创建通知：用户 {user.id}, 类型 {notification_type.value}")
         return notification
 
+    def _find_or_create_system_notification(
+        self,
+        user: User,
+        record: ComplianceRecord,
+        title: str,
+        message: str,
+        notification_type: NotificationType,
+    ) -> Notification:
+        """
+        查找或创建系统级别的通知（按系统名称聚合）
+
+        如果同一系统已有相同类型的未读通知，则追加内容而不是创建新通知
+        """
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == notification_type,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%{record.system_name}%"),
+        ).first()
+
+        if existing:
+            # 追加内容到已有通知
+            component_info = f"({record.component.name}@{record.component.version})"
+            if component_info not in existing.message:
+                # 追加组件信息
+                existing.message = existing.message.rstrip(".") + f"，{component_info} 等组件。\n"
+            existing.created_at = datetime.utcnow()  # 更新时间
+            self.db.commit()
+            return existing
+
+        # 创建新通知
+        return self.create_notification(
+            user=user,
+            title=title,
+            message=message,
+            notification_type=notification_type,
+            related_record=record,
+        )
+
     def notify_security_rejected(
         self,
         user: User,
         record: ComplianceRecord,
         reason: str,
+        required_fields: List[str] = None,
     ) -> Notification:
-        """通知安全驳回"""
+        """通知安全驳回（按系统聚合）"""
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == NotificationType.SECURITY_REJECTED,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%系统：{record.system_name}%"),
+        ).first()
+
+        if existing:
+            # 更新已有通知的驳回原因和需要补充的字段
+            if reason and reason not in existing.message:
+                existing.message = existing.message.replace(
+                    f"驳回原因：{existing.reason if hasattr(existing, 'reason') else '待补充'}",
+                    f"驳回原因：{reason}"
+                )
+            if required_fields:
+                # 追加需要补充的字段
+                for field in required_fields:
+                    if field not in existing.message:
+                        if "需要补充的字段" in existing.message:
+                            # 在现有字段列表后追加
+                            existing.message = existing.message.replace(
+                                "需要补充的字段：",
+                                f"需要补充的字段：{field}, "
+                            )
+                        else:
+                            existing.message += f"\n需要补充的字段：{field}"
+            existing.created_at = datetime.utcnow()
+            self.db.commit()
+            return existing
+
+        # 创建新通知 - 简化格式
+        fields_str = ", ".join(required_fields) if required_fields else "无"
+        message = f"系统：{record.system_name}\n驳回原因：{reason}\n需要补充的字段：{fields_str}"
         return self.create_notification(
             user=user,
             title="安全校验被驳回",
-            message=f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」在安全校验阶段被驳回。\n\n驳回原因：{reason}\n\n请修改后重新提交。",
+            message=message,
             notification_type=NotificationType.SECURITY_REJECTED,
             related_record=record,
         )
@@ -80,11 +155,32 @@ class NotificationService:
         record: ComplianceRecord,
         reason: str,
     ) -> Notification:
-        """通知法务驳回（要求修改）"""
+        """通知法务驳回（要求修改，按系统聚合）"""
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == NotificationType.LEGAL_REJECTED,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%系统：{record.system_name}%"),
+        ).first()
+
+        if existing:
+            # 更新驳回原因
+            if reason and reason not in existing.message:
+                existing.message = existing.message.replace(
+                    f"驳回原因：{existing.reason if hasattr(existing, 'reason') else '待补充'}",
+                    f"驳回原因：{reason}"
+                )
+            existing.created_at = datetime.utcnow()
+            self.db.commit()
+            return existing
+
+        # 创建新通知 - 简化格式
+        message = f"系统：{record.system_name}\n驳回原因：{reason}\n请修改后重新提交。"
         return self.create_notification(
             user=user,
             title="法务审批被驳回（要求修改）",
-            message=f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」在法务审批阶段被驳回，需要修改。\n\n驳回原因：{reason}\n\n请修改后重新提交。",
+            message=message,
             notification_type=NotificationType.LEGAL_REJECTED,
             related_record=record,
         )
@@ -95,11 +191,32 @@ class NotificationService:
         record: ComplianceRecord,
         reason: str,
     ) -> Notification:
-        """通知法务拒绝"""
+        """通知法务拒绝（按系统聚合）"""
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == NotificationType.LEGAL_DENIED,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%系统：{record.system_name}%"),
+        ).first()
+
+        if existing:
+            # 更新拒绝原因
+            if reason and reason not in existing.message:
+                existing.message = existing.message.replace(
+                    f"拒绝原因：{existing.reason if hasattr(existing, 'reason') else '待补充'}",
+                    f"拒绝原因：{reason}"
+                )
+            existing.created_at = datetime.utcnow()
+            self.db.commit()
+            return existing
+
+        # 创建新通知 - 简化格式
+        message = f"系统：{record.system_name}\n拒绝原因：{reason}"
         return self.create_notification(
             user=user,
             title="法务审批被拒绝",
-            message=f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」在法务审批阶段被拒绝。\n\n拒绝原因：{reason}",
+            message=message,
             notification_type=NotificationType.LEGAL_DENIED,
             related_record=record,
         )
@@ -110,8 +227,38 @@ class NotificationService:
         record: ComplianceRecord,
         comments: Optional[str] = None,
     ) -> Notification:
-        """通知法务审批通过"""
-        message = f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」已通过法务审批。"
+        """通知法务审批通过（按系统聚合）"""
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == NotificationType.LEGAL_APPROVED,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%系统：{record.system_name}%"),
+        ).first()
+
+        component_info = f"{record.component.name}@{record.component.version}"
+
+        if existing:
+            # 追加组件到已有通知
+            if component_info not in existing.message:
+                # 在系统名称后追加组件信息
+                if f"，{component_info}" not in existing.message:
+                    # 找到系统名称位置，在其后追加
+                    import re
+                    match = re.search(r'系统：([^\n]+)', existing.message)
+                    if match:
+                        existing.message = existing.message.replace(
+                            f"系统：{match.group(1)}",
+                            f"系统：{match.group(1)}（{component_info} 等）"
+                        )
+                    else:
+                        existing.message = existing.message.rstrip(".") + f"，{component_info} 等组件。"
+            existing.created_at = datetime.utcnow()
+            self.db.commit()
+            return existing
+
+        # 创建新通知 - 简化格式
+        message = f"系统：{record.system_name} 已通过法务审批。"
         if comments:
             message += f"\n\n备注：{comments}"
         return self.create_notification(
@@ -128,8 +275,37 @@ class NotificationService:
         record: ComplianceRecord,
         comments: Optional[str] = None,
     ) -> Notification:
-        """通知安全审批通过"""
-        message = f"您的合规记录「{record.component.name}@{record.component.version} - {record.system_name}」已通过安全校验。"
+        """通知安全审批通过（按系统聚合）"""
+        # 查找同一系统的未读通知
+        existing = self.db.query(Notification).filter(
+            Notification.user_id == user.id,
+            Notification.type == NotificationType.SECURITY_APPROVED,
+            Notification.is_read == False,
+            Notification.message.ilike(f"%系统：{record.system_name}%"),
+        ).first()
+
+        component_info = f"{record.component.name}@{record.component.version}"
+
+        if existing:
+            # 追加组件到已有通知
+            if component_info not in existing.message:
+                # 在系统名称后追加组件信息
+                if f"，{component_info}" not in existing.message:
+                    import re
+                    match = re.search(r'系统：([^\n]+)', existing.message)
+                    if match:
+                        existing.message = existing.message.replace(
+                            f"系统：{match.group(1)}",
+                            f"系统：{match.group(1)}（{component_info} 等）"
+                        )
+                    else:
+                        existing.message = existing.message.rstrip(".") + f"，{component_info} 等组件。"
+            existing.created_at = datetime.utcnow()
+            self.db.commit()
+            return existing
+
+        # 创建新通知 - 简化格式
+        message = f"系统：{record.system_name} 已通过安全校验。"
         if comments:
             message += f"\n\n备注：{comments}"
         return self.create_notification(

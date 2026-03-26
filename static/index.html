@@ -1049,6 +1049,135 @@
         .toast.warning { border-left-color: var(--warning); }
         .toast.error { border-left-color: var(--danger); }
 
+        /* 未读消息提醒横幅 */
+        .unread-message-alert {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
+            z-index: 999;
+            min-width: 400px;
+            max-width: 600px;
+            animation: slideInDown 0.5s ease forwards;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .unread-message-alert.slideOut {
+            animation: slideOutUp 0.3s ease forwards;
+        }
+
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-100%);
+            }
+        }
+
+        .unread-message-alert-icon {
+            font-size: 28px;
+            animation: bounce 1s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .unread-message-alert-content {
+            flex: 1;
+            color: white;
+        }
+
+        .unread-message-alert-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .unread-message-alert-title #unread-alert-count {
+            font-size: 20px;
+            font-weight: 700;
+            color: #FCD34D;
+        }
+
+        .unread-message-alert-desc {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .unread-message-alert-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .unread-message-alert-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .unread-message-alert-close {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .unread-message-alert-close:hover {
+            color: white;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .unread-message-alert {
+                top: 60px;
+                min-width: calc(100vw - 40px);
+                max-width: calc(100vw - 40px);
+                padding: 12px 16px;
+            }
+            .unread-message-alert-title {
+                font-size: 14px;
+            }
+            .unread-message-alert-desc {
+                display: none;
+            }
+        }
+
         /* 加载状态 */
         .loading {
             display: flex;
@@ -2411,6 +2540,10 @@
 
         /* 通知中心红点 - 使用 inline-block 支持动画 */
         .notification-badge {
+            display: none;  /* 默认隐藏，有未读消息时显示 */
+        }
+
+        .notification-badge.show {
             display: inline-block;
         }
 
@@ -2534,6 +2667,14 @@
             color: white;
             border-color: var(--primary);
         }
+
+        /* 角色控制元素 - 默认隐藏，由 JS 根据角色显示 */
+        .engineer-only,
+        .security-only,
+        .legal-only,
+        .admin-only {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -2604,7 +2745,7 @@
                 <h1 class="header-title" id="page-title">仪表板</h1>
                 <div class="user-menu" id="user-menu" onclick="toggleUserDropdown()">
                     <div class="user-avatar" id="user-avatar" style="position: relative;">
-                        U
+                        <span class="avatar-text">U</span>
                         <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
                     </div>
                     <span id="user-name">User</span>
@@ -2995,6 +3136,17 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- 登录成功后的未读消息提醒横幅 -->
+    <div class="unread-message-alert" id="unread-message-alert" style="display: none;">
+        <div class="unread-message-alert-icon">📬</div>
+        <div class="unread-message-alert-content">
+            <div class="unread-message-alert-title">您有 <span id="unread-alert-count">0</span> 条未读消息</div>
+            <div class="unread-message-alert-desc" id="unread-alert-preview">请尽快查看处理</div>
+        </div>
+        <button class="unread-message-alert-btn" onclick="openMessageCenter(event)">查看详情</button>
+        <button class="unread-message-alert-close" onclick="closeUnreadAlert()">×</button>
     </div>
 
     <!-- 登录模态框 -->
@@ -3925,9 +4077,17 @@
         }
 
         // 点击其他地方关闭下拉
-        document.addEventListener('click', () => {
-            document.getElementById('user-dropdown').classList.remove('active');
-            document.getElementById('notifications-dropdown').classList.remove('active');
+        document.addEventListener('click', (e) => {
+            const userDropdown = document.getElementById('user-dropdown');
+            const notificationsDropdown = document.getElementById('notifications-dropdown');
+
+            // 如果点击在消息下拉面板内部，不关闭
+            if (notificationsDropdown && notificationsDropdown.contains(e.target)) {
+                return;
+            }
+
+            userDropdown.classList.remove('active');
+            notificationsDropdown.classList.remove('active');
         });
 
         // 更新用户界面
@@ -3936,9 +4096,20 @@
             const name = document.getElementById('user-name');
             const role = document.getElementById('user-role');
             const email = document.getElementById('dropdown-email');
+            // 保存红点元素状态
+            const badge = document.getElementById('notification-badge');
+            const badgeHtml = badge ? badge.outerHTML : null;
 
             if (user) {
-                avatar.textContent = user.name.charAt(0).toUpperCase();
+                // 只修改头像文本，保留子元素（红点）
+                const avatarText = avatar.querySelector('.avatar-text');
+                if (avatarText) {
+                    avatarText.textContent = user.name.charAt(0).toUpperCase();
+                } else {
+                    // 兼容旧代码：创建 avatar-text 包裹器
+                    const text = user.name.charAt(0).toUpperCase();
+                    avatar.innerHTML = `<span class="avatar-text">${text}</span>` + (badgeHtml || '');
+                }
                 name.textContent = user.name;
                 role.textContent = getRoleLabel(user.role);
                 email.textContent = user.email;
@@ -3951,7 +4122,9 @@
                 authLoading = false;
                 updateRoleBasedUI();
             } else {
-                avatar.textContent = 'U';
+                // 保留红点元素
+                const text = 'U';
+                avatar.innerHTML = `<span class="avatar-text">${text}</span>` + (badgeHtml || '');
                 name.textContent = '未登录';
                 role.textContent = '';
                 email.textContent = '';
@@ -4076,14 +4249,11 @@
                 if (user) {
                     // 更新用户 UI 和角色相关 UI
                     updateUserUI(user);
-                    // 加载未读通知数
-                    loadUnreadNotificationCount();
-                }
-
-                // 加载当前页面数据
-                const currentPage = document.querySelector('.page.active');
-                if (currentPage && currentPage.id === 'page-dashboard') {
-                    await loadDashboard();
+                    // 根据角色显示默认页面
+                    const defaultPage = getDefaultPageForRole(user.role);
+                    showPage(defaultPage);
+                    // 加载未读通知数（显示登录后的提醒横幅）
+                    loadUnreadNotificationCount(true);
                 }
 
                 closeLoginModal();
@@ -4197,20 +4367,12 @@
             document.getElementById('login-code').value = '123456';
             await doLogin();
 
-            // 登录后检查当前页面对新用户是否可用，不可用则跳转到合规记录页
-            const currentPage = document.querySelector('.page.active');
-            if (currentPage && currentPage.id === 'page-dashboard') {
-                // 仪表板只对 security/legal/admin 可见，研发用户需要跳转
-                if (currentUser && currentUser.role !== 'security' && currentUser.role !== 'legal' && currentUser.role !== 'admin') {
-                    showPage('records');
-                    await loadRecords();
-                    return;
-                }
-                await loadDashboard();
-            } else if (currentPage && currentPage.id === 'page-records') {
-                await loadRecords();
-            } else if (currentPage && currentPage.id === 'page-components') {
-                await loadComponents();
+            // 登录后根据新用户角色跳转到默认页面
+            if (currentUser) {
+                const defaultPage = getDefaultPageForRole(currentUser.role);
+                showPage(defaultPage);
+                // 加载未读通知数
+                loadUnreadNotificationCount();
             }
         }
 
@@ -4224,8 +4386,12 @@
                     if (user) {
                         // 登录成功，更新 UI
                         updateUserUI(user);
-                        // 加载未读通知数
-                        loadUnreadNotificationCount();
+                        // 根据角色显示默认页面
+                        const defaultPage = getDefaultPageForRole(user.role);
+                        showPage(defaultPage);
+                        // 加载未读通知数（显示登录后的提醒横幅）
+                        loadUnreadNotificationCount(true);
+                        return;
                     } else {
                         // Token 失效或获取失败，清除状态
                         logout();
@@ -4245,12 +4411,26 @@
                 const user = await fetchCurrentUser();
                 if (user) {
                     updateUserUI(user);
-                    loadUnreadNotificationCount();
+                    // 根据角色显示默认页面
+                    const defaultPage = getDefaultPageForRole(user.role);
+                    showPage(defaultPage);
+                    // 加载未读通知数（显示登录后的提醒横幅）
+                    loadUnreadNotificationCount(true);
                 } else {
                     authLoading = false;
                     showLoginModal();
                 }
             }
+        }
+
+        // 根据角色获取默认页面
+        function getDefaultPageForRole(role) {
+            // 研发：组件导入
+            // 安全、法务、管理员：仪表板
+            if (role === 'engineer') {
+                return 'components';
+            }
+            return 'dashboard';
         }
 
         // 页面导航
@@ -7882,11 +8062,8 @@
 
         // 切换通知标签
         function switchNotificationTab(tab, event) {
+            if (event) event.stopPropagation();
             currentNotificationTab = tab;
-
-            // 关闭用户下拉菜单（如果打开）
-            const userDropdown = document.getElementById('user-dropdown');
-            if (userDropdown) userDropdown.classList.remove('active');
 
             const notificationsDropdown = document.getElementById('notifications-dropdown');
             const isDropdownOpen = notificationsDropdown && notificationsDropdown.classList.contains('active');
@@ -7975,7 +8152,7 @@
         }
 
         // 加载未读通知数
-        async function loadUnreadNotificationCount() {
+        async function loadUnreadNotificationCount(showAlert = false) {
             try {
                 const res = await authFetch(`${API_BASE}/notifications/unread-count`);
                 if (!res.ok) return;
@@ -7987,7 +8164,7 @@
                 if (data.unread_count > 0) {
                     if (badge) {
                         badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
-                        badge.style.display = 'inline-block';  // 使用 inline-block 支持动画
+                        badge.classList.add('show');  // 显示红点
                         badge.classList.add('pulse');  // 添加闪烁动画
                     }
                     if (tabCountUnread) tabCountUnread.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
@@ -7996,9 +8173,14 @@
                         dropdownUnreadCount.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
                         dropdownUnreadCount.style.display = 'inline-block';
                     }
+
+                    // 显示登录后的未读消息提醒横幅
+                    if (showAlert) {
+                        showUnreadMessageAlert(data.unread_count);
+                    }
                 } else {
                     if (badge) {
-                        badge.style.display = 'none';
+                        badge.classList.remove('show');  // 隐藏红点
                         badge.classList.remove('pulse');  // 移除闪烁动画
                     }
                     if (tabCountUnread) tabCountUnread.textContent = '0';
@@ -8007,6 +8189,68 @@
             } catch (error) {
                 console.error('加载未读通知数失败:', error);
             }
+        }
+
+        // 显示未读消息提醒横幅
+        function showUnreadMessageAlert(count) {
+            const alert = document.getElementById('unread-message-alert');
+            const countEl = document.getElementById('unread-alert-count');
+            const previewEl = document.getElementById('unread-alert-preview');
+
+            if (!alert || !countEl) return;
+
+            // 如果已经有提醒，先关闭再重新显示
+            alert.classList.remove('slideOut');
+
+            countEl.textContent = count > 99 ? '99+' : count;
+
+            // 根据消息数量显示不同的提示
+            if (count === 1) {
+                previewEl.textContent = '请尽快查看处理';
+            } else if (count <= 5) {
+                previewEl.textContent = '包含驳回、拒绝或催促等重要通知';
+            } else {
+                previewEl.textContent = '包含多条重要通知，请尽快处理';
+            }
+
+            alert.style.display = 'flex';
+
+            // 30 秒后自动隐藏（给用户足够时间点击）
+            setTimeout(() => {
+                closeUnreadMessageAlert();
+            }, 30000);
+        }
+
+        // 关闭未读消息提醒横幅
+        function closeUnreadMessageAlert() {
+            const alert = document.getElementById('unread-message-alert');
+            if (alert) {
+                alert.classList.add('slideOut');
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                    alert.classList.remove('slideOut');
+                }, 300);
+            }
+        }
+
+        // 打开消息中心
+        function openMessageCenter(event) {
+            if (event) event.stopPropagation();
+            closeUnreadMessageAlert();
+            // 直接打开消息下拉面板（独立于用户头像下拉菜单）
+            const notifications = document.getElementById('notifications-dropdown');
+            const userDropdown = document.getElementById('user-dropdown');
+
+            if (userDropdown) userDropdown.classList.remove('active');
+            if (notifications) {
+                notifications.classList.add('active');
+                loadNotificationsDropdown();
+            }
+        }
+
+        // 关闭未读消息提醒（点击 X 按钮）
+        function closeUnreadAlert() {
+            closeUnreadMessageAlert();
         }
 
         // 加载消息下拉面板
