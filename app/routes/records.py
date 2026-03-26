@@ -36,11 +36,12 @@ async def list_records(
     status: Optional[RecordStatusEnum] = None,
     system_name: Optional[str] = None,
     component_name: Optional[str] = None,
+    license: Optional[str] = None,
     response: Response = None,
     current_user: User = Depends(get_current_user_from_token),
     db: Session = Depends(get_db),
 ):
-    """获取合规记录列表（支持状态、系统名和组件名过滤）"""
+    """获取合规记录列表（支持状态、系统名、组件名和许可证过滤）"""
     from app.models.component import Component
     from app.models.legal_declaration import LegalDeclaration
     from app.models.approval_history import ApprovalHistory
@@ -59,6 +60,9 @@ async def list_records(
 
     if component_name:
         query = query.filter(Component.name.ilike(f"%{component_name}%"))
+
+    if license:
+        query = query.filter(Component.license.ilike(f"%{license}%"))
 
     # 角色数据过滤：Engineer 只能看到自己的记录和 NULL 遗留数据
     if current_user.role == UserRole.ENGINEER:

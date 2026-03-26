@@ -2536,6 +2536,12 @@
                                 </svg>
                                 <input type="text" class="form-input" placeholder="搜索组件名称..." id="search-component" oninput="loadRecords()">
                             </div>
+                            <div class="search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" class="form-input" placeholder="搜索许可证..." id="search-license" oninput="loadRecords()">
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
@@ -4373,10 +4379,12 @@
         async function loadRecords() {
             const status = document.getElementById('filter-status').value;
             const component = document.getElementById('search-component').value;
+            const licenseSearch = document.getElementById('search-license').value;
 
             let url = `${API_BASE}/compliance-records?limit=${recordsPageSize}&skip=${(recordsCurrentPage - 1) * recordsPageSize}`;
             if (status) url += `&status=${status}`;
             if (component) url += `&component_name=${encodeURIComponent(component)}`;
+            if (licenseSearch) url += `&license=${encodeURIComponent(licenseSearch)}`;
 
             try {
                 const res = await authFetch(url);
