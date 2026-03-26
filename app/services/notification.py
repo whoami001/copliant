@@ -106,41 +106,85 @@ class NotificationService:
         reason: str,
         required_fields: List[str] = None,
     ) -> Notification:
-        """通知安全驳回（按系统聚合）"""
+        """通知安全驳回（按系统聚合，支持组件计数）"""
         # 查找同一系统的未读通知
         existing = self.db.query(Notification).filter(
             Notification.user_id == user.id,
             Notification.type == NotificationType.SECURITY_REJECTED,
             Notification.is_read == False,
-            Notification.message.ilike(f"%系统：{record.system_name}%"),
+            Notification.message.ilike(f"系统：{record.system_name}\n%"),
         ).first()
 
         if existing:
-            # 更新已有通知的驳回原因和需要补充的字段
-            if reason and reason not in existing.message:
-                existing.message = existing.message.replace(
-                    f"驳回原因：{existing.reason if hasattr(existing, 'reason') else '待补充'}",
-                    f"驳回原因：{reason}"
-                )
-            if required_fields:
-                # 追加需要补充的字段
-                for field in required_fields:
-                    if field not in existing.message:
-                        if "需要补充的字段" in existing.message:
-                            # 在现有字段列表后追加
-                            existing.message = existing.message.replace(
-                                "需要补充的字段：",
-                                f"需要补充的字段：{field}, "
+            # 追加组件信息到系统名称行
+            component_info = f"{record.component.name}@{record.component.version}"
+            if component_info not in existing.message:
+                # 提取组件计数
+                import re
+                match = re.search(r'系统：([^\n]+)\n', existing.message)
+                if match:
+                    system_line = match.group(1)
+                    # 检查是否已有组件计数
+                    if ' (' in system_line and ' 个组件' in system_line:
+                        # 已有计数，+1
+                        count_match = re.search(r'(\d+) 个组件', system_line)
+                        if count_match:
+                            new_count = int(count_match.group(1)) + 1
+                            new_system_line = system_line.replace(
+                                f"{count_match.group(1)} 个组件",
+                                f"{new_count} 个组件"
                             )
+                            existing.message = existing.message.replace(
+                                f"系统：{system_line}",
+                                f"系统：{new_system_line}"
+                            )
+                    else:
+                        # 添加组件计数（第 2 个组件）
+                        new_system_line = f"{system_line}（2 个组件）"
+                        existing.message = existing.message.replace(
+                            f"系统：{system_line}",
+                            f"系统：{new_system_line}"
+                        )
+
+            # 更新驳回原因
+            if reason and f"驳回原因：{reason}" not in existing.message:
+                # 替换旧原因或直接添加
+                existing.message = re.sub(
+                    r'驳回原因：[^\n]*',
+                    f"驳回原因：{reason}",
+                    existing.message
+                )
+
+            # 更新需要补充的字段
+            if required_fields:
+                for field in required_fields:
+                    if f"需要补充的字段：{field}" not in existing.message:
+                        if "需要补充的字段：" in existing.message:
+                            # 在现有字段列表后追加
+                            if field not in existing.message:
+                                existing.message = existing.message.replace(
+                                    "需要补充的字段：",
+                                    f"需要补充的字段：{field}, "
+                                )
                         else:
                             existing.message += f"\n需要补充的字段：{field}"
+
+            # 更新备注
+            if "备注：" not in existing.message:
+                existing.message += f"\n备注：{reason}"
+
             existing.created_at = datetime.utcnow()
             self.db.commit()
             return existing
 
-        # 创建新通知 - 简化格式
+        # 创建新通知 - 简化格式（包含组件计数）
         fields_str = ", ".join(required_fields) if required_fields else "无"
-        message = f"系统：{record.system_name}\n驳回原因：{reason}\n需要补充的字段：{fields_str}"
+        message = (
+            f"系统：{record.system_name}（1 个组件）\n"
+            f"驳回原因：{reason}\n"
+            f"需要补充的字段：{fields_str}\n"
+            f"备注：{reason}"
+        )
         return self.create_notification(
             user=user,
             title="安全校验被驳回",

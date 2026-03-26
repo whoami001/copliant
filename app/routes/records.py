@@ -266,6 +266,7 @@ async def reject_record(
                     user=filler,
                     record=record,
                     reason=reject_data.get_rejection_reason(),
+                    required_fields=reject_data.required_fields or [],
                 )
 
     elif record.status == RecordStatus.PENDING_LEGAL:
@@ -325,6 +326,7 @@ async def request_changes(
                     user=filler,
                     record=record,
                     reason=reject_data.get_rejection_reason(),
+                    required_fields=reject_data.required_fields or [],
                 )
             else:
                 # 法务审批阶段要求补充信息
