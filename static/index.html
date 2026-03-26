@@ -155,7 +155,7 @@
         .main-content {
             flex: 1;
             margin-left: 240px;
-            padding: var(--spacing-xl);
+            padding: 0;
             transition: margin-left 0.2s ease;
             overflow-y: auto;
             height: 100vh;
@@ -164,12 +164,16 @@
             margin-left: 64px;
         }
 
+        /* 页面内容区 - 实际承载 padding */
+        .page-content-inner {
+            padding: var(--spacing-xl);
+        }
+
         /* 页面头部固定 */
         .page-header-card {
             background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
-            border-radius: var(--radius-lg);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
             padding: var(--spacing-xl);
-            margin-bottom: var(--spacing-xl);
             color: white;
             display: flex;
             justify-content: space-between;
@@ -1072,6 +1076,14 @@
 
         .page.active {
             display: block;
+        }
+
+        /* 页面头部与内容区无缝连接 - 消除 sticky 间隙 */
+        .page-header-card {
+            margin-top: calc(var(--spacing-xl) * -1);
+            margin-left: calc(var(--spacing-xl) * -1);
+            margin-right: calc(var(--spacing-xl) * -1);
+            width: calc(100% + var(--spacing-xl) * 2);
         }
 
         /* 登录模态框 */
