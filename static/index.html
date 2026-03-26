@@ -2669,19 +2669,12 @@
         }
 
         /* 角色控制元素 - 默认隐藏，由 JS 根据角色显示 */
+        /* 使用 !important 覆盖 .page.active 的 display: block */
         .engineer-only,
         .security-only,
         .legal-only,
         .admin-only {
-            display: none;
-        }
-
-        /* 角色可见状态 - 覆盖默认隐藏 */
-        .engineer-only[data-role-visible="true"],
-        .security-only[data-role-visible="true"],
-        .legal-only[data-role-visible="true"],
-        .admin-only[data-role-visible="true"] {
-            display: inherit;
+            display: none !important;
         }
     </style>
 </head>
@@ -4366,9 +4359,9 @@
                 }
 
                 if (shouldShow) {
-                    el.setAttribute('data-role-visible', 'true');
+                    el.style.setProperty('display', 'block', 'important');
                 } else {
-                    el.removeAttribute('data-role-visible');
+                    el.style.setProperty('display', 'none', 'important');
                 }
             });
         }
