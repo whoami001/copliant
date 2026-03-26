@@ -414,6 +414,25 @@ async def bulk_import_declarations(
                     if not component:
                         raise Exception("无法获取组件")
 
+            # 检查是否已存在相同组件和系统的合规记录（避免重复导入）
+            existing_record = db.query(ComplianceRecord).filter(
+                ComplianceRecord.component_id == component.id,
+                ComplianceRecord.system_name == system_name,
+            ).first()
+
+            if existing_record:
+                # 已存在，跳过
+                logger.info(f"组件 {spdx_comp.name}@{spdx_comp.version} 在系统 {system_name} 中已存在合规记录，跳过导入")
+                results.append(BulkImportItemResult(
+                    component_name=spdx_comp.name,
+                    component_version=spdx_comp.version,
+                    success=True,
+                    declaration_id=None,
+                    skipped=True,
+                    message="已存在合规记录",
+                ))
+                continue
+
             # 创建合规记录
             record = ComplianceRecord(
                 component_id=component.id,

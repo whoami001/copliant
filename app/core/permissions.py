@@ -47,11 +47,17 @@ def get_current_user_from_token(
         # 从数据库获取真实用户
         user = db.query(User).filter(User.email == email).first()
         if not user:
-            # 用户不存在于数据库，拒绝访问
-            logger.warning(f"用户 {email} 尝试访问但不在数据库中")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="用户不存在"
+            # 用户不存在于数据库，创建虚拟用户（MVP 模式兼容）
+            # 与 /auth/me 端点保持一致的 fallback 逻辑
+            logger.info(f"MVP 用户 {email} 使用虚拟用户对象，角色：engineer")
+            from datetime import datetime
+            user = User(
+                id=999,  # 虚拟用户 ID
+                email=email,
+                name="MVP User",
+                role=UserRole.ENGINEER,
+                is_active=True,
+                created_at=datetime.utcnow(),
             )
 
         return user

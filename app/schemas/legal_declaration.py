@@ -167,6 +167,8 @@ class BulkImportItemResult(BaseModel):
     success: bool
     declaration_id: Optional[int] = None
     error: Optional[str] = None
+    skipped: bool = False
+    message: Optional[str] = None
 
 
 class ApprovalTimelineResponse(BaseModel):
