@@ -7877,17 +7877,23 @@
             // 检查登录状态
             await checkAuth();
 
-            // 处理 hash 路由
-            const hash = window.location.hash.slice(1) || 'dashboard';
-            if (['dashboard', 'records', 'components', 'settings'].includes(hash)) {
-                showPage(hash);
-            } else {
-                showPage('dashboard');
+            // 处理 hash 路由 - 但要根据用户角色过滤
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                // 如果 hash 是 components 但用户不是 engineer，重定向到 dashboard
+                if (hash === 'components' && currentUser && currentUser.role !== 'engineer' && currentUser.role !== 'admin') {
+                    showPage('dashboard');
+                } else if (['dashboard', 'records', 'components', 'settings'].includes(hash)) {
+                    showPage(hash);
+                } else {
+                    showPage('dashboard');
+                }
             }
+            // 没有 hash 时，checkAuth 已经根据角色设置了默认页面，不需要再次调用 showPage
         });
 
         // 强制刷新缓存版本
-        const APP_VERSION = '1.3.0-notification-dropdown';
+        const APP_VERSION = '1.4.0-role-based-page-access';
 
         // ==================== 通知中心功能 ====================
 
