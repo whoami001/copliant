@@ -3705,7 +3705,7 @@
         async function loadAllNotifications() {
             try {
                 const unreadOnly = currentAllNotificationsTab === 'unread';
-                let url = `${API_BASE}/notifications?limit=200&`;
+                let url = `${API_BASE}/notifications?limit=100&`;
                 if (unreadOnly) {
                     url += `unread_only=true`;
                 } else {
