@@ -1,6 +1,6 @@
 """仪表板相关 Schema"""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 
@@ -30,6 +30,12 @@ class DashboardStatsResponse(BaseModel):
     approved_this_month: int
     avg_processing_days: float
     total_records: int
+
+
+class DashboardStatsDetailResponse(BaseModel):
+    """统计详情响应（用于图表）"""
+    trend: List[Dict[str, Any]]  # 近 7 天趋势 [{label, count}, ...]
+    status_distribution: Dict[str, int]  # 状态分布 {status: count, ...}
 
 
 class DashboardSystemGroupedTodoItem(BaseModel):

@@ -72,6 +72,43 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
+            transition: width 0.2s ease;
+        }
+        .sidebar.collapsed {
+            width: 64px;
+        }
+        .sidebar.collapsed .logo svg,
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .sidebar-toggle:hover {
+            background: var(--bg);
+            color: var(--primary);
+        }
+        #sidebar-toggle-icon {
+            transition: transform 0.2s;
+        }
+        .sidebar.collapsed #sidebar-toggle-icon {
+            transform: rotate(180deg);
         }
 
         .logo {
@@ -119,6 +156,27 @@
             flex: 1;
             margin-left: 240px;
             padding: var(--spacing-xl);
+            transition: margin-left 0.2s ease;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 64px;
+        }
+
+        /* 页面头部固定 */
+        .page-header-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         /* 顶部栏 */
@@ -152,6 +210,304 @@
             align-items: center;
             justify-content: center;
             font-weight: 600;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 渐变背景卡片 */
+        .stat-card-gradient {
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg) 100%);
+        }
+
+        .stat-pending {
+            border-left: 4px solid var(--warning);
+        }
+        .stat-pending .stat-icon {
+            background: linear-gradient(135deg, var(--warning) 0%, #F59E0B 100%);
+        }
+
+        .stat-approved {
+            border-left: 4px solid var(--success);
+        }
+        .stat-approved .stat-icon {
+            background: linear-gradient(135deg, var(--success) 0%, #10B981 100%);
+        }
+
+        .stat-avg-days {
+            border-left: 4px solid var(--info);
+        }
+        .stat-avg-days .stat-icon {
+            background: linear-gradient(135deg, var(--info) 0%, #06B6D4 100%);
+        }
+
+        .stat-total {
+            border-left: 4px solid var(--primary);
+        }
+        .stat-total .stat-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, #3B82F6 100%);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .stat-trend.up {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .stat-trend.down {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .stat-trend.flat {
+            background: var(--bg);
+            color: var(--text-secondary);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        /* 欢迎横幅 */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, #7C3AED 100%);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            color: white;
+        }
+
+        .welcome-content {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            line-height: 1;
+        }
+
+        .welcome-text {
+            flex: 1;
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .welcome-desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .welcome-actions .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .welcome-actions .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 图表区域 */
+        .dashboard-charts {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .chart-card {
+            min-height: 300px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 简单柱状图样式 */
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar {
+            width: 40px;
+            background: linear-gradient(180deg, var(--primary) 0%, #3B82F6 100%);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .bar-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 环形图样式 */
+        .donut-chart {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+
+        .donut-chart svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .donut-chart circle {
+            fill: none;
+            stroke-width: 30;
+        }
+
+        .donut-chart .donut-bg {
+            stroke: var(--border);
+        }
+
+        .donut-chart .donut-segment {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .donut-chart-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .donut-center-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .donut-center-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 图例 */
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* 卡片头部操作区 */
+        .card-header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
         }
 
         /* 统计卡片 */
@@ -204,6 +560,216 @@
 
         .card-body {
             padding: var(--spacing-lg);
+        }
+
+        /* 页面头部卡片 */
+        .page-header-content {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .page-header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .page-description {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        /* 筛选组 */
+        .filter-group {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            color: var(--text-secondary);
+            pointer-events: none;
+        }
+
+        .search-box .form-input {
+            padding-left: 40px;
+            width: 240px;
+        }
+
+        /* 分页容器 */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .pagination-buttons .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        /* 消息中心标签页增强 */
+        .notification-tabs-enhanced {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            background: var(--bg);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-lg);
+        }
+
+        .notification-tab-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .notification-tab-item:hover {
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .notification-tab-item.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .tab-icon {
+            font-size: 16px;
+        }
+
+        .tab-count {
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tab-count-unread {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 时间筛选器 */
+        .notification-filters {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: var(--bg);
+            border-radius: var(--radius-md);
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 6px 12px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: white;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .filter-select:hover {
+            border-color: var(--primary);
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        /* 消息卡片增强 */
+        .notification-card {
+            overflow: hidden;
+        }
+
+        .notification-item {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .notification-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        .notification-item.unread::before {
+            background: var(--danger);
+        }
+
+        .notification-item.unread {
+            background: var(--danger-bg);
+        }
+
+        .notification-item:hover {
+            background: var(--bg);
         }
 
         /* 按钮 */
@@ -279,10 +845,87 @@
             font-weight: 600;
             color: var(--text-primary);
             font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        .table tr:hover {
+        .table-enhanced tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table-enhanced tbody tr:hover {
             background: var(--bg);
+            transform: scale(1.001);
+        }
+
+        .table-enhanced tbody tr td {
+            transition: all 0.2s ease;
+        }
+
+        /* 状态徽章增强 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-badge.draft {
+            background: var(--bg);
+            color: var(--text-secondary);
+        }
+
+        .status-badge.pending_security {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .status-badge.pending_legal {
+            background: #F3E8FF;
+            color: #7E22CE;
+        }
+
+        .status-badge.approved {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .status-badge.rejected {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        /* 操作按钮组 */
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
         }
 
         /* 徽章 */
@@ -1327,6 +1970,23 @@
 
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .dashboard-charts {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .welcome-actions {
+                justify-content: center;
+            }
+
             .sidebar {
                 width: 100%;
                 height: auto;
@@ -1609,12 +2269,19 @@
         <div class="overlay" id="mobile-overlay" onclick="toggleMobileMenu()"></div>
 
         <!-- 侧边栏 -->
-        <aside class="sidebar">
-            <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-                Compliance Hub
+        <aside class="sidebar" id="sidebar">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span class="sidebar-text">Compliance Hub</span>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="折叠侧边栏">
+                    <svg id="sidebar-toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
@@ -1626,19 +2293,19 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="#components" class="nav-link engineer-only" data-page="components">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        组件导入
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="#records" class="nav-link" data-page="records">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                         合规记录
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#components" class="nav-link engineer-only" data-page="components">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-组件导入
                     </a>
                 </li>
                 <li class="nav-item">
@@ -1711,28 +2378,108 @@
 
             <!-- 仪表板页面 -->
             <div id="page-dashboard" class="page active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">待我处理</div>
-                        <div class="stat-value" id="stat-pending">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">本月通过</div>
-                        <div class="stat-value" id="stat-approved">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">平均处理时间</div>
-                        <div class="stat-value" id="stat-avg-days">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">总记录数</div>
-                        <div class="stat-value" id="stat-total">-</div>
+                <!-- 个性化欢迎区 -->
+                <div class="welcome-banner" id="welcome-banner">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">👋</div>
+                        <div class="welcome-text">
+                            <h2 class="welcome-title" id="welcome-title">早上好</h2>
+                            <p class="welcome-desc" id="welcome-desc">今天也是高效工作的一天</p>
+                        </div>
+                        <div class="welcome-actions" id="welcome-actions">
+                            <!-- 动态生成快速操作按钮 -->
+                        </div>
                     </div>
                 </div>
 
+                <!-- 统计卡片 -->
+                <div class="stats-grid">
+                    <div class="stat-card stat-card-gradient stat-pending">
+                        <div class="stat-card-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <span class="stat-trend" id="stat-pending-trend">-</span>
+                        </div>
+                        <div class="stat-label">待我处理</div>
+                        <div class="stat-value" id="stat-pending">-</div>
+                        <div class="stat-desc" id="stat-pending-desc">待处理事项</div>
+                    </div>
+                    <div class="stat-card stat-card-gradient stat-approved">
+                        <div class="stat-card-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                            </div>
+                            <span class="stat-trend" id="stat-approved-trend">-</span>
+                        </div>
+                        <div class="stat-label">本月通过</div>
+                        <div class="stat-value" id="stat-approved">-</div>
+                        <div class="stat-desc" id="stat-approved-desc">本月审批通过</div>
+                    </div>
+                    <div class="stat-card stat-card-gradient stat-avg-days">
+                        <div class="stat-card-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <span class="stat-trend" id="stat-avg-days-trend">-</span>
+                        </div>
+                        <div class="stat-label">平均处理时间</div>
+                        <div class="stat-value" id="stat-avg-days">-</div>
+                        <div class="stat-desc" id="stat-avg-days-desc">从提交到通过</div>
+                    </div>
+                    <div class="stat-card stat-card-gradient stat-total">
+                        <div class="stat-card-header">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                            </div>
+                            <span class="stat-trend" id="stat-total-trend">-</span>
+                        </div>
+                        <div class="stat-label">总记录数</div>
+                        <div class="stat-value" id="stat-total">-</div>
+                        <div class="stat-desc" id="stat-total-desc">系统累计记录</div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="dashboard-charts">
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h2 class="card-title">近 7 天处理趋势</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="trend-chart">
+                                <div class="loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h2 class="card-title">状态分布</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" id="status-chart">
+                                <div class="loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 待办事项 -->
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">待办事项</h2>
+                        <div class="card-header-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="switchToComponentsPage()">组件导入</button>
+                            <button class="btn btn-sm btn-secondary" onclick="switchToRecordsPage()">合规记录</button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div id="todo-list">
@@ -1746,13 +2493,24 @@
 
             <!-- 合规记录页面 -->
             <div id="page-records" class="page">
+                <div class="page-header-card">
+                    <div class="page-header-content">
+                        <div class="page-header-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <div class="page-header-text">
+                            <h1 class="page-title">合规记录</h1>
+                            <p class="page-description">管理和追踪所有组件的合规审批状态</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">合规记录列表</h2>
-                    </div>
-                    <div class="card-body">
-                        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
-                            <select class="form-select" style="width: 200px;" id="filter-status" onchange="loadRecords()">
+                        <div class="filter-group">
+                            <select class="form-select" id="filter-status" onchange="loadRecords()">
                                 <option value="">全部状态</option>
                                 <option value="draft">草稿</option>
                                 <option value="pending_security">待安全校验</option>
@@ -1760,10 +2518,17 @@
                                 <option value="approved">已通过</option>
                                 <option value="rejected">已驳回</option>
                             </select>
-                            <input type="text" class="form-input" placeholder="搜索组件名称..." style="width: 200px;" id="search-component" oninput="loadRecords()">
+                            <div class="search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" class="form-input" placeholder="搜索组件名称..." id="search-component" oninput="loadRecords()">
+                            </div>
                         </div>
+                    </div>
+                    <div class="card-body">
                         <div style="overflow-x: auto;">
-                            <table class="table" style="min-width: 800px; table-layout: fixed;">
+                            <table class="table table-enhanced" style="min-width: 800px; table-layout: fixed;">
                                 <colgroup>
                                     <col style="width: 15%;">
                                     <col style="width: 15%;">
@@ -1791,13 +2556,23 @@
                             </table>
                         </div>
                         <!-- 分页控件 -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
-                            <div style="color: var(--text-secondary); font-size: 14px;">
+                        <div class="pagination-container">
+                            <div class="pagination-info">
                                 第 <span id="records-current-page">1</span> 页，共 <span id="records-total-pages">1</span> 页（<span id="records-total-count">0</span> 条记录）
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="btn btn-sm btn-secondary" id="records-prev-btn" onclick="changeRecordsPage(-1)" disabled>上一页</button>
-                                <button class="btn btn-sm btn-primary" id="records-next-btn" onclick="changeRecordsPage(1)">下一页</button>
+                            <div class="pagination-buttons">
+                                <button class="btn btn-sm btn-secondary" id="records-prev-btn" onclick="changeRecordsPage(-1)" disabled>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M15 18l-6-6 6-6"/>
+                                    </svg>
+                                    上一页
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="records-next-btn" onclick="changeRecordsPage(1)">
+                                    下一页
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1806,19 +2581,30 @@
 
             <!-- 组件导入页面 -->
             <div id="page-components" class="page">
+                <div class="page-header-card">
+                    <div class="page-header-content">
+                        <div class="page-header-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                        </div>
+                        <div class="page-header-text">
+                            <h1 class="page-title">组件导入</h1>
+                            <p class="page-description">批量导入 SPDX 文件或管理组件合规记录</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        上传 SPDX 文件
+                    </button>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">组件导入</h2>
-                        <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading" style="margin-left: auto;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                            </svg>
-                            上传 SPDX 文件
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div style="margin-bottom: 16px; display: flex; gap: 12px;">
-                            <select class="form-select" style="width: 200px;" id="component-filter-status" onchange="loadComponentRecords()">
+                        <div class="filter-group">
+                            <select class="form-select" id="component-filter-status" onchange="loadComponentRecords()">
                                 <option value="">全部状态</option>
                                 <option value="draft">草稿</option>
                                 <option value="pending_security">待安全校验</option>
@@ -1826,10 +2612,17 @@
                                 <option value="approved">已通过</option>
                                 <option value="rejected">已驳回</option>
                             </select>
-                            <input type="text" class="form-input" placeholder="搜索系统名..." style="width: 200px;" id="component-search-system" oninput="loadComponentRecords()">
+                            <div class="search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" class="form-input" placeholder="搜索系统名..." id="component-search-system" oninput="loadComponentRecords()">
+                            </div>
                         </div>
+                    </div>
+                    <div class="card-body">
                         <div style="overflow-x: auto;">
-                            <table class="table" style="min-width: 700px; table-layout: fixed;">
+                            <table class="table table-enhanced" style="min-width: 700px; table-layout: fixed;">
                                 <colgroup>
                                     <col style="width: 25%;">
                                     <col style="width: 12%;">
@@ -1857,28 +2650,52 @@
 
             <!-- 消息中心页面 -->
             <div id="page-notifications" class="page">
-                <div class="notification-page-header">
-                    <h2 class="card-title">消息中心</h2>
-                    <div style="display: flex; gap: 8px;">
-                        <select id="notification-time-filter" onchange="loadNotifications()" style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;">
-                            <option value="24">最近 24 小时</option>
-                            <option value="72">最近 3 天</option>
-                            <option value="168">最近 7 天</option>
-                            <option value="720">最近 30 天</option>
-                            <option value="0">全部消息</option>
-                        </select>
+                <div class="page-header-card">
+                    <div class="page-header-content">
+                        <div class="page-header-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                        </div>
+                        <div class="page-header-text">
+                            <h1 class="page-title">消息中心</h1>
+                            <p class="page-description">查看审批通知和系统消息</p>
+                        </div>
+                    </div>
+                    <div class="page-header-actions">
                         <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsAsRead()">
-                            标记全部为已读
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                            全部已读
                         </button>
                     </div>
                 </div>
 
-                <div class="notification-tabs">
-                    <div class="notification-tab active" onclick="switchNotificationTab('all')">全部消息</div>
-                    <div class="notification-tab" onclick="switchNotificationTab('unread')">未读消息</div>
+                <div class="notification-tabs-enhanced">
+                    <button class="notification-tab-item active" onclick="switchNotificationTab('all', event)">
+                        <span class="tab-icon">📬</span>
+                        <span class="tab-text">全部消息</span>
+                        <span class="tab-count" id="tab-count-all">0</span>
+                    </button>
+                    <button class="notification-tab-item" onclick="switchNotificationTab('unread', event)">
+                        <span class="tab-icon">🔔</span>
+                        <span class="tab-text">未读消息</span>
+                        <span class="tab-count tab-count-unread" id="tab-count-unread">0</span>
+                    </button>
                 </div>
 
-                <div class="card">
+                <div class="notification-filters">
+                    <label class="filter-label">时间范围：</label>
+                    <select id="notification-time-filter" class="filter-select" onchange="loadNotifications()">
+                        <option value="24">最近 24 小时</option>
+                        <option value="72">最近 3 天</option>
+                        <option value="168">最近 7 天</option>
+                        <option value="0">全部消息</option>
+                    </select>
+                </div>
+
+                <div class="card notification-card">
                     <div class="card-body" style="padding: 0;">
                         <div id="notification-list">
                             <div class="loading">
@@ -2586,6 +3403,12 @@
             }
         }
 
+        // 侧边栏折叠功能
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
         // 用户菜单下拉
         function toggleUserDropdown() {
             const dropdown = document.getElementById('user-dropdown');
@@ -2957,18 +3780,28 @@
         // 加载仪表板数据
         async function loadDashboard() {
             try {
-                const [statsRes, todoRes] = await Promise.all([
+                const [statsRes, todoRes, statsDetailRes] = await Promise.all([
                     authFetch(`${API_BASE}/dashboard/stats`),
-                    authFetch(`${API_BASE}/dashboard/todo`)
+                    authFetch(`${API_BASE}/dashboard/todo`),
+                    authFetch(`${API_BASE}/dashboard/stats-detail`)
                 ]);
 
                 const stats = await statsRes.json();
                 const todos = await todoRes.json();
+                const statsDetail = await statsDetailRes.json();
 
-                document.getElementById('stat-pending').textContent = stats.pending_my_action;
-                document.getElementById('stat-approved').textContent = stats.approved_this_month;
+                // 数字动画
+                animateValue('stat-pending', stats.pending_my_action);
+                animateValue('stat-approved', stats.approved_this_month);
                 document.getElementById('stat-avg-days').textContent = stats.avg_processing_days + '天';
-                document.getElementById('stat-total').textContent = stats.total_records;
+                animateValue('stat-total', stats.total_records);
+
+                // 渲染欢迎区
+                renderWelcomeBanner();
+
+                // 渲染图表
+                renderTrendChart(statsDetail.trend);
+                renderStatusChart(statsDetail.status_distribution);
 
                 // 根据用户角色决定使用哪种待办列表显示
                 // 所有用户都使用按系统分组的视图
@@ -2985,6 +3818,230 @@
             } catch (error) {
                 showToast('加载数据失败：' + error.message, 'error');
             }
+        }
+
+        // 数字动画
+        function animateValue(elementId, end) {
+            const element = document.getElementById(elementId);
+            const start = 0;
+            const duration = 1000;
+            let startTime = null;
+
+            function animation(currentTime) {
+                if (startTime === null) startTime = currentTime;
+                const timeElapsed = currentTime - startTime;
+                const progress = Math.min(timeElapsed / duration, 1);
+
+                // Ease out effect
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (end - start) * easeOut);
+
+                element.textContent = current;
+
+                if (timeElapsed < duration) {
+                    requestAnimationFrame(animation);
+                } else {
+                    element.textContent = end;
+                }
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        // 渲染欢迎横幅
+        function renderWelcomeBanner() {
+            const title = document.getElementById('welcome-title');
+            const desc = document.getElementById('welcome-desc');
+            const actions = document.getElementById('welcome-actions');
+
+            if (!currentUser) {
+                title.textContent = '欢迎使用 Compliance Hub';
+                desc.textContent = '软件合规管理系统';
+                actions.innerHTML = '';
+                return;
+            }
+
+            const hour = new Date().getHours();
+            const greeting = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
+
+            const roleNames = {
+                'engineer': '工程师',
+                'security': '安全评审',
+                'legal': '法务审批',
+                'admin': '管理员'
+            };
+
+            const roleDesc = {
+                'engineer': '负责填写和提交组件合规声明',
+                'security': '负责安全校验和风险评估',
+                'legal': '负责法务审批和许可证审核',
+                'admin': '管理系统和查看所有数据'
+            };
+
+            title.textContent = `${greeting}，${currentUser.name}（${roleNames[currentUser.role] || currentUser.role}）`;
+            desc.textContent = roleDesc[currentUser.role] || '';
+
+            // 根据角色显示快速操作
+            if (currentUser.role === 'engineer') {
+                actions.innerHTML = `
+                    <button class="btn" onclick="switchToComponentsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        组件导入
+                    </button>
+                    <button class="btn" onclick="switchToRecordsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        合规记录
+                    </button>
+                `;
+            } else if (currentUser.role === 'security') {
+                actions.innerHTML = `
+                    <button class="btn" onclick="switchToRecordsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        安全校验
+                    </button>
+                `;
+            } else if (currentUser.role === 'legal') {
+                actions.innerHTML = `
+                    <button class="btn" onclick="switchToRecordsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        法务审批
+                    </button>
+                `;
+            } else {
+                actions.innerHTML = `
+                    <button class="btn" onclick="switchToRecordsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        合规记录
+                    </button>
+                    <button class="btn" onclick="switchToComponentsPage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        组件导入
+                    </button>
+                `;
+            }
+        }
+
+        // 渲染趋势图表
+        function renderTrendChart(trendData) {
+            const container = document.getElementById('trend-chart');
+
+            if (!trendData || trendData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-desc">暂无数据</div></div>';
+                return;
+            }
+
+            const maxValue = Math.max(...trendData.map(d => d.count));
+            const chartHeight = 200;
+
+            container.innerHTML = `
+                <div class="bar-chart">
+                    ${trendData.map(day => {
+                        const barHeight = maxValue > 0 ? (day.count / maxValue) * chartHeight : 0;
+                        return `
+                            <div class="bar-item">
+                                <div class="bar" style="height: ${barHeight}px;">
+                                    <span class="bar-value">${day.count}</span>
+                                </div>
+                                <span class="bar-label">${day.label}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // 渲染状态分布环形图
+        function renderStatusChart(statusData) {
+            const container = document.getElementById('status-chart');
+
+            if (!statusData || Object.keys(statusData).length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-desc">暂无数据</div></div>';
+                return;
+            }
+
+            const total = Object.values(statusData).reduce((a, b) => a + b, 0);
+            const colors = {
+                'draft': '#6B7280',
+                'pending_security': '#F59E0B',
+                'pending_legal': '#8B5CF6',
+                'approved': '#10B981',
+                'rejected': '#DC2626'
+            };
+            const labels = {
+                'draft': '草稿',
+                'pending_security': '待安全',
+                'pending_legal': '待法务',
+                'approved': '已通过',
+                'rejected': '已驳回'
+            };
+
+            // 计算环形图
+            const circumference = 2 * Math.PI * 65;
+            let offset = 0;
+            const segments = [];
+            const legendItems = [];
+
+            for (const [status, count] of Object.entries(statusData)) {
+                const percentage = count / total;
+                const strokeDasharray = `${percentage * circumference} ${circumference}`;
+                const strokeDashoffset = offset;
+                offset -= percentage * circumference;
+
+                segments.push(`
+                    <circle class="donut-segment"
+                        cx="90" cy="90" r="65"
+                        stroke="${colors[status] || '#6B7280'}"
+                        style="stroke-dasharray: ${strokeDasharray}; stroke-dashoffset: ${strokeDashoffset};"
+                    />
+                `);
+
+                legendItems.push(`
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: ${colors[status]}"></div>
+                        <span>${labels[status] || status}: ${count}</span>
+                    </div>
+                `);
+            }
+
+            container.innerHTML = `
+                <div class="donut-chart">
+                    <svg viewBox="0 0 180 180">
+                        <circle class="donut-bg" cx="90" cy="90" r="65" stroke="#E5E7EB"/>
+                        ${segments.join('')}
+                    </svg>
+                    <div class="donut-chart-center">
+                        <div class="donut-center-value">${total}</div>
+                        <div class="donut-center-label">总计</div>
+                    </div>
+                </div>
+                <div class="chart-legend">
+                    ${legendItems.join('')}
+                </div>
+            `;
+        }
+
+        // 切换到组件导入页面
+        function switchToComponentsPage() {
+            window.location.hash = '#components';
+            showPage('components');
+        }
+
+        // 切换到合规记录页面
+        function switchToRecordsPage() {
+            window.location.hash = '#records';
+            showPage('records');
         }
 
         // 渲染按系统分组的待办列表（安全/法务用户）
@@ -5956,25 +7013,29 @@
             try {
                 const unreadOnly = currentNotificationTab === 'unread';
                 const timeFilter = document.getElementById('notification-time-filter').value;
-                // 默认行为：未读 + 最近 24 小时已读
-                // unread_only=null 表示默认行为
-                // unread_only=true 表示只未读
-                // unread_only=false 表示所有（不受时间限制）
 
                 let url = `${API_BASE}/notifications?`;
                 if (unreadOnly) {
-                    url += `unread_only=true&`;
+                    // 未读模式：显示未读 + 最近 X 小时已读
+                    url += `unread_only=true&hours=${timeFilter}`;
                 } else if (timeFilter === '0') {
-                    // 显示所有消息
-                    url += `unread_only=false&`;
+                    // 全部消息模式：显示所有
+                    url += `unread_only=false`;
                 } else {
-                    // 默认行为：未读 + 最近 X 小时已读
-                    url += `hours=${timeFilter}&`;
+                    // 全部消息 + 时间筛选：显示最近 X 小时
+                    url += `hours=${timeFilter}`;
                 }
 
                 const res = await authFetch(url);
                 if (!res.ok) throw new Error('加载失败');
                 const data = await res.json();
+
+                // 更新标签计数
+                const tabCountAll = document.getElementById('tab-count-all');
+                if (tabCountAll) {
+                    tabCountAll.textContent = data.items?.length || 0;
+                }
+
                 renderNotifications(data.items);
             } catch (error) {
                 document.getElementById('notification-list').innerHTML = `
@@ -6054,7 +7115,9 @@
                     <div class="card" style="margin-bottom: 16px;">
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="font-weight: 600; font-size: 16px;">${escapeHtml(systemName)}</span>
+                                <span style="font-weight: 600; font-size: 16px;">
+                                    ${getNotificationIcon(latestItem.type)} ${escapeHtml(systemName)}
+                                </span>
                                 ${hasUnread ? `<span class="badge badge-danger">${items.length} 条消息</span>` : ''}
                                 ${typeBadges}
                             </div>
@@ -6066,7 +7129,6 @@
                         <div class="card-body" style="padding: 16px;">
                             ${items.map(item => {
                                 const itemTimeAgo = getTimeAgo(new Date(item.created_at));
-                                const itemRecordLink = item.related_record_id ? `onclick="viewRecord(${item.related_record_id})"` : '';
                                 const messageBadge = item.type === 'security_rejected'
                                     ? '<span class="badge" style="background: var(--warning-bg); color: var(--warning-text); font-size: 11px; margin-right: 6px;">安全</span>'
                                     : item.type === 'legal_rejected'
@@ -6078,13 +7140,16 @@
                                     : item.type === 'security_approved'
                                     ? '<span class="badge" style="background: var(--success-bg); color: var(--success-text); font-size: 11px; margin-right: 6px;">安全</span>'
                                     : '';
+                                // 移除消息中的组件信息（component@version - 部分）
+                                let cleanMessage = escapeHtml(item.message);
+                                cleanMessage = cleanMessage.replace(/^[^「]*「[^「]+@\S+\s*-\s*/, '');
                                 return `
                                     <div class="notification-item ${item.is_read ? '' : 'unread'}" style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);" data-id="${item.id}">
                                         <div class="notification-header">
                                             <span class="notification-title">${escapeHtml(item.title)}</span>
                                         </div>
-                                        <div class="notification-message" ${itemRecordLink} style="cursor: pointer; margin: 8px 0;">
-                                            ${messageBadge}${escapeHtml(item.message)}
+                                        <div class="notification-message" onclick="handleNotificationClick(${item.id}, ${item.related_record_id || 'null'})" style="cursor: pointer; margin: 8px 0;">
+                                            ${messageBadge}${cleanMessage}
                                         </div>
                                         <div class="notification-meta">
                                             <span style="color: var(--text-secondary); font-size: 13px;">${itemTimeAgo}</span>
@@ -6101,18 +7166,23 @@
         // 切换通知标签
         function switchNotificationTab(tab, event) {
             currentNotificationTab = tab;
-            document.querySelectorAll('.notification-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.notification-tab-item').forEach(t => t.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
 
-            // 切换到未读标签时，隐藏时间筛选器
-            const timeFilter = document.getElementById('notification-time-filter');
-            if (tab === 'unread') {
-                timeFilter.style.display = 'none';
-            } else {
-                timeFilter.style.display = 'block';
-            }
-
             loadNotifications();
+        }
+
+        // 获取通知类型对应的图标
+        function getNotificationIcon(type) {
+            const icons = {
+                'security_rejected': '🛡️',
+                'legal_rejected': '⚖️',
+                'legal_denied': '⚖️',
+                'urgency_added': '⏰',
+                'legal_approved': '✅',
+                'security_approved': '✅'
+            };
+            return icons[type] || '📬';
         }
 
         // 标记单个通知为已读
@@ -6144,6 +7214,25 @@
             }
         }
 
+        // 处理通知点击（自动标记为已读 + 跳转）
+        async function handleNotificationClick(notificationId, relatedRecordId) {
+            // 先标记为已读
+            try {
+                await authFetch(`${API_BASE}/notifications/${notificationId}/mark-as-read`, {
+                    method: 'POST'
+                });
+                loadNotifications();
+                loadUnreadNotificationCount();
+            } catch (error) {
+                console.error('标记已读失败:', error);
+            }
+
+            // 如果有相关记录，跳转查看
+            if (relatedRecordId) {
+                viewRecord(relatedRecordId);
+            }
+        }
+
         // 加载未读通知数
         async function loadUnreadNotificationCount() {
             try {
@@ -6151,12 +7240,15 @@
                 if (!res.ok) return;
                 const data = await res.json();
                 const badge = document.getElementById('notification-badge');
+                const tabCountUnread = document.getElementById('tab-count-unread');
 
                 if (data.unread_count > 0) {
                     badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
                     badge.style.display = 'inline-block';
+                    if (tabCountUnread) tabCountUnread.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
                 } else {
                     badge.style.display = 'none';
+                    if (tabCountUnread) tabCountUnread.textContent = '0';
                 }
             } catch (error) {
                 console.error('加载未读通知数失败:', error);

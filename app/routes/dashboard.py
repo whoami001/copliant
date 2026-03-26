@@ -10,7 +10,7 @@ from sqlalchemy import func, or_, extract
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse, DashboardTodoItem, DashboardSystemGroupedTodoItem, DashboardSystemGroupedTodoResponse
+from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse, DashboardTodoItem, DashboardSystemGroupedTodoItem, DashboardSystemGroupedTodoResponse, DashboardStatsDetailResponse
 from app.models.compliance_record import ComplianceRecord, RecordStatus
 from app.models.user import User, UserRole
 from app.core.permissions import get_current_user_from_token
@@ -379,8 +379,29 @@ async def get_dashboard_stats(
         .count()
     )
 
-    # 平均处理时间（天）- MVP 简化
-    avg_days = 2.3
+    # 平均处理时间（天）- 从提交到法务审批通过的时间
+    # 只计算已完成的记录（APPROVED 或 REJECTED 且有审批时间）
+    completed_records = (
+        db.query(ComplianceRecord)
+        .filter(
+            ComplianceRecord.status == RecordStatus.APPROVED,
+            ComplianceRecord.submitted_at.isnot(None),
+            ComplianceRecord.legal_approved_at.isnot(None),
+        )
+        .all()
+    )
+
+    if completed_records and len(completed_records) > 0:
+        total_days = 0
+        valid_count = 0
+        for record in completed_records:
+            if record.submitted_at and record.legal_approved_at:
+                delta = record.legal_approved_at - record.submitted_at
+                total_days += delta.total_seconds() / 86400  # 转换为天
+                valid_count += 1
+        avg_days = round(total_days / valid_count, 1) if valid_count > 0 else 0
+    else:
+        avg_days = 0
 
     # 总记录数
     total_count = db.query(ComplianceRecord).count()
@@ -390,4 +411,56 @@ async def get_dashboard_stats(
         approved_this_month=approved_count,
         avg_processing_days=avg_days,
         total_records=total_count,
+    )
+
+
+@router.get("/stats-detail", response_model=DashboardStatsDetailResponse)
+async def get_dashboard_stats_detail(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    """获取统计详情（用于图表展示）"""
+    from datetime import timedelta
+
+    # 近 7 天处理趋势（按批准日期统计）
+    today = datetime.utcnow().date()
+    trend_data = []
+
+    for i in range(6, -1, -1):
+        date = today - timedelta(days=i)
+        next_date = date + timedelta(days=1)
+
+        count = (
+            db.query(ComplianceRecord)
+            .filter(
+                ComplianceRecord.status == RecordStatus.APPROVED,
+                ComplianceRecord.legal_approved_at >= date,
+                ComplianceRecord.legal_approved_at < next_date,
+            )
+            .count()
+        )
+
+        trend_data.append({
+            "label": f"{date.month}/{date.day}",
+            "count": count
+        })
+
+    # 状态分布
+    status_counts = (
+        db.query(
+            ComplianceRecord.status,
+            func.count(ComplianceRecord.id).label('count')
+        )
+        .group_by(ComplianceRecord.status)
+        .all()
+    )
+
+    status_distribution = {
+        record.status.value: record.count
+        for record in status_counts
+    }
+
+    return DashboardStatsDetailResponse(
+        trend=trend_data,
+        status_distribution=status_distribution
     )
