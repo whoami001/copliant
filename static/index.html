@@ -1369,6 +1369,58 @@
             text-decoration: underline;
         }
 
+        /* 完整消息列表模态框样式 */
+        .notifications-tabs {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .notifications-tabs .notification-tab-item {
+            flex: 1;
+            padding: 8px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .notifications-tabs .notification-tab-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .notifications-tabs .notification-tab-item span {
+            margin-left: 6px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: var(--bg);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item-unread {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 3px solid var(--primary);
+        }
+
         /* 快速切换用户 */
         .quick-switch {
             padding: var(--spacing-md);
@@ -2548,7 +2600,7 @@
                             <div class="loading">加载中...</div>
                         </div>
                         <div class="notifications-dropdown-footer">
-                            <a href="#records" class="view-all-link" onclick="closeNotificationsDropdown()">查看全部</a>
+                            <a href="#" class="view-all-link" onclick="showAllNotificationsModal(); return false;">查看全部</a>
                         </div>
                     </div>
                 </div>
@@ -2802,6 +2854,10 @@
                                 </svg>
                                 <input type="text" class="form-input" placeholder="搜索系统名..." id="component-search-system" oninput="loadComponentRecords()">
                             </div>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); margin-left: 12px;">
+                                <input type="checkbox" id="show-approved-checkbox" onchange="loadComponentRecords()">
+                                显示已通过组件
+                            </label>
                         </div>
                     </div>
                     <div class="card-body">
@@ -3161,6 +3217,37 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeBatchRequestChangesModal()">取消</button>
                 <button class="btn btn-primary" onclick="executeBatchRequestChanges()">确认要求</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完整消息列表模态框 -->
+    <div class="modal-overlay" id="all-notifications-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="all-notifications-title">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="all-notifications-title">📬 消息中心</h3>
+                <button class="modal-close" onclick="closeAllNotificationsModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div class="notifications-tabs">
+                    <button class="notification-tab-item active" data-tab="all" onclick="switchAllNotificationsTab('all')">
+                        全部 <span id="all-tab-count">0</span>
+                    </button>
+                    <button class="notification-tab-item" data-tab="unread" onclick="switchAllNotificationsTab('unread')">
+                        未读 <span id="unread-tab-count">0</span>
+                    </button>
+                </div>
+                <div id="all-notifications-list" style="margin-top: 16px;">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="markAllAsReadFromModal()">全部标记为已读</button>
+                <button class="btn btn-primary" onclick="closeAllNotificationsModal()">关闭</button>
             </div>
         </div>
     </div>
@@ -3596,6 +3683,159 @@
         // 关闭消息下拉面板
         function closeNotificationsDropdown() {
             document.getElementById('notifications-dropdown').classList.remove('active');
+        }
+
+        // 显示完整消息列表模态框
+        function showAllNotificationsModal() {
+            closeNotificationsDropdown();
+            const modal = document.getElementById('all-notifications-modal-overlay');
+            modal.classList.add('active');
+            currentAllNotificationsTab = 'all';
+            loadAllNotifications();
+        }
+
+        // 关闭完整消息列表模态框
+        function closeAllNotificationsModal() {
+            document.getElementById('all-notifications-modal-overlay').classList.remove('active');
+        }
+
+        let currentAllNotificationsTab = 'all'; // 'all' 或 'unread'
+
+        // 加载完整消息列表
+        async function loadAllNotifications() {
+            try {
+                const unreadOnly = currentAllNotificationsTab === 'unread';
+                let url = `${API_BASE}/notifications?limit=200&`;
+                if (unreadOnly) {
+                    url += `unread_only=true`;
+                } else {
+                    url += `unread_only=false`;
+                }
+
+                const res = await authFetch(url);
+                if (!res.ok) throw new Error('加载失败');
+                const data = await res.json();
+
+                // 更新标签计数
+                const allTabCount = document.getElementById('all-tab-count');
+                const unreadTabCount = document.getElementById('unread-tab-count');
+
+                // 获取未读总数
+                const unreadCountRes = await authFetch(`${API_BASE}/notifications/unread-count`);
+                const unreadCountData = await unreadCountRes.json();
+                const unreadCount = unreadCountData.unread_count || 0;
+
+                if (allTabCount) allTabCount.textContent = data.items?.length || 0;
+                if (unreadTabCount) unreadTabCount.textContent = unreadCount;
+
+                renderAllNotificationsList(data.items);
+            } catch (error) {
+                document.getElementById('all-notifications-list').innerHTML = `
+                    <div class="empty-state-notifications">
+                        <p>加载失败：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 切换完整消息列表标签
+        function switchAllNotificationsTab(tab) {
+            currentAllNotificationsTab = tab;
+            document.querySelectorAll('.notifications-tabs .notification-tab-item').forEach(t => {
+                t.classList.remove('active');
+                if (t.dataset.tab === tab) t.classList.add('active');
+            });
+            loadAllNotifications();
+        }
+
+        // 渲染完整消息列表
+        function renderAllNotificationsList(notifications) {
+            const container = document.getElementById('all-notifications-list');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-notifications" style="padding: 40px 20px; text-align: center;">
+                        <div class="empty-state-icon" style="font-size: 32px;">🔔</div>
+                        <div class="empty-state-title" style="font-size: 14px; margin-top: 12px;">暂无消息</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按系统名称分组（按系统分组显示）
+            const systemGroups = new Map();
+            const recordIdSeen = new Set();
+
+            // 去重：每个 related_record_id 只保留最新的一条
+            const dedupedNotifications = [];
+            for (const item of notifications) {
+                const recordId = item.related_record_id;
+                if (recordId && recordIdSeen.has(recordId)) {
+                    continue;
+                }
+                if (recordId) {
+                    recordIdSeen.add(recordId);
+                }
+                dedupedNotifications.push(item);
+            }
+
+            // 按系统名称分组
+            dedupedNotifications.forEach(item => {
+                const match = item.message.match(/(?:^|「)[^「」]+@\S+\s*-\s*([^\n」]+)/);
+                const systemName = match ? match[1].trim() : '其他';
+
+                if (!systemGroups.has(systemName)) {
+                    systemGroups.set(systemName, []);
+                }
+                systemGroups.get(systemName).push(item);
+            });
+
+            // 渲染分组后的通知
+            container.innerHTML = Array.from(systemGroups.entries()).map(([systemName, items]) => {
+                const latestItem = items[0];
+                const typeLabels = {
+                    'security_rejected': '安全驳回',
+                    'legal_rejected': '法务驳回',
+                    'legal_denied': '法务拒绝',
+                    'urgency_added': '被催促',
+                    'legal_approved': '法务通过',
+                    'security_approved': '安全通过'
+                };
+                const typeLabel = typeLabels[latestItem.type] || latestItem.type;
+                const timeAgo = getTimeAgo(new Date(latestItem.created_at));
+                const unreadClass = !latestItem.is_read ? ' notification-item-unread' : '';
+
+                return `
+                    <div class="notification-group" style="margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                        <div style="padding: 12px 16px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <strong style="font-size: 14px;">${escapeHtml(systemName)}</strong>
+                            <span style="font-size: 12px; color: var(--text-secondary);">${items.length} 条消息</span>
+                        </div>
+                        <div>
+                            ${items.map(item => `
+                                <div class="notification-item${!item.is_read ? ' notification-item-unread' : ''}"
+                                     style="padding: 12px 16px; cursor: pointer;"
+                                     onclick="handleNotificationClick(${item.id}, ${item.related_record_id}); closeAllNotificationsModal();">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 12px; font-weight: 500; margin-bottom: 4px;">${typeLabels[item.type] || item.type}</div>
+                                            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${escapeHtml(item.message).substring(0, 100)}...</div>
+                                            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">${getTimeAgo(new Date(item.created_at))}</div>
+                                        </div>
+                                        ${!item.is_read ? '<span class="badge badge-danger" style="font-size: 10px; padding: 2px 6px;">未读</span>' : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 从模态框标记全部为已读
+        async function markAllAsReadFromModal() {
+            await markAllNotificationsAsRead();
+            loadAllNotifications();
         }
 
         // 点击其他地方关闭下拉
@@ -4688,6 +4928,7 @@
         async function loadComponentRecords() {
             const status = document.getElementById('component-filter-status').value;
             const system = document.getElementById('component-search-system').value;
+            const showApproved = document.getElementById('show-approved-checkbox').checked;
 
             let url = `${API_BASE}/compliance-records?limit=1000`;
             if (status) url += `&status=${status}`;
@@ -4695,7 +4936,16 @@
 
             try {
                 const res = await authFetch(url);
-                const records = await res.json();
+                let records = await res.json();
+
+                // 默认隐藏已通过状态的组件（除非勾选了"显示已通过组件"）
+                if (!showApproved && !status) {
+                    records = records.filter(record => {
+                        const isApproved = record.component?.is_approved === true;
+                        return !isApproved;
+                    });
+                }
+
                 renderComponentRecordsTable(records);
             } catch (error) {
                 showToast('加载记录失败：' + error.message, 'error');
