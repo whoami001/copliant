@@ -2637,7 +2637,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">待办事项</h2>
-                        <div class="card-header-actions">
+                        <div class="card-header-actions" id="todo-header-actions">
                             <button class="btn btn-sm btn-secondary" onclick="switchToComponentsPage()">组件导入</button>
                             <button class="btn btn-sm btn-secondary" onclick="switchToRecordsPage()">合规记录</button>
                         </div>
@@ -3089,6 +3089,31 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeLegalApproveModal()">取消</button>
                 <button class="btn btn-primary" onclick="confirmLegalApprove()">确认通过</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 批量法务审批通过填写备注模态框 -->
+    <div class="modal-overlay" id="batch-legal-approve-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="batch-legal-approve-title">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="batch-legal-approve-title">批量法务审批通过</h3>
+                <button class="modal-close" onclick="closeBatchLegalApproveModal()" aria-label="关闭">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">审批意见（可选）</label>
+                    <textarea id="batch-legal-approve-comments" rows="4" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; resize: vertical;" placeholder="输入审批意见，例如：'材料齐全，符合合规要求'"></textarea>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 13px;">审批意见将随审批结果一起发送给研发人员。不填写默认内容为"同意"。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchLegalApproveModal()">取消</button>
+                <button class="btn btn-primary" onclick="confirmBatchLegalApprove()">确认通过</button>
             </div>
         </div>
     </div>
@@ -3933,14 +3958,22 @@
         async function loadDashboard() {
             try {
                 const isAdmin = currentUser && currentUser.role === 'admin';
+                const isEngineer = currentUser && currentUser.role === 'engineer';
+                const isSecurity = currentUser && currentUser.role === 'security';
+                const isLegal = currentUser && currentUser.role === 'legal';
 
                 // 先重置显示状态
                 const statsGrid = document.getElementById('stats-grid');
                 const chartsContainer = document.querySelector('.dashboard-charts');
+                const todoHeaderActions = document.getElementById('todo-header-actions');
+                const welcomeBanner = document.getElementById('welcome-banner');
+
                 if (statsGrid) statsGrid.style.display = '';
                 if (chartsContainer) chartsContainer.style.display = '';
+                if (todoHeaderActions) todoHeaderActions.style.display = '';
+                if (welcomeBanner) welcomeBanner.style.display = '';
 
-                // 根据角色决定加载哪些数据
+                // 根据角色决定加载哪些数据和显示哪些 UI
                 if (isAdmin) {
                     // 管理员：加载完整仪表盘（统计 + 图表 + 待办）
                     const [statsRes, todoRes, statsDetailRes] = await Promise.all([
@@ -3962,14 +3995,23 @@
                     // 渲染图表
                     renderTrendChart(statsDetail.trend);
                     renderStatusChart(statsDetail.status_distribution);
-                } else {
-                    // 安全/法务：隐藏统计卡片和图表
+                } else if (isSecurity || isLegal) {
+                    // 安全/法务：隐藏统计卡片、图表和待办头部按钮
                     if (statsGrid) statsGrid.style.display = 'none';
                     if (chartsContainer) chartsContainer.style.display = 'none';
+                    if (todoHeaderActions) todoHeaderActions.style.display = 'none';
+                } else if (isEngineer) {
+                    // 研发：隐藏欢迎横幅、统计卡片、图表和待办头部按钮
+                    if (welcomeBanner) welcomeBanner.style.display = 'none';
+                    if (statsGrid) statsGrid.style.display = 'none';
+                    if (chartsContainer) chartsContainer.style.display = 'none';
+                    if (todoHeaderActions) todoHeaderActions.style.display = 'none';
                 }
 
-                // 渲染欢迎区
-                renderWelcomeBanner();
+                // 渲染欢迎区（所有角色都显示，除了研发）
+                if (!isEngineer) {
+                    renderWelcomeBanner();
+                }
 
                 // 加载待办事项（所有角色都需要）
                 const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`, {}, true);
@@ -5379,7 +5421,12 @@
             // 绑定按钮事件
             document.getElementById('batch-approve-confirm-btn').onclick = function() {
                 closeBatchApprovalActionModal();
-                executeBatchApprove();
+                // 如果是法务审批，显示审批意见输入框
+                if (approvalType === 'legal') {
+                    showBatchLegalApproveModal();
+                } else {
+                    executeBatchApprove();
+                }
             };
             document.getElementById('batch-request-changes-btn').onclick = function() {
                 closeBatchApprovalActionModal();
@@ -5389,6 +5436,69 @@
 
         function closeBatchApprovalActionModal() {
             document.getElementById('batch-approval-action-modal-overlay').classList.remove('active');
+        }
+
+        // 显示批量法务审批意见输入框
+        function showBatchLegalApproveModal() {
+            const modal = document.getElementById('batch-legal-approve-modal-overlay');
+            modal.classList.add('active');
+            // 清空之前的输入
+            document.getElementById('batch-legal-approve-comments').value = '';
+        }
+
+        function closeBatchLegalApproveModal() {
+            document.getElementById('batch-legal-approve-modal-overlay').classList.remove('active');
+        }
+
+        // 确认批量法务审批通过
+        function confirmBatchLegalApprove() {
+            const comments = document.getElementById('batch-legal-approve-comments').value.trim();
+            // 如果不填写，默认为"同意"
+            window.batchLegalApproveComments = comments || '同意';
+            closeBatchLegalApproveModal();
+            executeBatchLegalApprove();
+        }
+
+        // 执行批量法务审批通过
+        async function executeBatchLegalApprove() {
+            const items = window.batchImportData;
+            const selectedItems = [];
+            for (let i = 0; i < items.length; i++) {
+                const checkbox = document.querySelector(`.batch-item-checkbox[data-index="${i}"]`);
+                if (checkbox && checkbox.checked) {
+                    selectedItems.push(items[i]);
+                }
+            }
+
+            if (selectedItems.length === 0) {
+                showToast('请至少选择一个组件', 'warning');
+                return;
+            }
+
+            let successCount = 0;
+            let failedCount = 0;
+            const comments = window.batchLegalApproveComments || '同意';
+
+            for (const item of selectedItems) {
+                try {
+                    const res = await authFetch(`${API_BASE}/compliance-records/${item.record_id}/approve`, {
+                        method: 'POST',
+                        body: JSON.stringify({ comments: comments })
+                    });
+                    if (res.ok) successCount++;
+                    else failedCount++;
+                } catch (error) {
+                    failedCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                showToast(`批量法务审批完成：成功 ${successCount} 个，失败 ${failedCount} 个`, 'success');
+                closeSpdxImportModal();
+                loadDashboard();
+            } else {
+                showToast('批量审批失败：' + (failedCount > 0 ? '所有组件都失败' : '未知错误'), 'error');
+            }
         }
 
         // 执行批量审批通过
