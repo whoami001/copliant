@@ -604,6 +604,7 @@
             display: flex;
             gap: var(--spacing-md);
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
@@ -2863,13 +2864,13 @@
                             <h1 class="page-title">组件导入</h1>
                             <p class="page-description">批量导入 SPDX 文件或管理组件合规记录</p>
                         </div>
+                        <button class="btn btn-primary btn-lg engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading" style="margin-left: auto;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            上传 SPDX 文件
+                        </button>
                     </div>
-                    <button class="btn btn-primary engineer-only" onclick="showSpdxImportModal()" :disabled="authLoading">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                        </svg>
-                        上传 SPDX 文件
-                    </button>
                 </div>
 
                 <div class="card">
@@ -2889,9 +2890,11 @@
                                 </svg>
                                 <input type="text" class="form-input" placeholder="搜索系统名..." id="component-search-system" oninput="loadComponentRecords()">
                             </div>
-                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); margin-left: 12px;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 12px;">
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
                                 <input type="checkbox" id="show-approved-checkbox" onchange="loadComponentRecords()">
-                                显示已通过组件
+                                <span>显示已通过组件</span>
                             </label>
                         </div>
                     </div>
