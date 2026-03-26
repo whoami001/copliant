@@ -2673,7 +2673,15 @@
         .security-only,
         .legal-only,
         .admin-only {
-            display: none !important;
+            display: none;
+        }
+
+        /* 角色可见状态 - 覆盖默认隐藏 */
+        .engineer-only[data-role-visible="true"],
+        .security-only[data-role-visible="true"],
+        .legal-only[data-role-visible="true"],
+        .admin-only[data-role-visible="true"] {
+            display: inherit;
         }
     </style>
 </head>
@@ -4357,7 +4365,11 @@
                     shouldShow = true;
                 }
 
-                el.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) {
+                    el.setAttribute('data-role-visible', 'true');
+                } else {
+                    el.removeAttribute('data-role-visible');
+                }
             });
         }
 
