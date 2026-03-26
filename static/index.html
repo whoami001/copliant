@@ -3934,6 +3934,12 @@
             try {
                 const isAdmin = currentUser && currentUser.role === 'admin';
 
+                // 先重置显示状态
+                const statsGrid = document.getElementById('stats-grid');
+                const chartsContainer = document.querySelector('.dashboard-charts');
+                if (statsGrid) statsGrid.style.display = '';
+                if (chartsContainer) chartsContainer.style.display = '';
+
                 // 根据角色决定加载哪些数据
                 if (isAdmin) {
                     // 管理员：加载完整仪表盘（统计 + 图表 + 待办）
@@ -3958,8 +3964,8 @@
                     renderStatusChart(statsDetail.status_distribution);
                 } else {
                     // 安全/法务：隐藏统计卡片和图表
-                    document.getElementById('stats-grid').style.display = 'none';
-                    document.querySelector('.dashboard-charts').style.display = 'none';
+                    if (statsGrid) statsGrid.style.display = 'none';
+                    if (chartsContainer) chartsContainer.style.display = 'none';
                 }
 
                 // 渲染欢迎区
