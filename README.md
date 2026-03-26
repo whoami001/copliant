@@ -4,14 +4,23 @@
 
 ## 系统截图
 
-### 仪表盘（登录后）
-![仪表盘](./dashboard-logged-in.png)
+> 请访问 http://localhost:8000 登录后查看最新界面
 
-### 合规记录页面
-![合规记录](./current-state.png)
+### 1. 仪表盘
+![仪表盘](./screenshots/dashboard.png)
+*仪表盘显示统计卡片、待办事项、7 天趋势图和状态分布图*
 
-### 初始状态
-![初始状态](./initial.png)
+### 2. 合规记录
+![合规记录](./screenshots/records.png)
+*合规记录列表，支持筛选、搜索和批量操作*
+
+### 3. 组件导入
+![组件导入](./screenshots/components.png)
+*SPDX 批量导入组件功能*
+
+### 4. 消息中心
+![消息中心](./screenshots/notifications.png)
+*消息中心显示审批通知，支持时间筛选和点击已读*
 
 ## 功能特性
 
