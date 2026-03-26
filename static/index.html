@@ -2554,7 +2554,7 @@
                 </div>
 
                 <!-- 统计卡片 -->
-                <div class="stats-grid">
+                <div class="stats-grid" id="stats-grid">
                     <div class="stat-card stat-card-gradient stat-pending">
                         <div class="stat-card-header">
                             <div class="stat-icon">
@@ -3932,31 +3932,40 @@
         // 加载仪表板数据
         async function loadDashboard() {
             try {
-                const [statsRes, todoRes, statsDetailRes] = await Promise.all([
-                    authFetch(`${API_BASE}/dashboard/stats`, {}, true),
-                    authFetch(`${API_BASE}/dashboard/todo`, {}, true),
-                    authFetch(`${API_BASE}/dashboard/stats-detail`, {}, true)
-                ]);
+                const isAdmin = currentUser && currentUser.role === 'admin';
 
-                const stats = await statsRes.json();
-                const todos = await todoRes.json();
-                const statsDetail = await statsDetailRes.json();
+                // 根据角色决定加载哪些数据
+                if (isAdmin) {
+                    // 管理员：加载完整仪表盘（统计 + 图表 + 待办）
+                    const [statsRes, todoRes, statsDetailRes] = await Promise.all([
+                        authFetch(`${API_BASE}/dashboard/stats`, {}, true),
+                        authFetch(`${API_BASE}/dashboard/todo`, {}, true),
+                        authFetch(`${API_BASE}/dashboard/stats-detail`, {}, true)
+                    ]);
 
-                // 数字动画
-                animateValue('stat-pending', stats.pending_my_action);
-                animateValue('stat-approved', stats.approved_this_month);
-                document.getElementById('stat-avg-days').textContent = stats.avg_processing_days + '天';
-                animateValue('stat-total', stats.total_records);
+                    const stats = await statsRes.json();
+                    const todos = await todoRes.json();
+                    const statsDetail = await statsDetailRes.json();
+
+                    // 数字动画
+                    animateValue('stat-pending', stats.pending_my_action);
+                    animateValue('stat-approved', stats.approved_this_month);
+                    document.getElementById('stat-avg-days').textContent = stats.avg_processing_days + '天';
+                    animateValue('stat-total', stats.total_records);
+
+                    // 渲染图表
+                    renderTrendChart(statsDetail.trend);
+                    renderStatusChart(statsDetail.status_distribution);
+                } else {
+                    // 安全/法务：隐藏统计卡片和图表
+                    document.getElementById('stats-grid').style.display = 'none';
+                    document.querySelector('.dashboard-charts').style.display = 'none';
+                }
 
                 // 渲染欢迎区
                 renderWelcomeBanner();
 
-                // 渲染图表
-                renderTrendChart(statsDetail.trend);
-                renderStatusChart(statsDetail.status_distribution);
-
-                // 根据用户角色决定使用哪种待办列表显示
-                // 所有用户都使用按系统分组的视图
+                // 加载待办事项（所有角色都需要）
                 const todoGroupedRes = await authFetch(`${API_BASE}/dashboard/todo/system-grouped`, {}, true);
                 const todoGrouped = await todoGroupedRes.json();
 
