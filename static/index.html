@@ -2409,6 +2409,11 @@
             }
         }
 
+        /* 通知中心红点 - 使用 inline-block 支持动画 */
+        .notification-badge {
+            display: inline-block;
+        }
+
         .nav-link {
             position: relative;
         }
@@ -6816,8 +6821,10 @@
             document.getElementById('spdx-file').value = '';
             document.getElementById('import-progress').style.display = 'none';
             document.getElementById('import-result').style.display = 'none';
-            // 初始化拖拽上传
-            setTimeout(initSpdxUploadDragAndDrop, 100);
+            // 初始化拖拽上传 - 等待模态框完全打开后执行
+            requestAnimationFrame(() => {
+                setTimeout(initSpdxUploadDragAndDrop, 200);
+            });
         }
 
         // 关闭 SPDX 导入模态框
@@ -7980,9 +7987,7 @@
                 if (data.unread_count > 0) {
                     if (badge) {
                         badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
-                        badge.style.display = 'flex';  // 使用 flex 以支持动画
-                        badge.style.alignItems = 'center';
-                        badge.style.justifyContent = 'center';
+                        badge.style.display = 'inline-block';  // 使用 inline-block 支持动画
                         badge.classList.add('pulse');  // 添加闪烁动画
                     }
                     if (tabCountUnread) tabCountUnread.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
