@@ -108,14 +108,20 @@ class NotificationService:
     ) -> Notification:
         """通知安全驳回（按系统聚合，支持组件计数）"""
         import re
+        from sqlalchemy import or_
 
-        # 查找同一系统的未读通知（支持匹配带有组件计数的系统名称）
-        # 消息格式：系统：<system_name>（N 个组件）\n...
+        # 查找同一系统的未读通知
+        # 支持新旧两种格式：
+        # 新格式：系统：<system_name>（N 个组件）\n...
+        # 旧格式：您的合规记录「<component>@<version> - <system_name>」...
         existing = self.db.query(Notification).filter(
             Notification.user_id == user.id,
             Notification.type == NotificationType.SECURITY_REJECTED,
             Notification.is_read == False,
-            Notification.message.ilike(f"系统：{record.system_name}%\n%"),
+            or_(
+                Notification.message.ilike(f"系统：{record.system_name}%"),
+                Notification.message.ilike(f"%- {record.system_name}%"),
+            )
         ).first()
 
         if existing:
