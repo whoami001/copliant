@@ -247,8 +247,16 @@ class DeclarationAutoFiller:
                     name, version, autofill_data.get("license_name", "")
                 )
 
+            # 4. 检查组件是否已法务审批通过
+            is_approved = self.db.query(Component).filter(
+                Component.name == name,
+                Component.version == version,
+                Component.is_approved == True
+            ).first() is not None
+
             autofill_data["component_name"] = name
             autofill_data["component_version"] = version
+            autofill_data["is_approved"] = is_approved
 
             results.append(autofill_data)
 

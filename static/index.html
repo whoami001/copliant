@@ -1849,6 +1849,18 @@
             background: var(--primary-light);
         }
 
+        /* 已审批组件高亮样式 */
+        .batch-edit-table tbody tr.approved-row {
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .batch-edit-table tbody tr.approved-row:hover {
+            background: rgba(16, 185, 129, 0.12);
+        }
+        .batch-edit-table tbody tr.approved-row td {
+            color: var(--success);
+            font-weight: 500;
+        }
+
         .col-select {
             width: 25px;
             text-align: center;
@@ -6565,9 +6577,11 @@
 
             tbody.innerHTML = pageItems.map((item, index) => {
                 const globalIndex = startIndex + index; // 全局索引
+                // 已审批组件添加特殊样式类
+                const rowClass = item.is_approved ? 'approved-row' : '';
 
                 return `
-                <tr data-index="${globalIndex}">
+                <tr data-index="${globalIndex}" class="${rowClass}">
                     <td class="col-select">
                         <input type="checkbox" class="batch-item-checkbox" data-index="${globalIndex}" checked>
                     </td>
@@ -6598,9 +6612,12 @@
                         </select>
                     </td>
                     <td class="col-source">
-                        <span class="badge ${item.source === 'history' ? 'badge-success' : 'badge-secondary'}">
-                            ${item.source === 'history' ? '历史' : 'SPDX'}
-                        </span>
+                        ${item.is_approved
+                            ? '<span class="badge badge-success">已审批</span>'
+                            : `<span class="badge ${item.source === 'history' ? 'badge-success' : 'badge-secondary'}">
+                                 ${item.source === 'history' ? '历史' : 'SPDX'}
+                               </span>`
+                        }
                     </td>
                 </tr>
             `}).join('');
@@ -6907,18 +6924,37 @@
                 return;
             }
 
+            // 分离已审批和未审批的组件
+            const approvedItems = selectedItems.filter(item => item.is_approved);
+            const pendingItems = selectedItems.filter(item => !item.is_approved);
+
             // 显示进度
             document.getElementById('import-progress').style.display = 'block';
             document.getElementById('progress-fill').style.width = '30%';
-            const actionText = isEditMode ? '正在更新' : '正在导入';
-            document.getElementById('progress-text').textContent = `${actionText} ${selectedItems.length} 个组件...`;
+
+            let progressMsg = '';
+            if (approvedItems.length > 0 && pendingItems.length > 0) {
+                progressMsg = `共 ${selectedItems.length} 个组件（${approvedItems.length} 个已审批，${pendingItems.length} 个待审批）...`;
+            } else if (approvedItems.length > 0) {
+                progressMsg = `共 ${selectedItems.length} 个组件，均为已审批状态，无需重复提交...`;
+            } else {
+                const actionText = isEditMode ? '正在更新' : '正在导入';
+                progressMsg = `${actionText} ${pendingItems.length} 个组件...`;
+            }
+            document.getElementById('progress-text').textContent = progressMsg;
 
             try {
                 let successCount = 0;
                 let failedCount = 0;
                 let errorMessages = []; // 收集错误信息
 
-                for (const item of selectedItems) {
+                // 已审批的组件不需要提交审批，直接成功
+                for (const item of approvedItems) {
+                    successCount++;
+                }
+
+                // 处理未审批的组件
+                for (const item of pendingItems) {
                     try {
                         // 如果是编辑模式，直接更新已有的声明
                         if (isEditMode && item.record_id && item.declaration_id) {

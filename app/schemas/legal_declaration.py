@@ -206,6 +206,7 @@ class BulkAutofillItem(BaseModel):
     purpose_of_use: str = ""
     purpose_of_use_suggestion: str = ""
     source: str = "spdx"  # "spdx" 或 "history"
+    is_approved: bool = False  # 组件是否已法务审批通过
 
 
 class BulkAutofillResponse(BaseModel):
