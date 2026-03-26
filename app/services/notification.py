@@ -107,48 +107,20 @@ class NotificationService:
         required_fields: List[str] = None,
     ) -> Notification:
         """通知安全驳回（按系统聚合，支持组件计数）"""
-        # 查找同一系统的未读通知
+        import re
+
+        # 查找同一系统的未读通知（支持匹配带有组件计数的系统名称）
+        # 消息格式：系统：<system_name>（N 个组件）\n...
         existing = self.db.query(Notification).filter(
             Notification.user_id == user.id,
             Notification.type == NotificationType.SECURITY_REJECTED,
             Notification.is_read == False,
-            Notification.message.ilike(f"系统：{record.system_name}\n%"),
+            Notification.message.ilike(f"系统：{record.system_name}%\n%"),
         ).first()
 
         if existing:
-            # 追加组件信息到系统名称行
-            component_info = f"{record.component.name}@{record.component.version}"
-            if component_info not in existing.message:
-                # 提取组件计数
-                import re
-                match = re.search(r'系统：([^\n]+)\n', existing.message)
-                if match:
-                    system_line = match.group(1)
-                    # 检查是否已有组件计数
-                    if ' (' in system_line and ' 个组件' in system_line:
-                        # 已有计数，+1
-                        count_match = re.search(r'(\d+) 个组件', system_line)
-                        if count_match:
-                            new_count = int(count_match.group(1)) + 1
-                            new_system_line = system_line.replace(
-                                f"{count_match.group(1)} 个组件",
-                                f"{new_count} 个组件"
-                            )
-                            existing.message = existing.message.replace(
-                                f"系统：{system_line}",
-                                f"系统：{new_system_line}"
-                            )
-                    else:
-                        # 添加组件计数（第 2 个组件）
-                        new_system_line = f"{system_line}（2 个组件）"
-                        existing.message = existing.message.replace(
-                            f"系统：{system_line}",
-                            f"系统：{new_system_line}"
-                        )
-
             # 更新驳回原因
-            if reason and f"驳回原因：{reason}" not in existing.message:
-                # 替换旧原因或直接添加
+            if reason:
                 existing.message = re.sub(
                     r'驳回原因：[^\n]*',
                     f"驳回原因：{reason}",
@@ -157,19 +129,22 @@ class NotificationService:
 
             # 更新需要补充的字段
             if required_fields:
-                for field in required_fields:
-                    if f"需要补充的字段：{field}" not in existing.message:
-                        if "需要补充的字段：" in existing.message:
-                            # 在现有字段列表后追加
-                            if field not in existing.message:
-                                existing.message = existing.message.replace(
-                                    "需要补充的字段：",
-                                    f"需要补充的字段：{field}, "
-                                )
-                        else:
-                            existing.message += f"\n需要补充的字段：{field}"
+                current_fields_match = re.search(r'需要补充的字段：([^\n]*)', existing.message)
+                if current_fields_match:
+                    current_fields = current_fields_match.group(1).strip()
+                    # 合并字段列表（去重）
+                    all_fields = set(f.strip() for f in current_fields.split(',') if f.strip())
+                    all_fields.update(required_fields)
+                    new_fields_str = ', '.join(sorted(all_fields))
+                    existing.message = existing.message.replace(
+                        f"需要补充的字段：{current_fields}",
+                        f"需要补充的字段：{new_fields_str}"
+                    )
+                else:
+                    fields_str = ', '.join(required_fields)
+                    existing.message += f"\n需要补充的字段：{fields_str}"
 
-            # 更新备注
+            # 更新备注（如果没有或需要更新）
             if "备注：" not in existing.message:
                 existing.message += f"\n备注：{reason}"
 
