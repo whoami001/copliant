@@ -3827,28 +3827,24 @@
             // 根据角色显示/隐藏特定按钮
             const isAdmin = currentUser && currentUser.role === 'admin';
 
-            // 研发可见按钮和导航项
-            const engineerItems = document.querySelectorAll('.engineer-only');
-            engineerItems.forEach(el => {
-                el.style.display = (isAdmin || hasRole('engineer')) ? '' : 'none';
-            });
+            // 统一处理所有角色类元素
+            // 遍历所有带 *-only 类的元素，检查元素是否有至少一个当前用户允许的角色类
+            const allRoleElements = document.querySelectorAll('.engineer-only, .security-only, .legal-only, .admin-only');
+            allRoleElements.forEach(el => {
+                let shouldShow = false;
 
-            // 安全可见按钮和导航项
-            const securityItems = document.querySelectorAll('.security-only');
-            securityItems.forEach(el => {
-                el.style.display = (isAdmin || hasRole('security')) ? '' : 'none';
-            });
+                // 管理员可以看到所有带 admin-only 的元素
+                if (isAdmin) {
+                    shouldShow = true;
+                } else if (el.classList.contains('engineer-only') && hasRole('engineer')) {
+                    shouldShow = true;
+                } else if (el.classList.contains('security-only') && hasRole('security')) {
+                    shouldShow = true;
+                } else if (el.classList.contains('legal-only') && hasRole('legal')) {
+                    shouldShow = true;
+                }
 
-            // 法务可见按钮和导航项
-            const legalItems = document.querySelectorAll('.legal-only');
-            legalItems.forEach(el => {
-                el.style.display = (isAdmin || hasRole('legal')) ? '' : 'none';
-            });
-
-            // 管理员可见页面和导航项
-            const adminItems = document.querySelectorAll('.admin-only');
-            adminItems.forEach(el => {
-                el.style.display = isAdmin ? '' : 'none';
+                el.style.display = shouldShow ? '' : 'none';
             });
         }
 
