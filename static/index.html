@@ -1769,6 +1769,45 @@
             background: var(--primary-light);
         }
 
+        /* 拖拽上传区域 */
+        .upload-dropzone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg);
+        }
+
+        .upload-dropzone:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .upload-dropzone.drag-over {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .upload-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
         /* 成功按钮 */
         .btn-success {
             background: var(--success);
@@ -2891,12 +2930,6 @@
                                 <input type="text" class="form-input" placeholder="搜索系统名..." id="component-search-system" oninput="loadComponentRecords()">
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 16px; margin-top: 12px;">
-                            <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer;">
-                                <input type="checkbox" id="show-approved-checkbox" onchange="loadComponentRecords()">
-                                <span>显示已通过组件</span>
-                            </label>
-                        </div>
                     </div>
                     <div class="card-body">
                         <div style="overflow-x: auto;">
@@ -3490,9 +3523,18 @@
                         <span class="form-hint">从列表中选择系统名称</span>
                     </div>
                     <div class="form-group">
-                        <label class="form-label required" for="spdx-file">SPDX 文件</label>
-                        <input type="file" class="form-file" id="spdx-file" accept=".spdx,.spdx.json,application/json">
-                        <span class="form-hint">支持 SPDX JSON 和 tag-value 格式</span>
+                        <label class="form-label required">SPDX 文件</label>
+                        <div class="upload-dropzone" id="upload-dropzone" onclick="document.getElementById('spdx-file').click()">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            <div class="upload-title">点击选择文件或拖拽文件到此处</div>
+                            <div class="upload-desc">支持 SPDX JSON 和 tag-value 格式</div>
+                            <input type="file" class="form-file" id="spdx-file" accept=".spdx,.spdx.json,application/json" style="display: none;" onchange="handleFileSelect(event)">
+                        </div>
+                        <div id="file-selected-hint" class="form-hint" style="display: none; margin-top: 8px;">
+                            ✅ 已选择：<span id="file-name"></span>
+                        </div>
                     </div>
                     <div id="import-progress" style="display: none;">
                         <div class="progress-bar">
@@ -4967,7 +5009,6 @@
         async function loadComponentRecords() {
             const status = document.getElementById('component-filter-status').value;
             const system = document.getElementById('component-search-system').value;
-            const showApproved = document.getElementById('show-approved-checkbox').checked;
 
             let url = `${API_BASE}/compliance-records?limit=1000`;
             if (status) url += `&status=${status}`;
@@ -4975,15 +5016,7 @@
 
             try {
                 const res = await authFetch(url);
-                let records = await res.json();
-
-                // 默认隐藏已通过状态的组件（除非勾选了"显示已通过组件"）
-                if (!showApproved && !status) {
-                    records = records.filter(record => {
-                        const isApproved = record.component?.is_approved === true;
-                        return !isApproved;
-                    });
-                }
+                const records = await res.json();
 
                 renderComponentRecordsTable(records);
             } catch (error) {
@@ -6730,6 +6763,51 @@
             }
         }
 
+        // SPDX 拖拽上传初始化
+        function initSpdxUploadDragAndDrop() {
+            const dropzone = document.getElementById('upload-dropzone');
+            const fileInput = document.getElementById('spdx-file');
+            const fileNameSpan = document.getElementById('file-name');
+            const fileHint = document.getElementById('file-selected-hint');
+
+            if (!dropzone || !fileInput) return;
+
+            // 拖拽悬停
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('drag-over');
+            });
+
+            // 拖拽离开
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('drag-over');
+            });
+
+            // 文件放置
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // 将拖拽的文件赋值给 input
+                    fileInput.files = files;
+                    handleFileSelect({ target: { files: files } });
+                }
+            });
+        }
+
+        // 处理文件选择（点击或拖拽）
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const fileNameSpan = document.getElementById('file-name');
+            const fileHint = document.getElementById('file-selected-hint');
+
+            if (file && fileNameSpan && fileHint) {
+                fileNameSpan.textContent = file.name;
+                fileHint.style.display = 'block';
+            }
+        }
+
         // 打开 SPDX 导入模态框
         function showSpdxImportModal() {
             document.getElementById('spdx-import-modal-overlay').classList.add('active');
@@ -6738,6 +6816,8 @@
             document.getElementById('spdx-file').value = '';
             document.getElementById('import-progress').style.display = 'none';
             document.getElementById('import-result').style.display = 'none';
+            // 初始化拖拽上传
+            setTimeout(initSpdxUploadDragAndDrop, 100);
         }
 
         // 关闭 SPDX 导入模态框
@@ -7900,7 +7980,9 @@
                 if (data.unread_count > 0) {
                     if (badge) {
                         badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
-                        badge.style.display = 'inline-block';
+                        badge.style.display = 'flex';  // 使用 flex 以支持动画
+                        badge.style.alignItems = 'center';
+                        badge.style.justifyContent = 'center';
                         badge.classList.add('pulse');  // 添加闪烁动画
                     }
                     if (tabCountUnread) tabCountUnread.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
