@@ -13,7 +13,7 @@ from app.database import get_db
 from app.schemas.dashboard import DashboardTodoResponse, DashboardStatsResponse, DashboardTodoItem, DashboardSystemGroupedTodoItem, DashboardSystemGroupedTodoResponse, DashboardStatsDetailResponse
 from app.models.compliance_record import ComplianceRecord, RecordStatus
 from app.models.user import User, UserRole
-from app.core.permissions import get_current_user_from_token
+from app.core.permissions import get_current_user_from_token, require_role
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,6 +21,7 @@ router = APIRouter()
 
 
 @router.get("/todo", response_model=DashboardTodoResponse)
+@require_role([UserRole.SECURITY, UserRole.ADMIN])
 async def get_dashboard_todo(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_token),
@@ -138,6 +139,7 @@ async def get_dashboard_todo(
 
 
 @router.get("/todo/system-grouped", response_model=DashboardSystemGroupedTodoResponse)
+@require_role([UserRole.SECURITY, UserRole.ADMIN])
 async def get_dashboard_todo_system_grouped(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_token),
@@ -326,6 +328,7 @@ async def get_dashboard_todo_system_grouped(
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)
+@require_role([UserRole.SECURITY, UserRole.ADMIN])
 async def get_dashboard_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_token),
@@ -415,6 +418,7 @@ async def get_dashboard_stats(
 
 
 @router.get("/stats-detail", response_model=DashboardStatsDetailResponse)
+@require_role([UserRole.SECURITY, UserRole.ADMIN])
 async def get_dashboard_stats_detail(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_token),
