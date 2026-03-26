@@ -1249,6 +1249,121 @@
             color: var(--danger);
         }
 
+        /* 消息下拉面板 */
+        .notifications-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: var(--spacing-xs);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 380px;
+            max-width: 380px;
+            max-height: 450px;
+            z-index: 101;
+        }
+
+        .notifications-dropdown.active {
+            display: block;
+        }
+
+        .notifications-dropdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .notifications-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .notifications-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg);
+            color: var(--text-primary);
+        }
+
+        .notifications-dropdown-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .notification-tab-item {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .notification-tab-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 500;
+        }
+
+        .tab-count-inline {
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            margin-left: 4px;
+        }
+
+        .tab-count-unread {
+            background: var(--danger);
+            color: white;
+        }
+
+        .notifications-dropdown-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notifications-dropdown-footer {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .view-all-link {
+            font-size: 13px;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .view-all-link:hover {
+            text-decoration: underline;
+        }
+
         /* 快速切换用户 */
         .quick-switch {
             padding: var(--spacing-md);
@@ -2320,15 +2435,6 @@
                         合规记录
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="#notifications" class="nav-link" data-page="notifications">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                        消息中心
-                        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
-                    </a>
-                </li>
                 <li class="nav-item admin-only" style="display: none;">
                     <a href="#settings" class="nav-link" data-page="settings">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2358,6 +2464,15 @@
                         <div class="user-dropdown-header">
                             <div id="dropdown-email">user@example.com</div>
                         </div>
+                        <!-- 消息通知 -->
+                        <div class="user-dropdown-item" onclick="showNotificationsDropdown(event)">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>📬 消息中心</span>
+                                <span class="badge badge-danger" id="dropdown-unread-count" style="display: none;">0</span>
+                            </div>
+                        </div>
+                        <div class="user-dropdown-divider"></div>
+                        <!-- 快速切换 -->
                         <div class="quick-switch">
                             <div class="quick-switch-title">快速切换</div>
                             <button class="quick-user-btn" onclick="switchUser('engineer@test.com')">
@@ -2383,6 +2498,40 @@
                         </div>
                         <div class="user-dropdown-item danger" onclick="logout()">
                             退出登录
+                        </div>
+                    </div>
+
+                    <!-- 消息下拉面板 -->
+                    <div class="notifications-dropdown" id="notifications-dropdown">
+                        <div class="notifications-dropdown-header">
+                            <h3 class="notifications-title">消息中心</h3>
+                            <div class="notifications-actions">
+                                <button class="btn-icon" onclick="loadNotifications()" title="刷新">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 4v6h-6M1 20v-6h6"/>
+                                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                                    </svg>
+                                </button>
+                                <button class="btn-icon" onclick="markAllNotificationsAsRead()" title="全部已读">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 6L9 17l-5-5"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="notifications-dropdown-tabs">
+                            <button class="notification-tab-item active" onclick="switchNotificationTab('all', event)">
+                                全部 <span id="tab-count-all" class="tab-count-inline">0</span>
+                            </button>
+                            <button class="notification-tab-item" onclick="switchNotificationTab('unread', event)">
+                                未读 <span id="tab-count-unread" class="tab-count-inline tab-count-unread">0</span>
+                            </button>
+                        </div>
+                        <div class="notifications-dropdown-body" id="notifications-dropdown-list">
+                            <div class="loading">加载中...</div>
+                        </div>
+                        <div class="notifications-dropdown-footer">
+                            <a href="#records" class="view-all-link" onclick="closeNotificationsDropdown()">查看全部</a>
                         </div>
                     </div>
                 </div>
@@ -2666,61 +2815,12 @@
                 </div>
             </div>
 
-            <!-- 消息中心页面 -->
+            <!-- 消息中心页面（已简化为头像下拉菜单，此页面不再使用） -->
             <div id="page-notifications" class="page">
-                <div class="page-header-card">
-                    <div class="page-header-content">
-                        <div class="page-header-icon">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
-                        </div>
-                        <div class="page-header-text">
-                            <h1 class="page-title">消息中心</h1>
-                            <p class="page-description">查看审批通知和系统消息</p>
-                        </div>
-                    </div>
-                    <div class="page-header-actions">
-                        <button class="btn btn-sm btn-secondary" onclick="markAllNotificationsAsRead()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 6L9 17l-5-5"/>
-                            </svg>
-                            全部已读
-                        </button>
-                    </div>
-                </div>
-
-                <div class="notification-tabs-enhanced">
-                    <button class="notification-tab-item active" onclick="switchNotificationTab('all', event)">
-                        <span class="tab-icon">📬</span>
-                        <span class="tab-text">全部消息</span>
-                        <span class="tab-count" id="tab-count-all">0</span>
-                    </button>
-                    <button class="notification-tab-item" onclick="switchNotificationTab('unread', event)">
-                        <span class="tab-icon">🔔</span>
-                        <span class="tab-text">未读消息</span>
-                        <span class="tab-count tab-count-unread" id="tab-count-unread">0</span>
-                    </button>
-                </div>
-
-                <div class="notification-filters">
-                    <label class="filter-label">时间范围：</label>
-                    <select id="notification-time-filter" class="filter-select" onchange="loadNotifications()">
-                        <option value="24">最近 24 小时</option>
-                        <option value="72">最近 3 天</option>
-                        <option value="168">最近 7 天</option>
-                        <option value="0">全部消息</option>
-                    </select>
-                </div>
-
-                <div class="card notification-card">
-                    <div class="card-body" style="padding: 0;">
-                        <div id="notification-list">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="empty-state" style="padding: 60px 20px; text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📬</div>
+                    <h2 style="font-size: 18px; margin-bottom: 8px;">消息中心已迁移</h2>
+                    <p style="color: var(--text-secondary);">请点击右上角头像，在下拉菜单中查看消息</p>
                 </div>
             </div>
 
@@ -3434,13 +3534,32 @@
         // 用户菜单下拉
         function toggleUserDropdown() {
             const dropdown = document.getElementById('user-dropdown');
+            const notifications = document.getElementById('notifications-dropdown');
+            // 关闭消息下拉面板
+            notifications.classList.remove('active');
             dropdown.classList.toggle('active');
             event.stopPropagation();
+        }
+
+        // 显示消息下拉面板
+        function showNotificationsDropdown(event) {
+            if (event) event.stopPropagation();
+            const userDropdown = document.getElementById('user-dropdown');
+            const notifications = document.getElementById('notifications-dropdown');
+            userDropdown.classList.remove('active');
+            notifications.classList.add('active');
+            loadNotificationsDropdown();
+        }
+
+        // 关闭消息下拉面板
+        function closeNotificationsDropdown() {
+            document.getElementById('notifications-dropdown').classList.remove('active');
         }
 
         // 点击其他地方关闭下拉
         document.addEventListener('click', () => {
             document.getElementById('user-dropdown').classList.remove('active');
+            document.getElementById('notifications-dropdown').classList.remove('active');
         });
 
         // 更新用户界面
@@ -3780,6 +3899,12 @@
         });
 
         function showPage(page) {
+            // 消息中心页面已迁移到头像下拉菜单
+            if (page === 'notifications') {
+                showToast('消息中心已移至右上角头像下拉菜单', 'info');
+                page = 'dashboard';
+            }
+
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
@@ -3793,7 +3918,6 @@
                 'dashboard': '仪表板',
                 'records': '合规记录',
                 'components': '组件管理',
-                'notifications': '消息中心',
                 'settings': '系统管理'
             };
             document.getElementById('page-title').textContent = titles[page];
@@ -3802,7 +3926,6 @@
             if (page === 'dashboard') loadDashboard();
             else if (page === 'records') loadRecords();
             else if (page === 'components') loadComponentRecords();
-            else if (page === 'notifications') loadNotifications();
             else if (page === 'settings') loadSystemNames();
         }
 
@@ -7033,13 +7156,15 @@
 
             // 处理 hash 路由
             const hash = window.location.hash.slice(1) || 'dashboard';
-            if (['dashboard', 'records', 'components', 'notifications'].includes(hash)) {
+            if (['dashboard', 'records', 'components', 'settings'].includes(hash)) {
                 showPage(hash);
+            } else {
+                showPage('dashboard');
             }
         });
 
         // 强制刷新缓存版本
-        const APP_VERSION = '1.2.0-notification';
+        const APP_VERSION = '1.3.0-notification-dropdown';
 
         // ==================== 通知中心功能 ====================
 
@@ -7220,10 +7345,25 @@
         // 切换通知标签
         function switchNotificationTab(tab, event) {
             currentNotificationTab = tab;
-            document.querySelectorAll('.notification-tab-item').forEach(t => t.classList.remove('active'));
-            if (event && event.target) event.target.classList.add('active');
 
-            loadNotifications();
+            // 关闭用户下拉菜单（如果打开）
+            const userDropdown = document.getElementById('user-dropdown');
+            if (userDropdown) userDropdown.classList.remove('active');
+
+            const notificationsDropdown = document.getElementById('notifications-dropdown');
+            const isDropdownOpen = notificationsDropdown && notificationsDropdown.classList.contains('active');
+
+            // 更新所有标签的激活状态
+            document.querySelectorAll('.notification-tab-item').forEach(t => {
+                t.classList.remove('active');
+                if (event && t.contains(event.target)) t.classList.add('active');
+            });
+
+            if (isDropdownOpen) {
+                loadNotificationsDropdown();
+            } else {
+                loadNotifications();
+            }
         }
 
         // 获取通知类型对应的图标
@@ -7260,7 +7400,16 @@
                     method: 'POST'
                 });
                 if (!res.ok) throw new Error('标记失败');
-                loadNotifications();
+
+                // 检查消息下拉面板是否打开
+                const notificationsDropdown = document.getElementById('notifications-dropdown');
+                const isDropdownOpen = notificationsDropdown && notificationsDropdown.classList.contains('active');
+
+                if (isDropdownOpen) {
+                    loadNotificationsDropdown();
+                } else {
+                    loadNotifications();
+                }
                 loadUnreadNotificationCount();
                 showToast('已全部标记为已读', 'success');
             } catch (error) {
@@ -7295,18 +7444,105 @@
                 const data = await res.json();
                 const badge = document.getElementById('notification-badge');
                 const tabCountUnread = document.getElementById('tab-count-unread');
+                const dropdownUnreadCount = document.getElementById('dropdown-unread-count');
 
                 if (data.unread_count > 0) {
                     badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
                     badge.style.display = 'inline-block';
                     if (tabCountUnread) tabCountUnread.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                    // 下拉菜单中的未读数
+                    if (dropdownUnreadCount) {
+                        dropdownUnreadCount.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                        dropdownUnreadCount.style.display = 'inline-block';
+                    }
                 } else {
                     badge.style.display = 'none';
                     if (tabCountUnread) tabCountUnread.textContent = '0';
+                    if (dropdownUnreadCount) dropdownUnreadCount.style.display = 'none';
                 }
             } catch (error) {
                 console.error('加载未读通知数失败:', error);
             }
+        }
+
+        // 加载消息下拉面板
+        async function loadNotificationsDropdown() {
+            try {
+                const unreadOnly = currentNotificationTab === 'unread';
+                let url = `${API_BASE}/notifications?`;
+                if (unreadOnly) {
+                    url += `unread_only=true&hours=24`;
+                } else {
+                    url += `unread_only=false`;
+                }
+
+                const res = await authFetch(url);
+                if (!res.ok) throw new Error('加载失败');
+                const data = await res.json();
+
+                // 更新标签计数
+                const tabCountAll = document.getElementById('tab-count-all');
+                const tabCountUnread = document.getElementById('tab-count-unread');
+                if (tabCountAll) {
+                    tabCountAll.textContent = data.items?.length || 0;
+                }
+                if (unreadOnly && tabCountUnread) {
+                    tabCountUnread.textContent = data.items?.length || 0;
+                }
+
+                renderNotificationsDropdown(data.items);
+            } catch (error) {
+                document.getElementById('notifications-dropdown-list').innerHTML = `
+                    <div class="empty-state-notifications">
+                        <p>加载失败：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染消息下拉面板（简化版，最多显示 5 条）
+        function renderNotificationsDropdown(notifications) {
+            const container = document.getElementById('notifications-dropdown-list');
+            if (!container) return;
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-notifications" style="padding: 40px 20px; text-align: center;">
+                        <div class="empty-state-icon" style="font-size: 32px;">🔔</div>
+                        <div class="empty-state-title" style="font-size: 14px; margin-top: 12px;">暂无消息</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 只显示最新 5 条
+            const limited = notifications.slice(0, 5);
+            container.innerHTML = limited.map(item => {
+                const typeLabels = {
+                    'security_rejected': '安全驳回',
+                    'legal_rejected': '法务驳回',
+                    'legal_denied': '法务拒绝',
+                    'urgency_added': '被催促',
+                    'legal_approved': '法务通过',
+                    'security_approved': '安全通过'
+                };
+                const typeLabel = typeLabels[item.type] || item.type;
+                const timeAgo = getTimeAgo(new Date(item.created_at));
+                const unreadClass = !item.is_read ? ' dropdown-item-unread' : '';
+
+                return `
+                    <div class="notification-item${unreadClass}" style="padding: 12px 16px; cursor: pointer;" onclick="viewRecord(${item.related_record_id}); closeNotificationsDropdown();">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 12px; font-weight: 500; margin-bottom: 4px;">${typeLabel}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">${escapeHtml(item.message).substring(0, 80)}...</div>
+                                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">${timeAgo}</div>
+                            </div>
+                            ${!item.is_read ? '<span class="badge badge-danger" style="font-size: 10px; padding: 2px 6px;">未读</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // 时间格式化
