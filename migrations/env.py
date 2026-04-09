@@ -1,5 +1,6 @@
 """Alembic migrations module"""
 
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -12,6 +13,11 @@ from app.models import User, Component, ComplianceRecord, ApprovalHistory, Legal
 
 # this is the Alembic Config object
 config = context.config
+
+# Override sqlalchemy.url with DATABASE_URL env var if present
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:

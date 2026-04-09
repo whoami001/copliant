@@ -1,123 +1,220 @@
-# 部署文档
+# Compliance Hub - Docker 部署指南
 
-## 环境要求
+## 前置要求
 
-- Docker & Docker Compose（推荐）
-- 或 Python 3.11+ & PostgreSQL 14+
+- Docker 20.10+
+- Docker Compose v2+（`docker compose` 命令）
+- 至少 1GB 可用磁盘空间
+- 至少 512MB 可用内存
 
 ---
 
-## 方式一：Docker Compose 部署（推荐）
+## 快速开始
 
-### 1. 准备环境
+### 1. 获取代码
 
 ```bash
-cd compliance-hub
+git clone git@github.com:whoami001/copliant.git
+cd copliant
+```
+
+### 2. 配置环境变量
+
+```bash
 cp .env.production.example .env
-# 编辑 .env 配置生产环境变量
 ```
 
-### 2. 启动服务
+编辑 `.env` 文件，**必须修改**以下配置：
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
+| `DB_PASSWORD` | 数据库密码 | `MyS3cur3P@ssw0rd` |
+| `SECRET_KEY` | JWT 签名密钥（至少32字符） | `openssl rand -hex 32` 生成 |
+
+可选配置：
+
+| 配置项 | 说明 | 默认值 |
+|--------|------|--------|
+| `DB_USER` | 数据库用户名 | `compliance` |
+| `DB_NAME` | 数据库名 | `compliance_hub` |
+| `DB_PORT` | 数据库映射端口 | `5432` |
+| `APP_PORT` | 应用映射端口 | `8000` |
+| `BLACK_DUCK_URL` | Black Duck 地址 | 空 |
+| `BLACK_DUCK_TOKEN` | Black Duck API Token | 空 |
+
+### 3. 一键启动
 
 ```bash
-docker-compose up -d
+chmod +x deploy.sh
+./deploy.sh
 ```
 
-### 3. 初始化数据库
+或手动执行：
 
 ```bash
-docker-compose exec app alembic upgrade head
+# 构建镜像
+docker compose build
+
+# 启动服务
+docker compose up -d
+
+# 执行数据库迁移
+docker compose exec app alembic upgrade head
 ```
 
 ### 4. 验证部署
 
 ```bash
-# 检查服务状态
-docker-compose ps
+# 查看服务状态
+docker compose ps
 
-# 查看日志
-docker-compose logs -f app
+# 查看应用日志
+docker compose logs -f app
 
 # 健康检查
 curl http://localhost:8000/health
 ```
 
-### 5. 停止服务
+访问：
+- **前端页面**：http://localhost:8000/
+- **API 文档**：http://localhost:8000/docs
+
+---
+
+## 常用操作
+
+### 查看日志
 
 ```bash
-docker-compose down
-# 如需删除数据卷（谨慎）
-docker-compose down -v
+# 所有服务
+docker compose logs -f
+
+# 仅应用日志
+docker compose logs -f app
+
+# 仅数据库日志
+docker compose logs -f db
+```
+
+### 重启服务
+
+```bash
+docker compose restart app
+```
+
+### 停止服务
+
+```bash
+docker compose down
+```
+
+### 停止并删除数据（⚠️ 会丢失所有数据）
+
+```bash
+docker compose down -v
+```
+
+### 更新代码后重新部署
+
+```bash
+git pull
+docker compose build --no-cache
+docker compose up -d
+docker compose exec app alembic upgrade head
+```
+
+### 进入容器调试
+
+```bash
+docker compose exec app bash
+```
+
+### 数据库备份
+
+```bash
+docker compose exec db pg_dump -U compliance compliance_hub > backup_$(date +%Y%m%d).sql
+```
+
+### 数据库恢复
+
+```bash
+docker compose exec -T db psql -U compliance compliance_hub < backup_20260409.sql
 ```
 
 ---
 
-## 方式二：手动部署
+## 端口说明
 
-### 1. 准备 PostgreSQL
+| 端口 | 服务 | 说明 |
+|------|------|------|
+| 8000 | Compliance Hub | 前端 + API，可通过 `APP_PORT` 修改 |
+| 5432 | PostgreSQL | 数据库，仅本地访问，可通过 `DB_PORT` 修改 |
 
-```bash
-# 创建数据库和用户
-psql -U postgres << EOF
-CREATE DATABASE compliance_hub;
-CREATE USER compliance WITH PASSWORD 'CHANGE_ME';
-GRANT ALL PRIVILEGES ON DATABASE compliance_hub TO compliance;
-EOF
-```
+---
 
-### 2. 安装应用
+## 故障排查
+
+### 容器启动失败
 
 ```bash
-# 创建虚拟环境
-python3 -m venv /opt/compliance-hub/venv
-source /opt/compliance-hub/venv/bin/activate
+# 查看完整日志
+docker compose logs
 
-# 安装依赖
-pip install -r requirements.txt
-
-# 复制代码
-cp -r . /opt/compliance-hub/app
-
-# 配置环境
-cp .env.production.example /opt/compliance-hub/.env
-# 编辑 .env
+# 重新构建并启动
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 ```
 
-### 3. 初始化数据库
+### 数据库连接失败
 
 ```bash
-cd /opt/compliance-hub
-alembic upgrade head
+# 检查数据库是否就绪
+docker compose exec db pg_isready -U compliance
+
+# 查看数据库日志
+docker compose logs db
 ```
 
-### 4. 配置 systemd 服务
+### 迁移失败
 
 ```bash
-sudo tee /etc/systemd/system/compliance-hub.service > /dev/null <<'EOF'
-[Unit]
-Description=Compliance Hub API
-After=network.target postgresql.service
+# 查看当前迁移版本
+docker compose exec app alembic current
 
-[Service]
-Type=notify
-User=compliance
-Group=compliance
-WorkingDirectory=/opt/compliance-hub
-Environment="PATH=/opt/compliance-hub/venv/bin"
-ExecStart=/opt/compliance-hub/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-Restart=always
-RestartSec=10
+# 回滚到上一版本
+docker compose exec app alembic downgrade -1
 
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable compliance-hub
-sudo systemctl start compliance-hub
+# 重新执行
+docker compose exec app alembic upgrade head
 ```
 
-### 5. 配置 Nginx 反向代理
+### 默认测试账户
+
+登录代码为 `123456`，内置测试账户：
+
+| 邮箱 | 角色 | 权限 |
+|------|------|------|
+| engineer@test.com | 工程师 | 创建声明、导入组件 |
+| security@test.com | 安全评审 | 安全校验 |
+| legal@test.com | 法务审批 | 法务审批 |
+| admin@test.com | 管理员 | 全部权限 |
+
+---
+
+## 安全建议
+
+1. **修改默认密钥** - `SECRET_KEY` 必须使用强随机字符串
+2. **限制 CORS** - 生产环境应修改 `ALLOWED_HOSTS` 为具体域名
+3. **启用 HTTPS** - 使用 Nginx 反向代理 + Let's Encrypt 证书
+4. **数据库防火墙** - 限制数据库只允许应用容器访问
+5. **定期备份** - 配置自动备份策略
+
+---
+
+## 生产环境部署（带 Nginx）
+
+如需通过 Nginx 反向代理暴露服务：
 
 ```bash
 sudo tee /etc/nginx/sites-available/compliance-hub > /dev/null <<'EOF'
@@ -148,128 +245,4 @@ sudo systemctl reload nginx
 
 ---
 
-## 健康检查
-
-```bash
-# API 健康检查
-curl http://localhost:8000/health
-
-# 预期响应
-{"status":"healthy","version":"0.1.0"}
-```
-
----
-
-## 日志查看
-
-### Docker 部署
-
-```bash
-# 查看应用日志
-docker-compose logs -f app
-
-# 查看数据库日志
-docker-compose logs -f db
-```
-
-### 手动部署
-
-```bash
-# 使用 journalctl
-sudo journalctl -u compliance-hub -f
-
-# 或查看日志文件（如果配置了文件日志）
-tail -f /var/log/compliance-hub/app.log
-```
-
----
-
-## 备份与恢复
-
-### 数据库备份
-
-```bash
-# 备份
-pg_dump -U compliance compliance_hub > backup-$(date +%Y%m%d).sql
-
-# 恢复
-psql -U compliance compliance_hub < backup-20260320.sql
-```
-
-### Docker 数据卷备份
-
-```bash
-docker run --rm \
-  -v compliance-hub_postgres_data:/data:ro \
-  -v $(pwd):/backup alpine \
-  tar czf /backup/postgres-backup-$(date +%Y%m%d).tar.gz /data
-```
-
----
-
-## 故障排查
-
-### 常见问题
-
-**1. 数据库连接失败**
-
-```bash
-# 检查数据库是否运行
-docker-compose ps db
-
-# 检查连接字符串
-docker-compose exec app env | grep DATABASE_URL
-
-# 测试数据库连接
-docker-compose exec app python -c "from app.database import engine; print(engine.connect())"
-```
-
-**2. 迁移失败**
-
-```bash
-# 查看当前迁移状态
-docker-compose exec app alembic current
-
-# 回滚到上一个版本
-docker-compose exec app alembic downgrade -1
-
-# 重新应用
-docker-compose exec app alembic upgrade head
-```
-
-**3. 应用无法启动**
-
-```bash
-# 查看详细日志
-docker-compose logs app
-
-# 检查端口占用
-netstat -tlnp | grep 8000
-
-# 重启服务
-docker-compose restart app
-```
-
----
-
-## 安全建议
-
-1. **修改默认密钥** - `SECRET_KEY` 必须使用强随机字符串
-2. **限制 CORS** - 生产环境应限制允许的来源
-3. **启用 HTTPS** - 使用 Let's Encrypt 或其他证书
-4. **数据库防火墙** - 限制数据库只允许应用访问
-5. **定期备份** - 配置自动备份策略
-6. **日志审计** - 保留审计日志至少 6 个月
-
----
-
-## 监控建议
-
-1. **应用监控** - Prometheus + Grafana
-2. **日志聚合** - ELK Stack 或 Loki
-3. **告警** - PagerDuty 或钉钉/企业微信
-4. **数据库监控** - pg_stat_statements
-
----
-
-Last updated: 2026-03-20 - Frontend now includes authentication UI with role-based access
+Last updated: 2026-04-09

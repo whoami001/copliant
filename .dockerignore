@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Deploy scripts
+deploy.sh
+
+# Test data
+test_data/
+*.spdx.json
+111.spdx.json
+
+# Screenshots
+screenshots/
+
+# Documentation (not needed for runtime)
+DESIGN.md
+DEPLOYMENT.md
+QA-REPORT.md
+TODOS.md
+IMPLEMENTATION.md
+PROJECT_SUMMARY.md
+compliance-system-design.md
+compliance-system-test-plan.md
+
+# Claude
+.claude/
+:memory:
+=4.0.0
+.context/
+
+# Tests
+tests/
+pytest.ini
+
+# Migration scripts
+add_system_names_table.py
+create_test_users.py
+seed_users.py
+migrate.sh

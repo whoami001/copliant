@@ -8,18 +8,21 @@ services:
     image: postgres:14-alpine
     container_name: compliance-db
     environment:
-      POSTGRES_USER: compliance
+      POSTGRES_USER: ${DB_USER:-compliance}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-compliance123}
-      POSTGRES_DB: compliance_hub
+      POSTGRES_DB: ${DB_NAME:-compliance_hub}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U compliance"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-compliance}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - compliance-net
 
   # Compliance Hub 应用
   app:
@@ -27,16 +30,23 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: compliance-app
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql://compliance:${DB_PASSWORD:-compliance123}@db:5432/compliance_hub
+      DATABASE_URL: postgresql://${DB_USER:-compliance}:${DB_PASSWORD:-compliance123}@db:5432/${DB_NAME:-compliance_hub}
       SECRET_KEY: ${SECRET_KEY:-change-this-in-production}
-      LOG_FORMAT: json
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - compliance-net
 
 volumes:
   postgres_data:
+
+networks:
+  compliance-net:
+    driver: bridge

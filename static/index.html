@@ -4345,6 +4345,9 @@
             // 遍历所有带 *-only 类的元素，检查元素是否有至少一个当前用户允许的角色类
             const allRoleElements = document.querySelectorAll('.engineer-only, .security-only, .legal-only, .admin-only');
             allRoleElements.forEach(el => {
+                // 跳过页面级元素（页面显示/隐藏由 showPage 通过 active 类管理）
+                if (el.classList.contains('page')) return;
+
                 let shouldShow = false;
 
                 // 管理员可以看到所有带 admin-only 的元素
@@ -4454,13 +4457,21 @@
                 page = 'dashboard';
             }
 
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+                // 显式隐藏所有非活动页面（覆盖 CSS !important）
+                p.style.setProperty('display', 'none', 'important');
+            });
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
             const pageEl = document.getElementById(`page-${page}`);
             const navEl = document.querySelector(`[data-page="${page}"]`);
 
-            if (pageEl) pageEl.classList.add('active');
+            if (pageEl) {
+                pageEl.classList.add('active');
+                // 显式显示当前活动页面（覆盖 CSS !important）
+                pageEl.style.setProperty('display', 'block', 'important');
+            }
             if (navEl) navEl.classList.add('active');
 
             const titles = {
